@@ -1,0 +1,36 @@
+# ---- .NET build output ----
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+
+# ---- Published / packaged artifacts ----
+tools/scan-agent/publish/
+
+# ---- Vendored third-party tool (phpMyAdmin) — not part of this project ----
+tools/phpmyadmin/
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/rcheck/
+*.log
+
+# ---- Runtime data (uploaded files, scans) ----
+storage/
+**/storage/
+
+# ---- Local secrets / overrides ----
+# Holds the real DB password + JWT key + machine-specific paths. Use the .example as a template.
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.user.json
+secrets.json
+
+# ---- Misc / temp ----
+_shot.mjs
+*.tmp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>archiving-scan-agent</AssemblyName>
+    <!-- WIA is accessed through late-bound COM (no interop assembly needed). -->
+    <EnableComHosting>false</EnableComHosting>
+  </PropertyGroup>
+
+</Project>

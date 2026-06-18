@@ -1,0 +1,74 @@
+/* ---- Tabbed sections layout ---- */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.4rem;
+  align-items: start;
+}
+.settings-tabs {
+  display: flex; flex-direction: column; gap: .25rem;
+  position: sticky; top: 1rem;
+}
+.settings-tab {
+  display: flex; align-items: center; gap: .65rem;
+  padding: .7rem .85rem; border-radius: var(--radius-lg, 8px);
+  background: none; border: 1px solid transparent; cursor: pointer;
+  font: inherit; font-size: .95rem; color: var(--text, #211d17); text-align: start;
+  border-inline-start: 3px solid transparent;
+}
+.settings-tab:hover { background: rgba(176, 137, 45, .08); }
+.settings-tab.is-active {
+  background: var(--paper, #fbf7ec);
+  border-color: var(--parchment-3, #e2d3b2);
+  border-inline-start-color: var(--brass, #b0892d);
+  font-weight: 600;
+}
+.settings-tab__icon { font-size: 1.05rem; opacity: .8; }
+.settings-panel { min-width: 0; }
+
+@media (max-width: 760px) {
+  .settings-layout { grid-template-columns: 1fr; }
+  .settings-tabs { flex-direction: row; flex-wrap: wrap; position: static; }
+}
+
+.set-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+
+.agent-status { font-size: .9rem; margin: .4rem 0 1rem; }
+.agent-connected { color: #2f7a3e; }
+.agent-offline { color: var(--seal, #7a2e2e); }
+.agent-checking { color: var(--muted, #8a8170); }
+
+.scanner-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.scanner-item {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .7rem .9rem; border: 1px solid var(--line, #e4ddcf); border-radius: 8px;
+  cursor: pointer; background: var(--paper, #fbf8f1);
+}
+.scanner-item:hover { border-color: var(--gold, #b89042); }
+.scanner-item.is-selected { border-color: var(--gold, #b89042); background: rgba(184,144,66,.08); }
+.scanner-radio { color: var(--gold, #b89042); font-size: 1.1rem; }
+.scanner-name { flex: 1; font-weight: 600; }
+.scanner-default {
+  font-size: .68rem; padding: .1rem .45rem; border-radius: 4px;
+  background: var(--gold, #b89042); color: #fff;
+}
+
+.agent-help { font-size: .9rem; line-height: 1.7; }
+.agent-help p { margin: .3rem 0; }
+
+/* ---- User management ---- */
+.role-checks { display: flex; flex-wrap: wrap; gap: .4rem; }
+.role-chip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .25rem .6rem; border: 1px solid var(--parchment-3, #e2d3b2);
+  border-radius: 999px; cursor: pointer; font-size: .82rem; background: var(--paper, #fbf7ec);
+}
+.role-chip.is-on { background: rgba(176, 137, 45, .14); border-color: var(--brass, #b0892d); font-weight: 600; }
+.role-chip input { accent-color: var(--brass, #b0892d); }
+
+.user-actions { white-space: nowrap; }
+.status-pill.s-active { background: #e2efe4; color: #2f5d3a; }
+.status-pill.s-onhold { background: #f3dede; color: #7a2e2e; }
+.btn-sm { padding: .25rem .6rem; font-size: .8rem; }

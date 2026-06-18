@@ -1,0 +1,31 @@
+.worklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+}
+
+.task-card { border-inline-start: 4px solid var(--gold, #b89042); }
+.task-card.is-overdue { border-inline-start-color: var(--seal, #7a2e2e); }
+
+.task-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.task-stage { display: block; font-weight: 700; font-size: 1.05rem; }
+.task-def { display: block; color: var(--muted, #8a8170); font-size: 0.8rem; }
+
+.task-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: var(--muted, #8a8170);
+  font-size: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.status-pill.s-overdue { background: #f3dede; color: #7a2e2e; }
+.status-pill.s-pending { background: #efe7cf; color: #7a5a18; }

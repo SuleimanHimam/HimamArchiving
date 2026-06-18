@@ -1,0 +1,235 @@
+/* ============================================================
+   THE OFFICIAL DIWAN — design system
+   نظام إدارة الوثائق والأرشفة · RTL-first, Arabic primary
+   Aesthetic: digital government registry (diwan) — ink, parchment,
+   seal-red, ledger rules, mono reference numbers.
+   ============================================================ */
+
+:root {
+  /* — Palette — */
+  --ink:        #14213D;   /* navy ink — primary surface/text */
+  --ink-deep:   #0E1A30;   /* deeper ink — sidebar, headers */
+  --ink-soft:   #2B3A5B;
+
+  --parchment:  #F4ECD8;   /* page background */
+  --parchment-2:#EBDFC4;   /* raised panels */
+  --parchment-3:#E2D3B2;   /* rules, dividers */
+
+  --seal:       #9B2226;   /* seal red — primary accent, alerts, stamps */
+  --seal-deep:  #7A171B;
+  --brass:      #B0892D;   /* brass/gold — secondary accent, rules */
+  --brass-soft: #C8A24B;
+
+  --paper:      #FBF7EC;   /* near-white card */
+  --text:       #211D17;   /* main reading ink on parchment */
+  --text-muted: #6E6552;
+  --text-faint: #9A8F78;
+
+  --ok:    #2F5D3A;
+  --warn:  #9A6312;
+  --danger: var(--seal);
+
+  /* confidentiality badges */
+  --c-public:       #2F5D3A;
+  --c-internal:     #1F4E79;
+  --c-confidential: #9A6312;
+  --c-secret:       var(--seal);
+
+  /* — Type — */
+  --font-display: "Reem Kufi", "IBM Plex Sans Arabic", serif;
+  --font-body:    "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
+  --font-latin:   "Fraunces", "IBM Plex Sans Arabic", serif;
+
+  /* — Space / form — */
+  --radius: 4px;            /* official documents are squarish, not rounded */
+  --radius-lg: 8px;
+  --rule: 1px solid var(--parchment-3);
+  --rule-ink: 1.5px solid var(--ink);
+  --shadow-doc: 0 1px 0 rgba(20,33,61,.04), 0 18px 40px -24px rgba(20,33,61,.45);
+  --shadow-lift: 0 24px 60px -28px rgba(20,33,61,.55);
+
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background-color: var(--parchment);
+  /* parchment grain + ledger atmosphere */
+  background-image:
+    radial-gradient(circle at 18% -10%, rgba(176,137,45,.10), transparent 42%),
+    radial-gradient(circle at 105% 8%, rgba(155,34,38,.07), transparent 38%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* — Headings — */
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; color: var(--ink); margin: 0; line-height: 1.18; }
+h1 { font-size: clamp(1.8rem, 3.2vw, 2.9rem); letter-spacing: -.01em; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.15rem; }
+
+a { color: var(--seal); text-decoration: none; }
+
+/* — Mono register numbers — */
+.mono, .ref, .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+
+/* — Eyebrow / kicker label — */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* — Ledger rule divider — */
+.rule { border: 0; border-top: var(--rule); margin: 1rem 0; }
+.rule-ink { border: 0; border-top: 2px solid var(--ink); margin: 1rem 0; }
+.rule-brass { border: 0; border-top: 1.5px solid var(--brass); width: 64px; margin: .9rem 0; }
+
+/* ============================================================
+   Components
+   ============================================================ */
+
+/* Buttons */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: .95rem;
+  padding: .72rem 1.4rem;
+  border-radius: var(--radius);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: transform .12s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--ink);
+  color: var(--parchment);
+  box-shadow: 0 10px 24px -14px rgba(20,33,61,.8);
+}
+.btn-primary:hover { background: var(--ink-deep); box-shadow: 0 14px 30px -14px rgba(20,33,61,.9); }
+.btn-seal { background: var(--seal); color: #fff; }
+.btn-seal:hover { background: var(--seal-deep); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--parchment-3); }
+.btn-ghost:hover { border-color: var(--ink); background: rgba(20,33,61,.04); }
+
+/* Inputs — underlined, ledger style */
+.field { display: block; margin-bottom: 1.15rem; }
+.field > label {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: .4rem;
+}
+.field > input,
+.field > select,
+.field > textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--rule-ink);
+  padding: .55rem .2rem;
+  outline: none;
+  transition: border-color .2s var(--ease), background .2s var(--ease);
+}
+.field > input:focus,
+.field > textarea:focus {
+  border-bottom-color: var(--seal);
+  background: linear-gradient(to top, rgba(155,34,38,.05), transparent);
+}
+.field > input::placeholder { color: var(--text-faint); }
+
+/* Document card */
+.doc-card {
+  background: var(--paper);
+  border: var(--rule);
+  border-top: 3px solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-doc);
+  padding: 1.5rem;
+}
+
+/* Confidentiality badge */
+.badge {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--font-mono); font-size: .68rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: .22rem .55rem; border-radius: 2px;
+  border: 1px solid currentColor;
+}
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.public       { color: var(--c-public); }
+.badge.internal     { color: var(--c-internal); }
+.badge.confidential { color: var(--c-confidential); }
+.badge.secret       { color: var(--c-secret); }
+
+/* Stamp motif (decorative seal that can rotate-in) */
+.stamp {
+  display: grid; place-items: center;
+  width: 96px; height: 96px; border-radius: 50%;
+  border: 2px solid var(--seal);
+  color: var(--seal);
+  font-family: var(--font-display); font-weight: 700;
+  position: relative; opacity: .92;
+  box-shadow: inset 0 0 0 4px rgba(155,34,38,.12);
+}
+.stamp::after {
+  content: ""; position: absolute; inset: 6px; border-radius: 50%;
+  border: 1px dashed var(--seal); opacity: .55;
+}
+
+/* Utility */
+.flow > * + * { margin-top: var(--flow, 1rem); }
+.cluster { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+.muted { color: var(--text-muted); }
+.center { display: grid; place-items: center; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--parchment-2); }
+::-webkit-scrollbar-thumb { background: var(--parchment-3); border-radius: 6px; border: 3px solid var(--parchment-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--brass-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+/* ---- Global responsive helpers (all screens) ---- */
+*, *::before, *::after { box-sizing: border-box; }
+img, svg, video, iframe { max-width: 100%; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll > table { min-width: 640px; }
+
+/* Content fills the full width of the main area on large screens (no empty side margins). */
+
+/* Tablet: slightly tighter gutters. */
+@media (max-width: 1024px) {
+  .shell__main { padding: clamp(1rem, 2.5vw, 1.8rem); }
+}
+
+/* Small phones. */
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  .doc-card { padding: 1rem; }
+  .btn { padding: .5rem .8rem; }
+  .toast-stack { inset-inline: .6rem auto; inset-inline-end: .6rem; max-width: calc(100vw - 1.2rem); }
+}

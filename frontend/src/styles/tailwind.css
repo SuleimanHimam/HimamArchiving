@@ -1,0 +1,33 @@
+/* Tailwind v4 — utilities + theme only (no preflight), so utilities coexist with the
+   hand-built Diwan CSS without resetting it. The theme maps Diwan design tokens to
+   Tailwind colour/font/radius utilities (e.g. bg-paper, text-seal, font-display, rounded-doc). */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  --color-ink: #14213d;
+  --color-ink-deep: #0e1a30;
+  --color-ink-soft: #2b3a5b;
+  --color-seal: #9b2226;
+  --color-seal-deep: #7a171b;
+  --color-brass: #b0892d;
+  --color-brass-soft: #c8a24b;
+  --color-paper: #fbf7ec;
+  --color-parchment: #f4ecd8;
+  --color-parchment-2: #ebdfc4;
+  --color-parchment-3: #e2d3b2;
+  --color-ink-text: #211d17;
+  --color-muted: #6e6552;
+  --color-faint: #9a8f78;
+  --color-ok: #2f5d3a;
+  --color-warn: #9a6312;
+
+  --font-display: 'Reem Kufi', 'IBM Plex Sans Arabic', serif;
+  --font-body: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-doc: 4px;
+  --radius-doc-lg: 8px;
+}

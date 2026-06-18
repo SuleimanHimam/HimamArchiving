@@ -1,0 +1,56 @@
+.dash { display: flex; flex-direction: column; gap: 2rem; }
+
+.dash__roles { display: flex; gap: .5rem; flex-wrap: wrap; }
+.dash__role {
+  font-size: .72rem; background: var(--paper); border: 1px solid var(--parchment-3);
+  border-top: 2px solid var(--ink); color: var(--ink); padding: .35rem .6rem; border-radius: 2px;
+}
+
+.dash__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: .9rem;
+}
+.dash__stat {
+  display: flex; flex-direction: column; gap: .25rem;
+  background: var(--paper); border: 1px solid var(--parchment-3);
+  border-inline-start: 4px solid var(--brass, #b89042);
+  border-radius: var(--radius-lg); padding: 1rem 1.1rem;
+  text-decoration: none; color: inherit;
+  box-shadow: var(--shadow-doc);
+  transition: transform .12s ease;
+}
+.dash__stat:hover { transform: translateY(-2px); }
+.dash__stat.is-alert { border-inline-start-color: var(--seal, #7a2e2e); }
+.dash__statvalue { font-size: 1.9rem; font-weight: 800; line-height: 1; }
+.dash__statlabel { font-size: .82rem; color: var(--muted, #8a8170); }
+
+.dash__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1.1rem;
+}
+
+/* On phones each item spans the full width (one per row). */
+@media (max-width: 560px) {
+  .dash__stats, .dash__grid { grid-template-columns: 1fr; }
+  .dash__card { min-height: 0; }
+}
+.dash__cardlink { text-decoration: none; }
+.dash__card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .3rem;
+  background: var(--paper); border: 1px solid var(--parchment-3);
+  border-top: 3px solid var(--ink); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-doc);
+  padding: 1.3rem; min-height: 140px; text-align: start;
+  transition: transform .15s var(--ease), box-shadow .2s var(--ease);
+}
+.dash__cardlink:hover .dash__card:not(.is-locked) { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+.dash__card.is-locked { opacity: .55; border-top-color: var(--text-faint); }
+.dash__cardicon { font-size: 1.7rem; color: var(--seal); }
+.dash__cardlabel { font-family: var(--font-display); font-size: 1.2rem; color: var(--ink); margin-top: auto; }
+.dash__carden { font-size: .7rem; color: var(--text-faint); }
+.dash__cardstate { font-size: .74rem; color: var(--seal); font-weight: 600; margin-top: .3rem; }
+.dash__card.is-locked .dash__cardstate { color: var(--text-muted); font-weight: 400; }
+
+.dash__foot { font-size: .76rem; color: var(--text-muted); border-top: var(--rule); padding-top: 1rem; }

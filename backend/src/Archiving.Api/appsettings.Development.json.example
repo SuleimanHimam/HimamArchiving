@@ -1,0 +1,19 @@
+{
+  "//": "Template. Copy to appsettings.Development.json (gitignored) and fill in real local values.",
+  "Logging": {
+    "LogLevel": { "Default": "Information", "Microsoft.AspNetCore": "Warning" }
+  },
+  "ConnectionStrings": {
+    "Default": "server=localhost;port=3306;database=archiving_db;uid=archiver;pwd=YOUR_DB_PASSWORD;SslMode=Preferred;"
+  },
+  "Jwt": {
+    "Key": "YOUR_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS"
+  },
+  "Cors": {
+    "AllowedOrigins": [ "http://localhost:5173" ]
+  },
+  "Escalation": { "IntervalSeconds": 300 },
+  "Fixity": { "IntervalMinutes": 1440, "BatchSize": 50 },
+  "Downloads": { "ScanAgentPath": "C:\\path\\to\\tools\\scan-agent\\publish\\archiving-scan-agent.exe" },
+  "Preservation": { "VeraPdfPath": "" }
+}
