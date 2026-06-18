@@ -13,7 +13,12 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+    {
+        // Emit all timestamps as UTC (…Z) so browsers render them in the viewer's local time.
+        o.JsonSerializerOptions.Converters.Add(new Archiving.Api.Common.UtcDateTimeConverter());
+    });
 builder.Services.AddOpenApi();
 
 // Current-user resolution from the request.
