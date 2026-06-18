@@ -58,6 +58,10 @@ export interface DocumentDetail extends DocumentListItem {
   parentDocumentId: number | null
   isLatestVersion: boolean
   attachments: DocumentAttachmentDto[]
+  physicalLocationId: number | null
+  physicalLocationName: string | null
+  boxNumber: string | null
+  fileNumber: string | null
 }
 
 export interface CreateDocument {
@@ -70,6 +74,9 @@ export interface CreateDocument {
   confidentiality: Confidentiality
   keywords?: string | null
   documentDate?: string | null
+  physicalLocationId?: number | null
+  boxNumber?: string | null
+  fileNumber?: string | null
 }
 
 export interface OrgUnitDto {

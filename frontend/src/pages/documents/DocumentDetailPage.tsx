@@ -253,6 +253,10 @@ export default function DocumentDetailPage() {
             <dt>تاريخ الانتهاء</dt><dd className="mono">{doc.expiryDate ?? '—'}</dd>
             <dt>مدة الحفظ (شهر)</dt><dd className="mono">{doc.retentionMonths}</dd>
             <dt>الكلمات المفتاحية</dt><dd>{doc.keywords ?? '—'}</dd>
+            <dt>مكان الحفظ الفيزيائي</dt>
+            <dd>{doc.physicalLocationName
+              ? `${doc.physicalLocationName}${doc.boxNumber ? ` · صندوق ${doc.boxNumber}` : ''}${doc.fileNumber ? ` · ملف ${doc.fileNumber}` : ''}`
+              : '—'}</dd>
             <dt>الوصف</dt><dd>{doc.description ?? '—'}</dd>
           </dl>
 

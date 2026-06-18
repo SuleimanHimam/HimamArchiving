@@ -77,7 +77,12 @@ public sealed record DocumentDetail(
     long? ParentDocumentId,
     bool IsLatestVersion,
     DateTime CreatedAt,
-    IReadOnlyList<DocumentAttachmentDto> Attachments);
+    IReadOnlyList<DocumentAttachmentDto> Attachments,
+    // Physical archive location (where the paper original is stored)
+    long? PhysicalLocationId = null,
+    string? PhysicalLocationName = null,
+    string? BoxNumber = null,
+    string? FileNumber = null);
 
 public sealed record CreateDocumentRequest(
     string Title,
@@ -88,7 +93,11 @@ public sealed record CreateDocumentRequest(
     long? OwnerPositionId,
     ConfidentialityLevel Confidentiality,
     string? Keywords,
-    DateOnly? DocumentDate);
+    DateOnly? DocumentDate,
+    // Optional: link the physical storage location at entry time
+    long? PhysicalLocationId = null,
+    string? BoxNumber = null,
+    string? FileNumber = null);
 
 public sealed record UpdateDocumentRequest(
     string Title,

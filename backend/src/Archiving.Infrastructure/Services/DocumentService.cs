@@ -107,7 +107,7 @@ public sealed class DocumentService(
             .FirstOrDefaultAsync(d => d.Id == id, ct);
         if (doc is null) return Result<DocumentDetail>.Fail("الوثيقة غير موجودة");
         if (!CanAccess(doc)) return Result<DocumentDetail>.Fail("لا تملك صلاحية الوصول لهذه الوثيقة");
-        return Result<DocumentDetail>.Ok(ToDetail(doc));
+        return Result<DocumentDetail>.Ok(WithPhysical(ToDetail(doc), await GetPhysicalItemAsync(doc.Id, ct)));
     }
 
     public async Task<Result<DocumentDetail>> CreateAsync(CreateDocumentRequest r, CancellationToken ct = default)
@@ -116,6 +116,8 @@ public sealed class DocumentService(
         if (type is null) return Result<DocumentDetail>.Fail("نوع الوثيقة غير موجود");
         if (!await db.OrgUnits.AnyAsync(u => u.Id == r.OwningOrgUnitId, ct))
             return Result<DocumentDetail>.Fail("الوحدة المالكة غير موجودة");
+        if (r.PhysicalLocationId is { } locId && !await db.PhysicalLocations.AnyAsync(l => l.Id == locId, ct))
+            return Result<DocumentDetail>.Fail("مكان الحفظ الفيزيائي غير موجود");
 
         var doc = new Document
         {
@@ -138,8 +140,23 @@ public sealed class DocumentService(
         await db.SaveChangesAsync(ct);
         await audit.WriteAsync("Created", EntityType, doc.Id, doc.Title, ct: ct);
 
+        // Link the physical storage location at entry time, if provided.
+        if (r.PhysicalLocationId is { } location)
+        {
+            db.PhysicalArchiveItems.Add(new PhysicalArchiveItem
+            {
+                DocumentId = doc.Id,
+                PhysicalLocationId = location,
+                BoxNumber = r.BoxNumber,
+                FileNumber = r.FileNumber,
+                ArchivedByUserId = currentUser.UserId,
+            });
+            await db.SaveChangesAsync(ct);
+            await audit.WriteAsync("Archived", "Document", doc.Id, doc.Title, newValues: $"location={location}", ct: ct);
+        }
+
         await db.Entry(doc).Reference(d => d.DocumentType).LoadAsync(ct);
-        return Result<DocumentDetail>.Ok(ToDetail(doc));
+        return Result<DocumentDetail>.Ok(WithPhysical(ToDetail(doc), await GetPhysicalItemAsync(doc.Id, ct)));
     }
 
     public async Task<Result<DocumentDetail>> UpdateAsync(long id, UpdateDocumentRequest r, CancellationToken ct = default)
@@ -287,6 +304,21 @@ public sealed class DocumentService(
             .CountAsync(d => d.DocumentNumber.StartsWith(prefix), ct);
         return $"{prefix}{count + 1:00000}";
     }
+
+    private async Task<PhysicalArchiveItem?> GetPhysicalItemAsync(long docId, CancellationToken ct) =>
+        await db.PhysicalArchiveItems.Include(i => i.PhysicalLocation)
+            .Where(i => i.DocumentId == docId)
+            .OrderByDescending(i => i.Id)
+            .FirstOrDefaultAsync(ct);
+
+    private static DocumentDetail WithPhysical(DocumentDetail d, PhysicalArchiveItem? item) =>
+        item is null ? d : d with
+        {
+            PhysicalLocationId = item.PhysicalLocationId,
+            PhysicalLocationName = item.PhysicalLocation.Name,
+            BoxNumber = item.BoxNumber,
+            FileNumber = item.FileNumber,
+        };
 
     private static DocumentDetail ToDetail(Document d) => new(
         d.Id, d.DocumentNumber, d.Title, d.Description, d.DocumentTypeId, d.DocumentType.Name,

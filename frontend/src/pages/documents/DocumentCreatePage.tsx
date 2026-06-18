@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
 import { documents, type DocumentTypeDto, type OrgUnitDto } from '../../lib/documents'
+import { archive, type PhysicalLocationDto } from '../../lib/archive'
 import { type Confidentiality } from '../../lib/incomingMail'
 import '../incoming/incoming.css'
 
@@ -12,9 +13,11 @@ export default function DocumentCreatePage() {
   const navigate = useNavigate()
   const [types, setTypes] = useState<DocumentTypeDto[]>([])
   const [units, setUnits] = useState<OrgUnitDto[]>([])
+  const [locations, setLocations] = useState<PhysicalLocationDto[]>([])
   const [form, setForm] = useState({
     title: '', description: '', documentTypeId: '', owningOrgUnitId: '',
     confidentiality: 1 as Confidentiality, keywords: '', documentDate: today,
+    physicalLocationId: '', boxNumber: '', fileNumber: '',
   })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -31,6 +34,8 @@ export default function DocumentCreatePage() {
         }))
       })
       .catch(() => setError('تعذّر تحميل أنواع الوثائق والوحدات التنظيمية'))
+    // Physical locations are optional; ignore if the user can't see them.
+    archive.locations().then(setLocations).catch(() => {})
   }, [])
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -52,6 +57,9 @@ export default function DocumentCreatePage() {
         confidentiality: Number(form.confidentiality) as Confidentiality,
         keywords: form.keywords || null,
         documentDate: form.documentDate || null,
+        physicalLocationId: form.physicalLocationId ? Number(form.physicalLocationId) : null,
+        boxNumber: form.boxNumber || null,
+        fileNumber: form.fileNumber || null,
       })
       navigate(`/app/documents/${created.id}`, { replace: true })
     } catch (err) {
@@ -99,6 +107,20 @@ export default function DocumentCreatePage() {
             <input value={form.keywords} onChange={set('keywords')} placeholder="مفصولة بمسافات" /></label>
           <label className="field field--wide"><span>الوصف</span>
             <textarea rows={4} value={form.description} onChange={set('description')} /></label>
+
+          {locations.length > 0 && (
+            <>
+              <label className="field"><span>مكان الحفظ الفيزيائي</span>
+                <select value={form.physicalLocationId} onChange={set('physicalLocationId')}>
+                  <option value="">— غير محدد —</option>
+                  {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select></label>
+              <label className="field"><span>رقم الصندوق</span>
+                <input value={form.boxNumber} onChange={set('boxNumber')} dir="ltr" /></label>
+              <label className="field"><span>رقم الملف</span>
+                <input value={form.fileNumber} onChange={set('fileNumber')} dir="ltr" /></label>
+            </>
+          )}
         </div>
 
         {error && <p className="login__error">{error}</p>}
