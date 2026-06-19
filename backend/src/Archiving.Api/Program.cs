@@ -13,7 +13,10 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(o =>
+    {
+        o.Filters.Add<Archiving.Api.Common.AuditActionFilter>();
+    })
     .AddJsonOptions(o =>
     {
         // Emit all timestamps as UTC (…Z) so browsers render them in the viewer's local time.
@@ -47,7 +50,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddSingleton<Archiving.Api.Common.IOnlineUserTracker, Archiving.Api.Common.OnlineUserTracker>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddHostedService<Archiving.Api.Common.AutoBackupHostedService>();
 
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
@@ -77,6 +82,7 @@ else
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<Archiving.Api.Common.LastSeenMiddleware>();
 app.MapControllers();
 
 app.Run();

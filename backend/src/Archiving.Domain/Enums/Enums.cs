@@ -179,6 +179,13 @@ public enum MfaMethod
     Sms = 3
 }
 
+public enum Gender
+{
+    NotSpecified = 0,
+    Male = 1,   // ذكر
+    Female = 2  // أنثى
+}
+
 /// <summary>Restricts where document/attachment uploads may originate (some clients allow scanner-only).</summary>
 [Flags]
 public enum UploadSource

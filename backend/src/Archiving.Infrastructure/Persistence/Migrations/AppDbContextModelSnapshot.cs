@@ -85,6 +85,100 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.AutoBackupSettings", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("IntervalHours")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastRunAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("LastRunError")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LastRunStatus")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("TargetPath")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AutoBackupSettings");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ClassificationType", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClassificationTypes");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.DesignatedCommunity", b =>
                 {
                     b.Property<long>("Id")
@@ -691,6 +785,14 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
+                    b.Property<string>("ColorAccent")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ColorPrimary")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -703,6 +805,10 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LogoBase64")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
 
                     b.Property<string>("LogoStorageKey")
                         .HasMaxLength(256)
@@ -1692,6 +1798,21 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("Roles");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.RoleClassification", b =>
+                {
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ClassificationTypeId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RoleId", "ClassificationTypeId");
+
+                    b.HasIndex("ClassificationTypeId");
+
+                    b.ToTable("RoleClassifications");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.RolePermission", b =>
                 {
                     b.Property<long>("RoleId")
@@ -1737,10 +1858,21 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
+                    b.Property<string>("FamilyName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
+
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -1766,6 +1898,10 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("varchar(512)");
 
+                    b.Property<string>("NationalId")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<long?>("OrgUnitId")
                         .HasColumnType("bigint");
 
@@ -1775,6 +1911,14 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<string>("Phone")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("SecondName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ThirdName")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
@@ -2399,6 +2543,25 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("DocumentType");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.RoleClassification", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.ClassificationType", "Classification")
+                        .WithMany("RoleClassifications")
+                        .HasForeignKey("ClassificationTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Archiving.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Classification");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.RolePermission", b =>
                 {
                     b.HasOne("Archiving.Domain.Entities.Permission", "Permission")
@@ -2493,6 +2656,11 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("Stage");
 
                     b.Navigation("WorkflowInstance");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ClassificationType", b =>
+                {
+                    b.Navigation("RoleClassifications");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.Document", b =>

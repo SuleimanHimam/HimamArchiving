@@ -15,20 +15,20 @@ public sealed class PreservationController(
     IPreservationPolicyService policy) : ControllerBase
 {
     [HttpGet("designated-community")]
-    [HasPermission("Settings.View")]
+    [HasPermission("Preservation.View")]
     public async Task<IActionResult> GetCommunity(CancellationToken ct) => Ok(await community.GetAsync(ct));
 
     [HttpPut("designated-community")]
-    [HasPermission("Settings.Edit")]
+    [HasPermission("Preservation.Edit")]
     public async Task<IActionResult> UpdateCommunity([FromBody] DesignatedCommunityDto req, CancellationToken ct)
         => Ok(await community.UpdateAsync(req, ct));
 
     [HttpGet("policy")]
-    [HasPermission("Settings.View")]
+    [HasPermission("Preservation.View")]
     public async Task<IActionResult> GetPolicy(CancellationToken ct) => Ok(await policy.GetAsync(ct));
 
     [HttpPut("policy")]
-    [HasPermission("Settings.Edit")]
+    [HasPermission("Preservation.Edit")]
     public async Task<IActionResult> UpdatePolicy([FromBody] PreservationPolicyDto req, CancellationToken ct)
         => Ok(await policy.UpdateAsync(req, ct));
 }

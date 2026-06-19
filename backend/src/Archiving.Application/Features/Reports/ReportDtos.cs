@@ -2,6 +2,14 @@ namespace Archiving.Application.Features.Reports;
 
 public sealed record StatusCount(string Status, int Count);
 
+public sealed record AuditItem(
+    long     Id,
+    string   Action,
+    string   EntityType,
+    string   EntityTitle,
+    DateTime CreatedAt,
+    string?  UserName);
+
 /// <summary>Aggregate counts for the dashboard, gated by the caller's clearance where relevant.</summary>
 public sealed record DashboardSummary(
     int TotalDocuments,
@@ -14,4 +22,5 @@ public sealed record DashboardSummary(
     int UnreadNotifications,
     IReadOnlyList<StatusCount> DocumentsByStatus,
     IReadOnlyList<StatusCount> IncomingByStatus,
-    IReadOnlyList<StatusCount> OutgoingByStatus);
+    IReadOnlyList<StatusCount> OutgoingByStatus,
+    IReadOnlyList<AuditItem>   RecentActivity);

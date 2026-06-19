@@ -37,6 +37,14 @@ public sealed class ReportService(AppDbContext db, ICurrentUser currentUser) : I
             .CountAsync(r => r.Status == DisposalRequestStatus.Pending, ct);
         var unread = me is null ? 0 : await db.Notifications.CountAsync(n => n.RecipientUserId == me && !n.IsRead, ct);
 
+        var recentActivity = await (
+            from a in db.AuditLogs
+            join u in db.Users.IgnoreQueryFilters() on a.UserId equals (long?)u.Id into uj
+            from u in uj.DefaultIfEmpty()
+            orderby a.CreatedAt descending
+            select new AuditItem(a.Id, a.Action, a.EntityType ?? "", a.EntityTitle ?? "", a.CreatedAt, u.FullName)
+        ).Take(8).ToListAsync(ct);
+
         return new DashboardSummary(
             TotalDocuments: docsByStatus.Sum(s => s.Count),
             TotalIncoming: incomingByStatus.Sum(s => s.Count),
@@ -48,6 +56,7 @@ public sealed class ReportService(AppDbContext db, ICurrentUser currentUser) : I
             UnreadNotifications: unread,
             DocumentsByStatus: docsByStatus,
             IncomingByStatus: incomingByStatus,
-            OutgoingByStatus: outgoingByStatus);
+            OutgoingByStatus: outgoingByStatus,
+            RecentActivity: recentActivity);
     }
 }

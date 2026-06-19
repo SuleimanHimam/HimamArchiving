@@ -15,6 +15,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PositionAssignment> PositionAssignments => Set<PositionAssignment>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    // System settings
+    public DbSet<ClassificationType>  ClassificationTypes  => Set<ClassificationType>();
+    public DbSet<RoleClassification>  RoleClassifications  => Set<RoleClassification>();
+    public DbSet<AutoBackupSettings>  AutoBackupSettings    => Set<AutoBackupSettings>();
+
     // Organization
     public DbSet<Institution> Institutions => Set<Institution>();
     public DbSet<OrgUnit> OrgUnits => Set<OrgUnit>();
@@ -82,6 +87,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // ---- Composite keys (join tables) ----
         b.Entity<RolePermission>().HasKey(x => new { x.RoleId, x.PermissionId });
         b.Entity<UserRole>().HasKey(x => new { x.UserId, x.RoleId });
+        b.Entity<RoleClassification>().HasKey(x => new { x.RoleId, x.ClassificationTypeId });
 
         // ---- Unique indexes ----
         b.Entity<User>().HasIndex(x => x.Email).IsUnique();
@@ -125,6 +131,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         b.Entity<InformationPackage>().Property(x => x.Manifest).HasColumnType("longtext");
         b.Entity<RepresentationInfo>().Property(x => x.RenderingNote).HasColumnType("longtext");
         b.Entity<DesignatedCommunity>().Property(x => x.RenderingExpectations).HasColumnType("longtext");
+        b.Entity<Institution>().Property(x => x.LogoBase64).HasColumnType("longtext");
+        b.Entity<AutoBackupSettings>().Property(x => x.LastRunError).HasColumnType("longtext");
         b.Entity<AuditLog>().Property(x => x.OldValues).HasColumnType("longtext");
         b.Entity<AuditLog>().Property(x => x.NewValues).HasColumnType("longtext");
         b.Entity<AuditLog>().Property(x => x.UserAgent).HasMaxLength(512);

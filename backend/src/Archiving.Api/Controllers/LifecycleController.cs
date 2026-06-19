@@ -17,7 +17,7 @@ public sealed class LifecycleController(ILifecycleService service) : ControllerB
     public async Task<IActionResult> Policies(CancellationToken ct) => Ok(await service.ListPoliciesAsync(ct));
 
     [HttpPost("policies")]
-    [HasPermission("Settings.Create")]
+    [HasPermission("Preservation.Edit")]
     public async Task<IActionResult> CreatePolicy([FromBody] CreateRetentionPolicyRequest req, CancellationToken ct)
     {
         var r = await service.CreatePolicyAsync(req, ct);

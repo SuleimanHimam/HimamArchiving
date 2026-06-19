@@ -9,6 +9,9 @@ public class Institution : BaseEntity
     public string? NameEn { get; set; }
     public string? Code { get; set; }                 // unique short code
     public string? LogoStorageKey { get; set; }       // logo stored in object storage, not the DB
+    public string? LogoBase64    { get; set; }        // data-URI, stored in-DB for simplicity
+    public string? ColorPrimary  { get; set; }        // hex for --ink CSS variable
+    public string? ColorAccent   { get; set; }        // hex for --brass CSS variable
     public string? Address { get; set; }
     public string? Phone { get; set; }
     public string? Email { get; set; }

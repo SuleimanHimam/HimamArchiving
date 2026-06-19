@@ -1,10 +1,15 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { notifications, type NotificationDto } from '../lib/notifications'
+import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
+import { type NotificationDto } from '../lib/notifications'
+import {
+  useNotifications, useUnreadCount, useMarkRead, useMarkAllRead,
+  NOTIFICATIONS_KEY,
+} from '../lib/useNotifications'
 import './notificationbell.css'
 
-// Map a notification's deep-link target to an app route.
 function routeFor(n: NotificationDto): string | null {
   if (!n.entityType || !n.entityId) return null
   switch (n.entityType) {
@@ -17,28 +22,27 @@ function routeFor(n: NotificationDto): string | null {
 }
 
 export default function NotificationBell() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [items, setItems] = useState<NotificationDto[]>([])
-  const [unread, setUnread] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
 
-  const refresh = useCallback(async () => {
-    try {
-      const res = await notifications.list(false)
-      setItems(res.items)
-      setUnread(res.unreadCount)
-    } catch { /* silent — the bell is non-critical chrome */ }
-  }, [])
+  const { data: unread = 0 } = useUnreadCount()
+  const { data: list } = useNotifications(false)
+  const markRead = useMarkRead()
+  const markAll = useMarkAllRead()
 
-  // Poll the unread count periodically; load the full list when opened.
-  useEffect(() => { refresh() }, [refresh])
-  useEffect(() => {
-    const id = setInterval(() => { notifications.unreadCount().then(setUnread).catch(() => {}) }, 30_000)
-    return () => clearInterval(id)
-  }, [])
+  const items = list?.items ?? []
+  const locale = i18n.language === 'ar' ? 'ar' : 'en'
 
-  // Close on outside click.
+  // Refetch full list whenever panel opens.
+  function toggle() {
+    const next = !open
+    setOpen(next)
+    if (next) qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY })
+  }
+
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -47,27 +51,16 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
-  async function toggle() {
-    const next = !open
-    setOpen(next)
-    if (next) await refresh()
-  }
-
   async function onItem(n: NotificationDto) {
-    if (!n.isRead) { try { await notifications.markRead(n.id); setUnread((u) => Math.max(0, u - 1)) } catch { /* ignore */ } }
+    if (!n.isRead) markRead.mutate(n.id)
     const route = routeFor(n)
     setOpen(false)
     if (route) navigate(route)
-    else refresh()
-  }
-
-  async function markAll() {
-    try { await notifications.markAllRead(); setUnread(0); await refresh() } catch { /* ignore */ }
   }
 
   return (
     <div className="bell" ref={ref}>
-      <button className="bell__btn" onClick={toggle} title="الإشعارات" aria-label="الإشعارات">
+      <button className="bell__btn" onClick={toggle} title={t('notifications.title')} aria-label={t('notifications.title')}>
         <span className="bell__icon">🔔</span>
         {unread > 0 && <span className="bell__badge">{unread > 99 ? '99+' : unread}</span>}
       </button>
@@ -79,11 +72,15 @@ export default function NotificationBell() {
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
           >
             <div className="bell__head">
-              <span>الإشعارات</span>
-              {unread > 0 && <button className="bell__markall" onClick={markAll}>تعليم الكل كمقروء</button>}
+              <span>{t('notifications.title')}</span>
+              {unread > 0 && (
+                <button className="bell__markall" onClick={() => markAll.mutate()}>
+                  {t('notifications.markAllRead')}
+                </button>
+              )}
             </div>
             <ul className="bell__list">
-              {items.length === 0 && <li className="bell__empty">لا توجد إشعارات</li>}
+              {items.length === 0 && <li className="bell__empty">{t('notifications.empty')}</li>}
               {items.map((n) => (
                 <li
                   key={n.id}
@@ -92,7 +89,7 @@ export default function NotificationBell() {
                 >
                   <div className="bell__title">{n.title}</div>
                   {n.body && <div className="bell__body">{n.body}</div>}
-                  <div className="bell__time mono">{new Date(n.createdAt).toLocaleString('ar')}</div>
+                  <div className="bell__time mono">{new Date(n.createdAt).toLocaleString(locale)}</div>
                 </li>
               ))}
             </ul>

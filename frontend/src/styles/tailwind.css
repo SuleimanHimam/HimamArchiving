@@ -30,4 +30,16 @@
 
   --radius-doc: 4px;
   --radius-doc-lg: 8px;
+
+  /* shadcn/ui compat — mapped to Diwan design tokens */
+  --color-background:          #fbf7ec;   /* paper */
+  --color-foreground:          #211d17;   /* ink-text */
+  --color-popover:             #fbf7ec;   /* paper */
+  --color-popover-foreground:  #211d17;   /* ink-text */
+  --color-accent:              #f4ecd8;   /* parchment */
+  --color-accent-foreground:   #14213d;   /* ink */
+  --color-border:              #e2d3b2;   /* parchment-3 */
+  --color-muted-foreground:    #6e6552;   /* muted */
+  --color-destructive:         #9b2226;   /* seal */
+  --color-destructive-foreground: #fbf7ec;
 }

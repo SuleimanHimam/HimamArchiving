@@ -14,7 +14,7 @@ public static class DbSeeder
     private static readonly string[] Resources =
     [
         "Documents", "IncomingMail", "OutgoingMail", "Workflow", "Archive",
-        "Reports", "Users", "Organization", "Settings", "Audit"
+        "Reports", "Users", "Organization", "Classification", "Preservation", "Backup", "Audit", "Scanner"
     ];
 
     public static async Task SeedAsync(AppDbContext db, IPasswordHasher hasher, CancellationToken ct = default)
@@ -23,6 +23,64 @@ public static class DbSeeder
         await SeedRolesAsync(db, ct);
         await SeedAdminAsync(db, hasher, ct);
         await SeedOrganizationAsync(db, ct);
+        await SeedClassificationTypesAsync(db, ct);
+        await SeedRoleClassificationsAsync(db, ct);
+    }
+
+    private static async Task SeedRoleClassificationsAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.RoleClassifications.AnyAsync(ct)) return;
+
+        var roles = await db.Roles.ToListAsync(ct);
+        var types = await db.ClassificationTypes.ToListAsync(ct);
+        if (roles.Count == 0 || types.Count == 0) return;
+
+        long AdminId(string name) => roles.FirstOrDefault(r => r.Name == name)?.Id ?? 0;
+
+        var sysAdmin     = AdminId("System Administrator");
+        var manager      = AdminId("Manager");
+        var archiver     = AdminId("Archive Officer");
+        var employee     = AdminId("Employee");
+
+        // Default clearance mapping:
+        //   عام / داخلي      → all 4 roles
+        //   سري              → sysAdmin, manager, archiver
+        //   سري للغاية       → sysAdmin, manager only
+        var defaults = new Dictionary<string, long[]>
+        {
+            ["عام"]         = [sysAdmin, manager, archiver, employee],
+            ["داخلي"]       = [sysAdmin, manager, archiver, employee],
+            ["سري"]         = [sysAdmin, manager, archiver],
+            ["سري للغاية"]  = [sysAdmin, manager],
+        };
+
+        foreach (var (nameAr, allowedRoles) in defaults)
+        {
+            var ctype = types.FirstOrDefault(t => t.NameAr == nameAr);
+            if (ctype is null) continue;
+
+            foreach (var roleId in allowedRoles.Where(id => id != 0))
+                db.RoleClassifications.Add(new RoleClassification
+                {
+                    RoleId               = roleId,
+                    ClassificationTypeId = ctype.Id,
+                });
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task SeedClassificationTypesAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.ClassificationTypes.AnyAsync(ct)) return;
+
+        db.ClassificationTypes.AddRange(
+            new ClassificationType { NameAr = "عام",           NameEn = "Public",             Color = "#2f5d3a", SortOrder = 0, IsSystem = true,  IsActive = true, Description = "وثائق عامة لا تستلزم قيودًا" },
+            new ClassificationType { NameAr = "داخلي",         NameEn = "Internal",           Color = "#1e3a8a", SortOrder = 1, IsSystem = true,  IsActive = true, Description = "للاستخدام الداخلي فقط" },
+            new ClassificationType { NameAr = "سري",           NameEn = "Confidential",       Color = "#9a6312", SortOrder = 2, IsSystem = true,  IsActive = true, Description = "وثائق سرية مقيّدة الاطلاع" },
+            new ClassificationType { NameAr = "سري للغاية",    NameEn = "Highly Confidential",Color = "#9b2226", SortOrder = 3, IsSystem = true,  IsActive = true, Description = "أعلى درجات التصنيف الأمني" }
+        );
+        await db.SaveChangesAsync(ct);
     }
 
     private static async Task SeedPermissionsAsync(AppDbContext db, CancellationToken ct)
@@ -56,13 +114,19 @@ public static class DbSeeder
             ("Manager", "اعتماد وتظهير المعاملات ومراجعة التقارير",
                 p => p.Action is PermissionAction.View or PermissionAction.Approve
                     or PermissionAction.Forward or PermissionAction.Print
-                    || p.Resource == "Reports"),
+                    || p.Resource == "Reports"
+                    || (p.Resource == "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)
+                    || (p.Resource is "Classification" or "Preservation" && p.Action == PermissionAction.View)),
             ("Archive Officer", "إدخال وتصنيف وحفظ الوثائق وإدارة المواقع",
                 p => p.Resource is "Documents" or "Archive"
-                    || (p.Resource is "IncomingMail" or "OutgoingMail" && p.Action == PermissionAction.View)),
+                    || (p.Resource is "IncomingMail" or "OutgoingMail" && p.Action == PermissionAction.View)
+                    || (p.Resource == "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)
+                    || (p.Resource == "Classification" && p.Action is PermissionAction.View or PermissionAction.Edit)
+                    || (p.Resource == "Preservation" && p.Action == PermissionAction.View)),
             ("Employee", "استلام المعاملات والرد والإحالة والمتابعة",
                 p => (p.Resource is "Documents" or "IncomingMail" or "OutgoingMail")
-                    && p.Action is PermissionAction.View or PermissionAction.Create or PermissionAction.Forward),
+                    && p.Action is PermissionAction.View or PermissionAction.Create or PermissionAction.Forward
+                    || (p.Resource == "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)),
         };
 
         foreach (var (name, desc, pick) in roleDefs)
@@ -88,25 +152,31 @@ public static class DbSeeder
 
     private static async Task SeedAdminAsync(AppDbContext db, IPasswordHasher hasher, CancellationToken ct)
     {
-        if (await db.Users.IgnoreQueryFilters().AnyAsync(u => u.Email == AdminEmail, ct))
-            return;
-
         var adminRole = await db.Roles.FirstAsync(r => r.Name == "System Administrator", ct);
 
-        var admin = new User
+        var admin = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Email == AdminEmail, ct);
+        if (admin is null)
         {
-            FullName = "مدير النظام",
-            Email = AdminEmail,
-            JobTitle = "مدير النظام",
-            PasswordHash = hasher.Hash(AdminPassword),
-            Clearance = ConfidentialityLevel.HighlyConfidential,
-            IsActive = true,
-        };
-        db.Users.Add(admin);
-        await db.SaveChangesAsync(ct);
+            admin = new User
+            {
+                FullName = "مدير النظام",
+                Email = AdminEmail,
+                JobTitle = "مدير النظام",
+                PasswordHash = hasher.Hash(AdminPassword),
+                Clearance = ConfidentialityLevel.HighlyConfidential,
+                IsActive = true,
+            };
+            db.Users.Add(admin);
+            await db.SaveChangesAsync(ct);
+        }
 
-        db.UserRoles.Add(new UserRole { UserId = admin.Id, RoleId = adminRole.Id });
-        await db.SaveChangesAsync(ct);
+        // Always ensure the admin has the System Administrator role (idempotent).
+        var hasRole = await db.UserRoles.AnyAsync(ur => ur.UserId == admin.Id && ur.RoleId == adminRole.Id, ct);
+        if (!hasRole)
+        {
+            db.UserRoles.Add(new UserRole { UserId = admin.Id, RoleId = adminRole.Id });
+            await db.SaveChangesAsync(ct);
+        }
     }
 
     private static async Task SeedOrganizationAsync(AppDbContext db, CancellationToken ct)

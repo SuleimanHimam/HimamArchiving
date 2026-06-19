@@ -10,7 +10,12 @@
 
 const BASE = import.meta.env.VITE_SCAN_AGENT_URL ?? 'http://127.0.0.1:8765'
 
-export interface ScanAgentStatus { status: string; scanners: string[]; mock: boolean }
+export interface ScanAgentStatus {
+  status: string
+  scanners: string[]   // TWAIN / WIA capture devices
+  printers?: string[]  // Windows print-spooler queues (agent v1.1+)
+  mock: boolean
+}
 
 export const scanAgent = {
   baseUrl: BASE,

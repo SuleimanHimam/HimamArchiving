@@ -1,0 +1,450 @@
+{
+  "app": {
+    "name": "Electronic Diwan",
+    "tagline": "Document Management, Archiving & Institutional Workflow System",
+    "officialRegistry": "OFFICIAL REGISTRY · Electronic Diwan"
+  },
+  "lang": {
+    "switchTitle": "Change System Language",
+    "switchTo": "Switch to Arabic (العربية)",
+    "switchConfirm": "Switch the system language to Arabic? This change will apply immediately across all pages.",
+    "confirm": "Yes, Switch Language",
+    "cancel": "Cancel"
+  },
+  "nav": {
+    "home": "Home",
+    "incoming": "Incoming",
+    "outgoing": "Outgoing",
+    "documents": "Documents",
+    "workflow": "Workflow",
+    "archive": "Archive",
+    "reports": "Reports",
+    "monitoring": "Activity Log",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "menu": "Menu"
+  },
+  "auth": {
+    "login": "Sign In",
+    "loginAction": "Sign In to Diwan",
+    "loginLoading": "Verifying...",
+    "email": "Email Address",
+    "password": "Password",
+    "emailPlaceholder": "name@institution.gov",
+    "passwordPlaceholder": "••••••••",
+    "autoFill": "Auto-fill",
+    "autoFillTitle": "Fill in demo credentials",
+    "adLogin": "Sign in with Institutional Account (Active Directory)",
+    "mfaNote": "You may be prompted for a two-factor verification code after entering your password.",
+    "subtitle": "Enter your credentials to access the Diwan.",
+    "scanAgentLink": "Scan Agent",
+    "loginSection": "AUTHENTICATION · Sign In",
+    "errors": {
+      "required": "Please enter your email and password.",
+      "networkError": "Cannot reach the server. Make sure the API is running.",
+      "failed": "Login failed."
+    },
+    "stats": {
+      "todayTransactions": "Today's Transactions",
+      "pendingApproval": "Pending Approval",
+      "overdue": "Overdue"
+    },
+    "footer": {
+      "institution": "Ministry / Institution — Electronic Diwan"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "kicker": "DASHBOARD · Control Panel",
+    "welcome": "Welcome, {{name}}",
+    "permissionsGranted": "{{count}} permissions granted",
+    "authSuccess": "Authentication successful",
+    "accessLevel": "Access level:",
+    "enter": "Open →",
+    "noPermission": "No permission",
+    "stats": {
+      "documents": "Documents",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing",
+      "openTasks": "My Open Tasks",
+      "overdueTasks": "Overdue Tasks",
+      "expiringSoon": "Expiring Soon",
+      "pendingDisposals": "Pending Disposals"
+    },
+    "modules": {
+      "incoming": "Incoming",
+      "outgoing": "Outgoing",
+      "documents": "Documents",
+      "workflow": "Workflow",
+      "archive": "Archive",
+      "reports": "Reports"
+    }
+  },
+  "incoming": {
+    "title": "Incoming Mail",
+    "kicker": "INCOMING · Incoming Mail",
+    "newButton": "+ New Transaction",
+    "searchPlaceholder": "Search by number, subject, or sender…",
+    "loading": "Loading...",
+    "empty": "No transactions found.",
+    "loadError": "Failed to load transactions.",
+    "columns": {
+      "number": "Transaction No.",
+      "sender": "Sending Entity",
+      "subject": "Subject",
+      "confidentiality": "Confidentiality",
+      "priority": "Priority",
+      "status": "Status",
+      "date": "Received Date"
+    },
+    "statuses": {
+      "all": "All Statuses",
+      "new": "New",
+      "assigned": "Assigned",
+      "inProgress": "In Progress",
+      "onHold": "On Hold",
+      "closed": "Closed",
+      "archived": "Archived"
+    },
+    "create": {
+      "title": "Register Incoming Transaction",
+      "kicker": "NEW · Incoming",
+      "senderEntity": "Sending Entity",
+      "senderEntityPlaceholder": "Ministry / Institution",
+      "senderName": "Sender Name",
+      "senderReference": "Sender Reference No.",
+      "receivedDate": "Received Date",
+      "issueDate": "Issue Date",
+      "subject": "Subject",
+      "keywords": "Keywords",
+      "keywordsPlaceholder": "Space-separated",
+      "body": "Body",
+      "submit": "Register Transaction",
+      "submitting": "Saving...",
+      "cancel": "Cancel",
+      "back": "← Back to List",
+      "errors": {
+        "required": "Sending entity and subject are required.",
+        "failed": "Failed to create transaction."
+      }
+    },
+    "detail": {
+      "kicker": "DETAIL · Incoming",
+      "back": "← Back to List",
+      "notFound": "Transaction not found.",
+      "loadError": "Failed to load transaction.",
+      "fields": {
+        "number": "Transaction No.",
+        "sender": "Sending Entity",
+        "senderName": "Sender Name",
+        "senderRef": "Reference",
+        "subject": "Subject",
+        "body": "Body",
+        "confidentiality": "Confidentiality",
+        "priority": "Priority",
+        "status": "Status",
+        "receivedDate": "Received Date",
+        "issueDate": "Issue Date",
+        "assignedTo": "Assigned To",
+        "keywords": "Keywords"
+      },
+      "actions": {
+        "assign": "Assign",
+        "close": "Close",
+        "archive": "Archive",
+        "reassign": "Reassign"
+      }
+    }
+  },
+  "outgoing": {
+    "title": "Outgoing Mail",
+    "kicker": "OUTGOING · Outgoing Mail",
+    "newButton": "+ New Letter",
+    "searchPlaceholder": "Search by number, subject, or recipient…",
+    "loading": "Loading...",
+    "empty": "No letters found.",
+    "loadError": "Failed to load letters.",
+    "columns": {
+      "number": "Letter No.",
+      "recipient": "Recipient Entity",
+      "subject": "Subject",
+      "confidentiality": "Confidentiality",
+      "priority": "Priority",
+      "status": "Status",
+      "date": "Issue Date"
+    },
+    "statuses": {
+      "all": "All Statuses",
+      "draft": "Draft",
+      "pendingApproval": "Pending Approval",
+      "approved": "Approved",
+      "sent": "Sent",
+      "archived": "Archived"
+    },
+    "create": {
+      "title": "New Outgoing Letter",
+      "kicker": "NEW · Outgoing",
+      "recipientEntity": "Recipient Entity",
+      "recipientEntityPlaceholder": "Ministry / Institution",
+      "recipientName": "Recipient Name",
+      "subject": "Subject",
+      "body": "Body",
+      "confidentiality": "Confidentiality",
+      "priority": "Priority",
+      "keywords": "Keywords",
+      "submit": "Save Draft",
+      "submitting": "Saving...",
+      "cancel": "Cancel",
+      "back": "← Back to List",
+      "errors": {
+        "required": "Recipient entity and subject are required.",
+        "failed": "Failed to create letter."
+      }
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "kicker": "DOCUMENTS · Documents",
+    "newButton": "+ New Document",
+    "scanButton": "Scan",
+    "searchPlaceholder": "Search by title or keywords…",
+    "loading": "Loading...",
+    "empty": "No documents found.",
+    "loadError": "Failed to load documents.",
+    "columns": {
+      "title": "Title",
+      "type": "Type",
+      "category": "Category",
+      "confidentiality": "Confidentiality",
+      "status": "Status",
+      "date": "Date"
+    },
+    "statuses": {
+      "all": "All Statuses",
+      "draft": "Draft",
+      "active": "Active",
+      "archived": "Archived",
+      "pendingDisposal": "Pending Disposal",
+      "disposed": "Disposed"
+    },
+    "create": {
+      "title": "Upload New Document",
+      "kicker": "NEW · Document",
+      "titleField": "Title",
+      "type": "Document Type",
+      "category": "Category",
+      "confidentiality": "Confidentiality",
+      "keywords": "Keywords",
+      "body": "Description",
+      "files": "Files",
+      "submit": "Upload Document",
+      "submitting": "Uploading...",
+      "cancel": "Cancel",
+      "back": "← Back to List",
+      "dragDrop": "Drag & drop files here or click to select",
+      "errors": {
+        "required": "Title and document type are required.",
+        "failed": "Failed to upload document."
+      }
+    },
+    "scan": {
+      "title": "Scan Document",
+      "kicker": "SCAN · Scan",
+      "back": "← Back",
+      "notAvailable": "Scan agent not available.",
+      "selectScanner": "Select scanner",
+      "scan": "Scan",
+      "scanning": "Scanning...",
+      "attach": "Attach",
+      "preview": "Preview"
+    }
+  },
+  "workflow": {
+    "title": "My Worklist",
+    "kicker": "WORKFLOW · Workflow",
+    "empty": "No pending tasks.",
+    "loadError": "Failed to load tasks.",
+    "columns": {
+      "task": "Task",
+      "document": "Document / Transaction",
+      "stage": "Stage",
+      "dueDate": "Due Date",
+      "priority": "Priority",
+      "status": "Status"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "forward": "Forward",
+      "return": "Return",
+      "hold": "Hold",
+      "close": "Close"
+    },
+    "statuses": {
+      "all": "All Statuses",
+      "pending": "Pending",
+      "completed": "Completed",
+      "skipped": "Skipped",
+      "escalated": "Escalated"
+    }
+  },
+  "archive": {
+    "title": "Physical Archive",
+    "kicker": "ARCHIVE · Archive",
+    "empty": "No archive locations found.",
+    "loadError": "Failed to load archive.",
+    "addLocation": "Add Location",
+    "fields": {
+      "name": "Name",
+      "code": "Code",
+      "type": "Type",
+      "capacity": "Capacity",
+      "description": "Description"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "kicker": "REPORTS · Reports",
+    "sections": {
+      "expiring": "Documents Expiring Soon",
+      "disposal": "Disposal Requests",
+      "workflow": "Workflow Report",
+      "audit": "Audit Log"
+    },
+    "empty": "No data available.",
+    "loadError": "Failed to load reports."
+  },
+  "settings": {
+    "title": "Settings",
+    "kicker": "SETTINGS · Settings",
+    "sections": {
+      "users": "Users & Permissions",
+      "organization": "Organization Structure",
+      "preservation": "Preservation Policies",
+      "scanner": "Scanner Settings",
+      "community": "Designated Community",
+      "about": "About",
+      "language": "Language",
+      "backup": "Backup & Restore",
+      "roles": "Role Management",
+      "classification": "Classification Types"
+    }
+  },
+  "backup": {
+    "kicker": "BACKUP · Database Backup",
+    "title": "Backup & Restore",
+    "description": "Download a full database backup or restore from a previous backup file. This section is restricted to system administrators.",
+    "toolsReady": "Database tools are ready",
+    "toolsMissing": "Some database tools are missing on the server",
+    "notFound": "not found",
+    "backupTitle": "Download Backup",
+    "backupDesc": "Export the full database as a SQL file. Schedule regular backups and store them in a secure location.",
+    "downloadBtn": "⬇ Download Backup",
+    "downloading": "Downloading...",
+    "downloadSuccess": "Backup downloaded successfully",
+    "downloadError": "Failed to download backup",
+    "restoreTitle": "Restore Data",
+    "restoreDesc": "Restore the database from a SQL file. Warning: all current data will be replaced with the data in the file.",
+    "restoreBtn": "⬆ Select Restore File (.sql)",
+    "restoring": "Restoring...",
+    "restoreSuccess": "Data restored successfully from {{file}}",
+    "restoreError": "Restore failed",
+    "invalidFile": "File must be a .sql file",
+    "confirmTitle": "Confirm Data Restore",
+    "confirmBody": "All current data in the database will be replaced with the contents of «{{file}}». This cannot be undone. Do you want to continue?",
+    "confirmOk": "Yes, Restore Data",
+    "autoTitle": "Automatic Backup",
+    "autoDesc": "Enable this to run a scheduled backup automatically and save it to a folder on the server.",
+    "autoEnableOn": "Enabled",
+    "autoEnableOff": "Disabled",
+    "pathLabel": "Backup destination path",
+    "pathPlaceholder": "e.g. D:\\Backups\\Archiving",
+    "browseBtn": "Browse",
+    "browseTitle": "Choose Backup Folder",
+    "browseDrives": "Drives",
+    "browseEmpty": "No sub-folders",
+    "browseSelect": "Select This Folder",
+    "browseError": "Could not browse this path",
+    "testPathBtn": "Test path",
+    "testingPath": "Testing...",
+    "pathOk": "✓ Path is writable",
+    "pathError": "Could not write to this path",
+    "intervalLabel": "Backup interval",
+    "every6h": "Every 6 hours",
+    "every12h": "Every 12 hours",
+    "daily": "Daily (24 hours)",
+    "every2days": "Every 2 days",
+    "weekly": "Weekly",
+    "saveAutoBtn": "Save Auto-Backup Settings",
+    "savingAuto": "Saving...",
+    "saveAutoSuccess": "Auto-backup settings saved",
+    "saveAutoError": "Failed to save settings",
+    "lastRunLabel": "Last run",
+    "lastRunNever": "Never run yet",
+    "lastRunSuccess": "Success",
+    "lastRunFailed": "Failed"
+  },
+  "timeline": {
+    "kicker": "TIMELINE · Workflow History",
+    "actions": {
+      "Created": "Created",
+      "Forwarded": "Forwarded",
+      "Approved": "Approved",
+      "Held": "On Hold",
+      "Closed": "Closed",
+      "Archived": "Archived",
+      "SubmittedForApproval": "Submitted for Approval",
+      "Sent": "Sent",
+      "Edited": "Edited"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications.",
+    "markAllRead": "Mark all as read",
+    "loadError": "Failed to load notifications."
+  },
+  "common": {
+    "confidentiality": {
+      "public": "Public",
+      "internal": "Internal",
+      "confidential": "Confidential",
+      "highlyConfidential": "Highly Confidential"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "view": "View",
+      "back": "Back",
+      "search": "Search",
+      "filter": "Filter",
+      "refresh": "Refresh",
+      "download": "Download",
+      "upload": "Upload",
+      "print": "Print",
+      "close": "Close"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{total}}",
+      "count": "{{count}} items"
+    },
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "required": "Required",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "unknown": "Unknown",
+    "mfa": "MFA"
+  }
+}
