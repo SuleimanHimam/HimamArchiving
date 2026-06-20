@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
+import { useTranslation } from 'react-i18next'
 import { documents, type DocumentTypeDto, type OrgUnitDto } from '../../lib/documents'
 import { archive, type PhysicalLocationDto } from '../../lib/archive'
 import { type Confidentiality } from '../../lib/incomingMail'
@@ -10,6 +11,7 @@ import '../incoming/incoming.css'
 const today = new Date().toISOString().slice(0, 10)
 
 export default function DocumentCreatePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [types, setTypes] = useState<DocumentTypeDto[]>([])
   const [units, setUnits] = useState<OrgUnitDto[]>([])
@@ -33,10 +35,9 @@ export default function DocumentCreatePage() {
           owningOrgUnitId: u[0] ? String(u[0].id) : '',
         }))
       })
-      .catch(() => setError('تعذّر تحميل أنواع الوثائق والوحدات التنظيمية'))
-    // Physical locations are optional; ignore if the user can't see them.
+      .catch(() => setError(t('documents.loadError')))
     archive.locations().then(setLocations).catch(() => {})
-  }, [])
+  }, [t])
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -45,7 +46,7 @@ export default function DocumentCreatePage() {
     e.preventDefault()
     setError('')
     if (!form.title || !form.documentTypeId || !form.owningOrgUnitId) {
-      setError('العنوان ونوع الوثيقة والوحدة المالكة حقول مطلوبة'); return
+      setError(t('documents.create.errors.required')); return
     }
     setSaving(true)
     try {
@@ -64,7 +65,7 @@ export default function DocumentCreatePage() {
       navigate(`/app/documents/${created.id}`, { replace: true })
     } catch (err) {
       const ax = err as AxiosError<{ error?: string }>
-      setError(ax.response?.data?.error ?? 'تعذّر إنشاء الوثيقة')
+      setError(ax.response?.data?.error ?? t('documents.create.errors.failed'))
     } finally { setSaving(false) }
   }
 
@@ -72,52 +73,50 @@ export default function DocumentCreatePage() {
     <div>
       <header className="page__head">
         <div>
-          <span className="kicker">NEW · تسجيل وثيقة</span>
-          <h1>تسجيل وثيقة جديدة</h1>
+          <span className="kicker">{t('documents.create.kicker')}</span>
+          <h1>{t('documents.create.title')}</h1>
         </div>
-        <Link to="/app/documents" className="btn btn-ghost">← رجوع للقائمة</Link>
+        <Link to="/app/documents" className="btn btn-ghost">{t('documents.create.back')}</Link>
       </header>
 
-      <motion.form
-        className="doc-card form-card"
-        onSubmit={submit}
-        initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-      >
+      <motion.form className="doc-card form-card" onSubmit={submit} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
         <div className="form-grid">
-          <label className="field field--wide"><span>العنوان *</span>
+          <label className="field field--wide"><span>{t('documents.create.titleField')} *</span>
             <input value={form.title} onChange={set('title')} /></label>
-          <label className="field"><span>نوع الوثيقة *</span>
+          <label className="field"><span>{t('documents.create.type')} *</span>
             <select value={form.documentTypeId} onChange={set('documentTypeId')}>
-              {types.length === 0 && <option value="">— لا توجد أنواع —</option>}
-              {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {types.length === 0 && <option value="">—</option>}
+              {types.map((tp) => <option key={tp.id} value={tp.id}>{tp.name}</option>)}
             </select></label>
-          <label className="field"><span>الوحدة المالكة *</span>
+          <label className="field"><span>{t('documents.columns.category')}</span>
             <select value={form.owningOrgUnitId} onChange={set('owningOrgUnitId')}>
-              {units.length === 0 && <option value="">— لا توجد وحدات —</option>}
+              {units.length === 0 && <option value="">—</option>}
               {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select></label>
-          <label className="field"><span>السرية</span>
+          <label className="field"><span>{t('incoming.columns.confidentiality')}</span>
             <select value={form.confidentiality} onChange={set('confidentiality')}>
-              <option value={0}>عام</option><option value={1}>داخلي</option>
-              <option value={2}>سري</option><option value={3}>سري للغاية</option>
+              <option value={0}>{t('common.confidentiality.public')}</option>
+              <option value={1}>{t('common.confidentiality.internal')}</option>
+              <option value={2}>{t('common.confidentiality.confidential')}</option>
+              <option value={3}>{t('common.confidentiality.highlyConfidential')}</option>
             </select></label>
-          <label className="field"><span>تاريخ الوثيقة</span>
+          <label className="field"><span>{t('documents.columns.date')}</span>
             <input type="date" value={form.documentDate} onChange={set('documentDate')} dir="ltr" /></label>
-          <label className="field field--wide"><span>الكلمات المفتاحية</span>
-            <input value={form.keywords} onChange={set('keywords')} placeholder="مفصولة بمسافات" /></label>
-          <label className="field field--wide"><span>الوصف</span>
+          <label className="field field--wide"><span>{t('incoming.create.keywords')}</span>
+            <input value={form.keywords} onChange={set('keywords')} placeholder={t('incoming.create.keywordsPlaceholder')} /></label>
+          <label className="field field--wide"><span>{t('documents.create.body')}</span>
             <textarea rows={4} value={form.description} onChange={set('description')} /></label>
 
           {locations.length > 0 && (
             <>
-              <label className="field"><span>مكان الحفظ الفيزيائي</span>
+              <label className="field"><span>{t('archive.title')}</span>
                 <select value={form.physicalLocationId} onChange={set('physicalLocationId')}>
-                  <option value="">— غير محدد —</option>
+                  <option value="">—</option>
                   {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                 </select></label>
-              <label className="field"><span>رقم الصندوق</span>
+              <label className="field"><span>{t('archive.fields.code')}</span>
                 <input value={form.boxNumber} onChange={set('boxNumber')} dir="ltr" /></label>
-              <label className="field"><span>رقم الملف</span>
+              <label className="field"><span>{t('archive.fields.name')}</span>
                 <input value={form.fileNumber} onChange={set('fileNumber')} dir="ltr" /></label>
             </>
           )}
@@ -126,8 +125,10 @@ export default function DocumentCreatePage() {
         {error && <p className="login__error">{error}</p>}
 
         <div className="form-actions">
-          <button className="btn btn-primary" disabled={saving}>{saving ? '…جارٍ الحفظ' : 'تسجيل الوثيقة'}</button>
-          <Link to="/app/documents" className="btn btn-ghost">إلغاء</Link>
+          <button className="btn btn-primary" disabled={saving}>
+            {saving ? t('documents.create.submitting') : t('documents.create.submit')}
+          </button>
+          <Link to="/app/documents" className="btn btn-ghost">{t('documents.create.cancel')}</Link>
         </div>
       </motion.form>
     </div>

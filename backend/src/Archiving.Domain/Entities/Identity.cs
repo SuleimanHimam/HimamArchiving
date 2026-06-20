@@ -6,7 +6,18 @@ namespace Archiving.Domain.Entities;
 /// <summary>System account. Captures the mandated minimum: full name, email, phone, department, job title.</summary>
 public class User : SoftDeleteEntity
 {
+    // Full display name — kept in sync with the name parts below.
     public string FullName { get; set; } = string.Empty;
+
+    // Structured name components (Arabic names: اسم + اسم الأب + اسم الجد + اسم العائلة)
+    public string? FirstName  { get; set; }
+    public string? SecondName { get; set; }
+    public string? ThirdName  { get; set; }
+    public string? FamilyName { get; set; }
+
+    public Gender Gender { get; set; } = Gender.NotSpecified;
+    public string? NationalId { get; set; }
+
     public string Email { get; set; } = string.Empty;          // unique, login identifier
     public string? Phone { get; set; }
     public string JobTitle { get; set; } = string.Empty;

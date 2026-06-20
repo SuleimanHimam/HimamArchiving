@@ -35,7 +35,7 @@ public sealed class DocumentsController(
     public async Task<IActionResult> Types(CancellationToken ct) => Ok(await service.ListTypesAsync(ct));
 
     [HttpPost("types")]
-    [HasPermission("Settings.Create")]
+    [HasPermission("Classification.Edit")]
     public async Task<IActionResult> CreateType([FromBody] CreateDocumentTypeRequest req, CancellationToken ct)
     {
         var r = await service.CreateTypeAsync(req, ct);
@@ -47,7 +47,7 @@ public sealed class DocumentsController(
     public async Task<IActionResult> Categories(CancellationToken ct) => Ok(await service.ListCategoriesAsync(ct));
 
     [HttpPost("categories")]
-    [HasPermission("Settings.Create")]
+    [HasPermission("Classification.Edit")]
     public async Task<IActionResult> CreateCategory([FromBody] CreateDocumentCategoryRequest req, CancellationToken ct)
     {
         var r = await service.CreateCategoryAsync(req, ct);

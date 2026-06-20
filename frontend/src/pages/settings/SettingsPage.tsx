@@ -1,37 +1,53 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { auth } from '../../lib/auth'
 import ScannerSettings from '../../components/ScannerSettings'
 import UsersAdmin from '../../components/UsersAdmin'
 import AboutSettings from '../../components/AboutSettings'
 import DesignatedCommunitySettings from '../../components/DesignatedCommunitySettings'
 import PreservationPolicySettings from '../../components/PreservationPolicySettings'
+import BackupSettings from '../../components/BackupSettings'
+import RolesAdmin from '../../components/RolesAdmin'
+import ClassificationSettings from '../../components/ClassificationSettings'
+import BrandingSettings from '../../components/BrandingSettings'
 import '../incoming/incoming.css'
 import './settings.css'
 
 interface Section { key: string; label: string; icon: string; show: boolean; render: () => React.ReactNode }
 
 export default function SettingsPage() {
+  const { t } = useTranslation()
+
   const sections: Section[] = [
-    { key: 'scanner', label: 'الماسحات الضوئية', icon: '⎙', show: true, render: () => <ScannerSettings /> },
-    { key: 'users', label: 'المستخدمون والصلاحيات', icon: '◔', show: auth.hasPermission('Users.View'), render: () => <UsersAdmin /> },
-    { key: 'preservation', label: 'الحفظ الرقمي', icon: '⛁', show: auth.hasPermission('Settings.View'), render: () => (
+    { key: 'branding', label: 'هوية المؤسسة', icon: '◉', show: auth.hasPermission('Organization.View'), render: () => <BrandingSettings /> },
+    { key: 'scanner', label: t('settings.sections.scanner'), icon: '⎙', show: auth.hasPermission('Scanner.View'), render: () => <ScannerSettings /> },
+    { key: 'users', label: t('settings.sections.users'), icon: '◔', show: auth.hasPermission('Users.View'), render: () => <UsersAdmin /> },
+    { key: 'roles', label: t('settings.sections.roles'), icon: '⊙', show: auth.hasPermission('Users.View'), render: () => <RolesAdmin /> },
+    { key: 'classification', label: t('settings.sections.classification'), icon: '◈', show: auth.hasPermission('Classification.View'), render: () => <ClassificationSettings /> },
+    { key: 'preservation', label: t('settings.sections.preservation'), icon: '⛁', show: auth.hasPermission('Preservation.View'), render: () => (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
         <PreservationPolicySettings />
         <DesignatedCommunitySettings />
       </div>
     ) },
-    { key: 'about', label: 'حول النظام', icon: 'ℹ', show: true, render: () => <AboutSettings /> },
+    { key: 'backup', label: t('settings.sections.backup'), icon: '⛃', show: auth.hasPermission('Backup.Edit'), render: () => <BackupSettings /> },
+    { key: 'about', label: t('settings.sections.about'), icon: 'ℹ', show: true, render: () => <AboutSettings /> },
   ].filter((s) => s.show)
 
-  const [active, setActive] = useState(sections[0]?.key ?? 'scanner')
+  const [searchParams] = useSearchParams()
+  const tabFromUrl = searchParams.get('tab')
+  const [active, setActive] = useState(
+    sections.some((s) => s.key === tabFromUrl) ? tabFromUrl! : (sections[0]?.key ?? 'scanner'),
+  )
   const current = sections.find((s) => s.key === active) ?? sections[0]
 
   return (
     <div>
       <header className="page__head">
         <div>
-          <span className="kicker">SETTINGS · الإعدادات</span>
-          <h1>الإعدادات</h1>
+          <span className="kicker">{t('settings.kicker')}</span>
+          <h1>{t('settings.title')}</h1>
         </div>
       </header>
 

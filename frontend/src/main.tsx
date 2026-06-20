@@ -1,6 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './lib/queryClient'
+import './i18n'
 import './styles/tailwind.css'
 import './styles/diwan.css'
 import './styles/print.css'
@@ -20,13 +23,18 @@ import OutgoingDetailPage from './pages/outgoing/OutgoingDetailPage'
 import WorklistPage from './pages/workflow/WorklistPage'
 import ArchivePage from './pages/archive/ArchivePage'
 import ReportsPage from './pages/reports/ReportsPage'
+import MonitoringPage from './pages/monitoring/MonitoringPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ToastProvider } from './components/toast'
+import { loadBranding } from './lib/branding'
+
+loadBranding()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <ToastProvider>
       <Routes>
@@ -54,11 +62,13 @@ createRoot(document.getElementById('root')!).render(
           <Route path="workflow" element={<WorklistPage />} />
           <Route path="archive" element={<ArchivePage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="monitoring" element={<MonitoringPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
       </ToastProvider>
     </BrowserRouter>
+    </QueryClientProvider>
   </StrictMode>,
 )

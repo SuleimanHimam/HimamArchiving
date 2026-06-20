@@ -12,12 +12,14 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// On 401, clear the session (a refresh-token flow can be added here later).
+// On 401/403, clear the session so a stale or permission-less token doesn't block the user.
 api.interceptors.response.use(
   (r) => r,
   (error) => {
-    if (error.response?.status === 401 && auth.isAuthenticated()) {
+    const status = error.response?.status
+    if ((status === 401 || status === 403) && auth.isAuthenticated()) {
       auth.clear()
+      window.location.replace('/login')
     }
     return Promise.reject(error)
   },

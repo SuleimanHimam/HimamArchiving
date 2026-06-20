@@ -87,6 +87,16 @@
 .login__cardhead h2 { margin: .5rem 0 .35rem; }
 .login__cardhead { margin-bottom: 1.6rem; }
 .login__headrow { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.login__headactions { display: flex; align-items: center; gap: .5rem; }
+
+.login__langbtn {
+  font-family: var(--font-mono); font-size: .66rem; font-weight: 700;
+  letter-spacing: .08em; color: var(--brass); background: rgba(176,137,45,.1);
+  border: 1px solid rgba(176,137,45,.4); border-radius: 2px;
+  padding: .25rem .55rem; cursor: pointer; white-space: nowrap;
+  transition: background .18s var(--ease), color .18s var(--ease);
+}
+.login__langbtn:hover { background: rgba(176,137,45,.25); }
 
 .login__autofill {
   font-family: var(--font-mono);

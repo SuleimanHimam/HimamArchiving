@@ -40,20 +40,6 @@
 .agent-offline { color: var(--seal, #7a2e2e); }
 .agent-checking { color: var(--muted, #8a8170); }
 
-.scanner-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
-.scanner-item {
-  display: flex; align-items: center; gap: .7rem;
-  padding: .7rem .9rem; border: 1px solid var(--line, #e4ddcf); border-radius: 8px;
-  cursor: pointer; background: var(--paper, #fbf8f1);
-}
-.scanner-item:hover { border-color: var(--gold, #b89042); }
-.scanner-item.is-selected { border-color: var(--gold, #b89042); background: rgba(184,144,66,.08); }
-.scanner-radio { color: var(--gold, #b89042); font-size: 1.1rem; }
-.scanner-name { flex: 1; font-weight: 600; }
-.scanner-default {
-  font-size: .68rem; padding: .1rem .45rem; border-radius: 4px;
-  background: var(--gold, #b89042); color: #fff;
-}
 
 .agent-help { font-size: .9rem; line-height: 1.7; }
 .agent-help p { margin: .3rem 0; }
@@ -69,6 +55,84 @@
 .role-chip input { accent-color: var(--brass, #b0892d); }
 
 .user-actions { white-space: nowrap; }
+
+/* ── Gender radio group ── */
+.gender-radios {
+  display: flex;
+  gap: 1.2rem;
+  padding: .45rem 0 .2rem;
+}
+.gender-radio {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  cursor: pointer;
+  font-size: .9rem;
+  color: var(--text);
+}
+.gender-radio input[type="radio"] {
+  width: 16px; height: 16px;
+  accent-color: var(--brass);
+  cursor: pointer;
+}
+
+/* ── Auto-email note + reset button ── */
+.email-auto-note {
+  display: block;
+  font-size: .73rem;
+  color: var(--brass);
+  margin-top: .2rem;
+  font-weight: 600;
+}
+.email-auto-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: .72rem; color: var(--brass);
+  padding: 0 .3rem; margin-inline-start: .4rem;
+  text-decoration: underline; font: inherit;
+}
+.email-auto-btn:hover { color: var(--brass-soft); }
+
+/* ── Password match bar ── */
+.pw-match-bar {
+  margin-top: .35rem;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+.pw-match-bar__fill {
+  height: 4px;
+  border-radius: 99px;
+  width: 100%;
+  transition: background .2s;
+}
+.pw-match-bar__label {
+  font-size: .75rem;
+  font-weight: 600;
+  transition: color .2s;
+}
+.pw-match--ok .pw-match-bar__fill,
+.pw-match--ok.pw-match-bar__fill { background: var(--ok, #2f5d3a); }
+.pw-match--ok.pw-match-bar__label { color: var(--ok, #2f5d3a); }
+.pw-match--err .pw-match-bar__fill,
+.pw-match--err.pw-match-bar__fill { background: var(--seal, #9b2226); }
+.pw-match--err.pw-match-bar__label { color: var(--seal, #9b2226); }
 .status-pill.s-active { background: #e2efe4; color: #2f5d3a; }
 .status-pill.s-onhold { background: #f3dede; color: #7a2e2e; }
 .btn-sm { padding: .25rem .6rem; font-size: .8rem; }
+
+/* ── Reset-password modal ── */
+.pwdlg__backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(20,33,61,.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.pwdlg {
+  background: var(--paper, #FBF7EC);
+  border: 1px solid var(--parchment-3);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem 1.6rem;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 24px 60px -16px rgba(20,33,61,.4);
+}
+.pwdlg__sub { font-size: .82rem; color: var(--text-muted); margin: .1rem 0 1rem; }

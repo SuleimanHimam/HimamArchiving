@@ -1,22 +1,19 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'motion/react'
+import { useTranslation } from 'react-i18next'
 import { auth } from '../../lib/auth'
 import { documents, type DocumentListItem, DOC_STATUS_LABELS } from '../../lib/documents'
 import { type PagedResult, CONFIDENTIALITY_LABELS } from '../../lib/incomingMail'
 import { useToast } from '../../components/toast'
 import '../incoming/incoming.css'
 
-const STATUSES = [
-  { v: '', ar: 'كل الحالات' },
-  { v: '0', ar: 'مسودة' }, { v: '1', ar: 'نشطة' }, { v: '2', ar: 'مؤرشفة' },
-  { v: '3', ar: 'بانتظار الإتلاف' }, { v: '4', ar: 'مُتلَفة' },
-]
-
 export default function DocumentsListPage() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState<PagedResult<DocumentListItem> | null>(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') ?? '')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -26,18 +23,26 @@ export default function DocumentsListPage() {
   const wantPrint = useRef(false)
   const toast = useToast()
 
-  // Print once the full register has rendered.
+  const STATUSES = [
+    { v: '', label: t('documents.statuses.all') },
+    { v: '0', label: t('documents.statuses.draft') },
+    { v: '1', label: t('documents.statuses.active') },
+    { v: '2', label: t('documents.statuses.archived') },
+    { v: '3', label: t('documents.statuses.pendingDisposal') },
+    { v: '4', label: t('documents.statuses.disposed') },
+  ]
+
+  const locale = i18n.language === 'ar' ? 'ar' : 'en'
+
   useEffect(() => {
     if (wantPrint.current && printRows) { wantPrint.current = false; window.print() }
   }, [printRows])
 
-  // Fetch every matching document (across pages) and print the register.
   async function printAll() {
     setPrinting(true)
     try {
       const all: DocumentListItem[] = []
       let p = 1
-      // backend caps pageSize at 100; page through until we have them all (sane upper bound).
       for (;;) {
         const res = await documents.list({
           search: search || undefined,
@@ -48,11 +53,11 @@ export default function DocumentsListPage() {
         if (res.items.length === 0 || all.length >= res.totalCount || all.length >= 5000) break
         p++
       }
-      if (all.length === 0) { toast.error('لا توجد وثائق للطباعة'); return }
+      if (all.length === 0) { toast.error(t('documents.empty')); return }
       wantPrint.current = true
       setPrintRows(all)
     } catch {
-      toast.error('تعذّر تجهيز قائمة الطباعة')
+      toast.error(t('documents.loadError'))
     } finally { setPrinting(false) }
   }
 
@@ -66,29 +71,43 @@ export default function DocumentsListPage() {
       })
       setData(res)
     } catch {
-      setError('تعذّر تحميل الوثائق')
+      setError(t('documents.loadError'))
     } finally { setLoading(false) }
-  }, [search, status, page])
+  }, [search, status, page, t])
 
   useEffect(() => { load() }, [load])
+
+  // keep the URL in sync with the search box (and pick up deep-links like /app/documents?search=...)
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') ?? ''
+    if (urlSearch !== search) setSearch(urlSearch)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams)
+    if (search) next.set('search', search); else next.delete('search')
+    setSearchParams(next, { replace: true })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
 
   return (
     <div>
       <header className="page__head">
         <div>
-          <span className="kicker">DOCUMENTS · إدارة الوثائق</span>
-          <h1>الوثائق</h1>
+          <span className="kicker">{t('documents.kicker')}</span>
+          <h1>{t('documents.title')}</h1>
         </div>
         <div className="page__headactions">
           {auth.hasPermission('Documents.Print') && (
             <button className="btn btn-ghost" disabled={printing} onClick={printAll}>
-              {printing ? '…جارٍ التجهيز' : '🖨 طباعة كل الوثائق'}
+              {printing ? t('common.loading') : `🖨 ${t('common.actions.print')}`}
             </button>
           )}
           {auth.hasPermission('Documents.Create') && (
             <>
-              <Link to="/app/documents/scan" className="btn btn-seal">⎙ مسح وثيقة</Link>
-              <Link to="/app/documents/new" className="btn btn-primary">+ وثيقة جديدة</Link>
+              <Link to="/app/documents/scan" className="btn btn-seal">⎙ {t('documents.scanButton')}</Link>
+              <Link to="/app/documents/new" className="btn btn-primary">{t('documents.newButton')}</Link>
             </>
           )}
         </div>
@@ -97,12 +116,12 @@ export default function DocumentsListPage() {
       <div className="filters">
         <input
           className="filters__search"
-          placeholder="بحث برقم الوثيقة، العنوان، الكلمات المفتاحية، أو داخل محتوى الملفات…"
+          placeholder={t('documents.searchPlaceholder')}
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
         />
         <select className="filters__status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }}>
-          {STATUSES.map((s) => <option key={s.v} value={s.v}>{s.ar}</option>)}
+          {STATUSES.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
         </select>
       </div>
 
@@ -112,23 +131,27 @@ export default function DocumentsListPage() {
         <table className="reg-table">
           <thead>
             <tr>
-              <th>رقم الوثيقة</th><th>العنوان</th><th>النوع</th>
-              <th>السرية</th><th>الإصدار</th><th>الحالة</th><th>المكان</th><th>تاريخ الانتهاء</th>
+              <th>{t('documents.columns.title')}</th>
+              <th>{t('documents.columns.type')}</th>
+              <th>{t('documents.columns.confidentiality')}</th>
+              <th>{t('documents.columns.status')}</th>
+              <th>{t('documents.columns.location')}</th>
+              <th>{t('documents.columns.date')}</th>
             </tr>
           </thead>
           <tbody>
             {loading && Array.from({ length: 6 }).map((_, i) => (
               <tr key={`sk${i}`} className="reg-row reg-skel">
-                {Array.from({ length: 8 }).map((_, j) => <td key={j}><span className="skel-bar" /></td>)}
+                {Array.from({ length: 6 }).map((_, j) => <td key={j}><span className="skel-bar" /></td>)}
               </tr>
             ))}
             {!loading && data?.items.length === 0 && (
-              <tr><td colSpan={8} className="reg-empty">
+              <tr><td colSpan={6} className="reg-empty">
                 <div className="empty-state">
                   <span className="empty-state__icon" aria-hidden>▤</span>
-                  <span className="empty-state__text">لا توجد وثائق مطابقة</span>
+                  <span className="empty-state__text">{t('documents.empty')}</span>
                   {auth.hasPermission('Documents.Create') && (
-                    <Link to="/app/documents/new" className="btn btn-ghost btn-sm">+ إنشاء أول وثيقة</Link>
+                    <Link to="/app/documents/new" className="btn btn-ghost btn-sm">{t('documents.newButton')}</Link>
                   )}
                 </div>
               </td></tr>
@@ -137,11 +160,9 @@ export default function DocumentsListPage() {
               const c = CONFIDENTIALITY_LABELS[d.confidentiality] ?? { ar: d.confidentiality, cls: 'internal' }
               return (
                 <tr key={d.id} onClick={() => navigate(`/app/documents/${d.id}`)} className="reg-row">
-                  <td className="mono num">{d.documentNumber}</td>
                   <td className="reg-subject">{d.title}</td>
                   <td>{d.documentTypeName}</td>
                   <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
-                  <td className="mono">v{d.version}</td>
                   <td><span className={`status-pill s-${d.status.toLowerCase()}`}>{DOC_STATUS_LABELS[d.status] ?? d.status}</span></td>
                   <td>{d.physicalLocationName ? `${d.physicalLocationName}${d.boxNumber ? ` · ${d.boxNumber}` : ''}` : '—'}</td>
                   <td className="mono">{d.expiryDate ?? '—'}</td>
@@ -154,31 +175,38 @@ export default function DocumentsListPage() {
 
       {data && data.totalPages > 1 && (
         <div className="pager">
-          <button className="btn btn-ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>السابق</button>
-          <span className="mono">صفحة {page} من {data.totalPages} · {data.totalCount} وثيقة</span>
-          <button className="btn btn-ghost" disabled={page >= data.totalPages} onClick={() => setPage((p) => p + 1)}>التالي</button>
+          <button className="btn btn-ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            {t('common.pagination.previous')}
+          </button>
+          <span className="mono">
+            {t('common.pagination.page', { page, total: data.totalPages })} · {t('common.pagination.count', { count: data.totalCount })}
+          </span>
+          <button className="btn btn-ghost" disabled={page >= data.totalPages} onClick={() => setPage((p) => p + 1)}>
+            {t('common.pagination.next')}
+          </button>
         </div>
       )}
 
-      {/* Print-only full register (populated by "طباعة كل الوثائق"). */}
       {printRows && (
         <div className="print-register">
           <div className="print-header">
-            <h2>سجل الوثائق</h2>
-            <div className="print-sub mono">{printRows.length} وثيقة · {new Date().toLocaleString('ar')}</div>
+            <h2>{t('documents.title')}</h2>
+            <div className="print-sub mono">{printRows.length} · {new Date().toLocaleString(locale)}</div>
             <hr />
           </div>
           <table className="reg-table print-table">
             <thead>
               <tr>
-                <th>رقم الوثيقة</th><th>العنوان</th><th>النوع</th>
-                <th>السرية</th><th>الحالة</th><th>تاريخ الانتهاء</th>
+                <th>{t('documents.columns.title')}</th>
+                <th>{t('documents.columns.type')}</th>
+                <th>{t('documents.columns.confidentiality')}</th>
+                <th>{t('documents.columns.status')}</th>
+                <th>{t('documents.columns.date')}</th>
               </tr>
             </thead>
             <tbody>
               {printRows.map((d) => (
                 <tr key={d.id}>
-                  <td className="mono">{d.documentNumber}</td>
                   <td>{d.title}</td>
                   <td>{d.documentTypeName}</td>
                   <td>{CONFIDENTIALITY_LABELS[d.confidentiality]?.ar ?? d.confidentiality}</td>

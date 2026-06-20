@@ -1,0 +1,195 @@
+.clf-subtitle {
+  font-size: .82rem;
+  color: var(--text-muted);
+  margin: .1rem 0 0;
+}
+.clf-add-btn { display: flex; align-items: center; gap: .35rem; }
+
+/* ── New-item form wrapper ── */
+.clf-new-form {
+  overflow: hidden;
+  margin-bottom: 1rem;
+  border: 1.5px dashed var(--brass);
+  border-radius: var(--radius-lg);
+  padding: .8rem 1rem;
+  background: rgba(176,137,45,.04);
+}
+.clf-new-label {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .82rem; font-weight: 700; color: var(--brass);
+  margin: 0 0 .6rem;
+}
+
+/* ── Classification list ── */
+.clf-list { list-style: none; margin: .4rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+
+.clf-item {
+  border: 1px solid var(--parchment-3);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  overflow: hidden;
+  transition: border-color .12s;
+}
+.clf-item:hover { border-color: var(--parchment-2); }
+.clf-item--inactive { opacity: .55; }
+
+/* Normal row */
+.clf-item__row {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .65rem .85rem;
+}
+.clf-grip { color: var(--text-faint); flex-shrink: 0; cursor: grab; }
+
+.clf-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(0,0,0,.08);
+}
+
+.clf-item__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.clf-item__name {
+  font-size: .92rem; font-weight: 600; color: var(--ink);
+  display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+}
+.clf-item__name-en {
+  font-size: .78rem; color: var(--text-muted); font-weight: 400;
+  font-family: var(--font-mono);
+}
+.clf-system-badge {
+  display: inline-flex; align-items: center; gap: .2rem;
+  font-size: .67rem; font-weight: 600;
+  background: rgba(20,33,61,.08); color: var(--ink-soft);
+  padding: .1rem .35rem; border-radius: 99px;
+}
+.clf-inactive-badge {
+  font-size: .67rem; font-weight: 600;
+  background: rgba(155,34,38,.1); color: var(--seal);
+  padding: .1rem .35rem; border-radius: 99px;
+}
+.clf-item__desc { font-size: .78rem; color: var(--text-muted); }
+.clf-order { font-size: .75rem; color: var(--text-faint); font-family: var(--font-mono); flex-shrink: 0; }
+
+.clf-item__actions { display: flex; gap: .3rem; flex-shrink: 0; }
+.clf-action-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  border: 1px solid var(--parchment-3);
+  border-radius: var(--radius);
+  background: none; cursor: pointer; color: var(--ink-soft);
+  transition: background .12s, border-color .12s, color .12s;
+}
+.clf-action-btn:hover { background: var(--parchment-2); border-color: var(--brass); color: var(--brass); }
+.clf-action-btn--del:hover { background: rgba(155,34,38,.08); border-color: var(--seal); color: var(--seal); }
+.clf-action-btn:disabled { opacity: .4; pointer-events: none; }
+
+/* Edit mode */
+.clf-item__edit { padding: .75rem 1rem; }
+.clf-item__edit-head {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .7rem;
+}
+.clf-edit-label { font-size: .75rem; color: var(--brass); font-weight: 600; }
+
+/* ── Edit / Create form ── */
+.clf-form { display: flex; flex-direction: column; gap: .6rem; }
+.clf-form__row { display: flex; gap: .85rem; align-items: flex-start; flex-wrap: wrap; }
+
+/* Color section */
+.clf-color-wrap { display: flex; flex-direction: column; gap: .4rem; flex-shrink: 0; }
+.clf-color-preview {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-lg);
+  border: 2px solid rgba(0,0,0,.1);
+}
+.clf-swatches {
+  display: flex; flex-wrap: wrap; gap: .25rem;
+  max-width: 130px;
+}
+.clf-swatch {
+  width: 20px; height: 20px;
+  border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; outline: none; flex-shrink: 0;
+  transition: transform .1s;
+}
+.clf-swatch:hover { transform: scale(1.2); }
+.clf-swatch.is-selected { border-color: var(--ink); box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+.clf-swatch--custom {
+  background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.clf-swatch--custom input[type="color"] {
+  opacity: 0; position: absolute; width: 0; height: 0;
+}
+.clf-swatch--custom span { font-size: .6rem; font-weight: 700; color: #fff; pointer-events: none; }
+
+/* Fields section */
+.clf-form__fields { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: .45rem; }
+.clf-field { display: flex; flex-direction: column; gap: .2rem; font-size: .82rem; }
+.clf-field span { font-weight: 600; color: var(--ink-soft); }
+.clf-field input {
+  padding: .4rem .55rem;
+  border: 1px solid var(--parchment-3);
+  border-radius: var(--radius);
+  font: inherit; font-size: .85rem;
+  background: var(--paper);
+  transition: border-color .12s;
+}
+.clf-field input:focus { border-color: var(--brass); outline: none; }
+.clf-field--sm { width: fit-content; }
+
+.clf-form__meta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.clf-active-toggle {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .85rem; cursor: pointer; color: var(--text);
+}
+.clf-active-toggle input[type="checkbox"] { accent-color: var(--brass); width: 15px; height: 15px; cursor: pointer; }
+
+.clf-form__actions { display: flex; gap: .5rem; align-items: center; }
+.clf-form__actions .btn { display: flex; align-items: center; gap: .3rem; }
+
+/* ── Role association section ── */
+.clf-roles-section {
+  border-top: 1px solid var(--parchment-3);
+  padding-top: .65rem;
+  display: flex; flex-direction: column; gap: .45rem;
+}
+.clf-roles-label {
+  display: flex; align-items: center; gap: .35rem;
+  font-size: .82rem; font-weight: 700; color: var(--ink-soft);
+  margin: 0;
+}
+.clf-roles-grid { display: flex; flex-wrap: wrap; gap: .4rem; }
+.clf-role-chip {
+  display: flex; align-items: center; gap: .35rem;
+  padding: .3rem .65rem;
+  border: 1.5px solid var(--parchment-3);
+  border-radius: 99px;
+  font-size: .8rem; font-weight: 500;
+  cursor: pointer; background: var(--paper);
+  transition: border-color .12s, background .12s, color .12s;
+}
+.clf-role-chip input[type="checkbox"] { display: none; }
+.clf-role-chip:hover { border-color: var(--brass); color: var(--brass); }
+.clf-role-chip.is-checked {
+  border-color: var(--brass); background: rgba(176,137,45,.1); color: var(--brass);
+  font-weight: 700;
+}
+.clf-role-chip.is-checked::before { content: '✓ '; }
+.clf-roles-warn { font-size: .75rem; color: var(--seal); margin: 0; }
+
+/* ── Role badges in row view ── */
+.clf-item__roles {
+  display: flex; align-items: center; gap: .3rem; flex-wrap: wrap;
+  margin-top: 2px;
+}
+.clf-roles-icon { color: var(--text-muted); flex-shrink: 0; }
+.clf-role-tag {
+  font-size: .68rem; font-weight: 600;
+  background: rgba(20,33,61,.07); color: var(--ink-soft);
+  padding: .08rem .35rem; border-radius: 99px;
+  white-space: nowrap;
+}
+.clf-no-roles { font-size: .73rem; color: var(--seal); font-style: italic; }
