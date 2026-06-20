@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
+import { Printer } from 'lucide-react'
 import { auth } from '../../lib/auth'
 import { documents, type DocumentDetail, type ScanFormat, DOC_STATUS_LABELS, formatBytes } from '../../lib/documents'
 import { scanAgent } from '../../lib/scanAgent'
@@ -177,6 +178,28 @@ export default function DocumentDetailPage() {
     }
   }
 
+  // Print an attachment on a physical printer via the local agent (the chosen default printer,
+  // or the first one the agent reports). PDFs/images are spooled by the agent on the user's PC.
+  async function printToPrinter(a: DocumentDetail['attachments'][number]) {
+    setBusy(true)
+    try {
+      let printer = scannerSettings.getPrinter()
+      if (!printer) {
+        const st = await scanAgent.status()
+        if (!st) { toast.error('الوكيل المحلي غير مُشغّل — حمّله وشغّله من الإعدادات'); return }
+        printer = st.printers?.[0] ?? null
+        if (!printer) { toast.error('لا توجد طابعة متاحة — اختر طابعة من الإعدادات'); return }
+      }
+      const url = await documents.fetchObjectUrl(docId, a.id, a.contentType)
+      const blob = await (await fetch(url)).blob()
+      URL.revokeObjectURL(url)
+      const r = await scanAgent.print(blob, { printer, ext: a.fileExtension })
+      toast.success(`تمت الطباعة على ${r.printer} (${r.pages} صفحة)`)
+    } catch (err) {
+      toast.error((err as Error).message || 'تعذّر الطباعة على الطابعة')
+    } finally { setBusy(false) }
+  }
+
   // Merge all attachments into one PDF (server-side) and print it in a single job.
   async function printAllAttachments() {
     if (!doc || doc.attachments.length === 0) { toast.error('لا توجد مرفقات للطباعة'); return }
@@ -298,7 +321,11 @@ export default function DocumentDetailPage() {
                 <span className="attach-actions">
                   <span className="attach-size mono">{formatBytes(a.sizeBytes)}</span>
                   {auth.hasPermission('Documents.Print') && (
-                    <button className="attach-view" title="طباعة" onClick={() => printAttachment(a)}>🖨</button>
+                    <button className="attach-view" title="طباعة عبر المتصفح" onClick={() => printAttachment(a)}>🖨</button>
+                  )}
+                  {auth.hasPermission('Documents.Print') && (
+                    <button className="attach-view" title="طباعة على طابعة محلية (عبر الوكيل)" disabled={busy}
+                      onClick={() => printToPrinter(a)}><Printer size={14} /></button>
                   )}
                   <button className="attach-view" title="تنزيل" onClick={() => documents.download(docId, a.id, a.fileName)}>⬇</button>
                   {auth.hasPermission('Documents.Edit') && (

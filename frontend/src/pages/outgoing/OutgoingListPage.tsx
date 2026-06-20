@@ -5,6 +5,12 @@ import { useTranslation } from 'react-i18next'
 import { auth } from '../../lib/auth'
 import { outgoingMail, type OutgoingMailListItem, OUT_STATUS_LABELS } from '../../lib/outgoingMail'
 import { type PagedResult, CONFIDENTIALITY_LABELS, PRIORITY_LABELS } from '../../lib/incomingMail'
+import { useAutoRefresh } from '../../lib/useAutoRefresh'
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel,
+  ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger,
+} from '../../components/ui/context-menu'
+import { Eye, FolderOpen, BadgeCheck, Archive, Copy } from 'lucide-react'
 import '../incoming/incoming.css'
 
 export default function OutgoingListPage() {
@@ -17,6 +23,10 @@ export default function OutgoingListPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const canApprove = auth.hasPermission('OutgoingMail.Approve')
+  const canArchive = auth.hasPermission('OutgoingMail.Archive')
+  const copyNumber = (num: string) => navigator.clipboard.writeText(num).catch(() => {})
+
   const STATUSES = [
     { v: '', label: t('outgoing.statuses.all') },
     { v: '0', label: t('outgoing.statuses.draft') },
@@ -26,19 +36,21 @@ export default function OutgoingListPage() {
     { v: '4', label: t('outgoing.statuses.archived') },
   ]
 
-  const load = useCallback(async () => {
-    setLoading(true); setError('')
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    setError('')
     try {
       setData(await outgoingMail.list({
         search: search || undefined,
         status: status === '' ? undefined : Number(status),
         page, pageSize: 15,
       }))
-    } catch { setError(t('outgoing.loadError')) }
-    finally { setLoading(false) }
+    } catch { if (!silent) setError(t('outgoing.loadError')) }
+    finally { if (!silent) setLoading(false) }
   }, [search, status, page, t])
 
   useEffect(() => { load() }, [load])
+  useAutoRefresh(() => load(true), 30000)
 
   return (
     <div>
@@ -87,15 +99,65 @@ export default function OutgoingListPage() {
             {!loading && data?.items.map((m) => {
               const c = CONFIDENTIALITY_LABELS[m.confidentiality] ?? { ar: m.confidentiality, cls: 'internal' }
               return (
-                <tr key={m.id} onClick={() => navigate(`/app/outgoing/${m.id}`)} className="reg-row">
-                  <td className="mono num">{m.letterNumber}</td>
-                  <td>{m.recipientEntity}</td>
-                  <td className="reg-subject">{m.subject}</td>
-                  <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
-                  <td>{PRIORITY_LABELS[m.priority] ?? m.priority}</td>
-                  <td><span className={`status-pill s-${m.status.toLowerCase()}`}>{OUT_STATUS_LABELS[m.status] ?? m.status}</span></td>
-                  <td className="mono">{m.sentDate ? m.sentDate.slice(0, 10) : '—'}</td>
-                </tr>
+                <ContextMenu key={m.id}>
+                  <ContextMenuTrigger asChild>
+                    <tr
+                      onClick={() => navigate(`/app/outgoing/${m.id}`)}
+                      className="reg-row"
+                      title="انقر للفتح · انقر بالزر الأيمن للإجراءات السريعة"
+                    >
+                      <td className="mono num">{m.letterNumber}</td>
+                      <td>{m.recipientEntity}</td>
+                      <td className="reg-subject">{m.subject}</td>
+                      <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
+                      <td>{PRIORITY_LABELS[m.priority] ?? m.priority}</td>
+                      <td><span className={`status-pill s-${m.status.toLowerCase()}`}>{OUT_STATUS_LABELS[m.status] ?? m.status}</span></td>
+                      <td className="mono">{m.sentDate ? m.sentDate.slice(0, 10) : '—'}</td>
+                    </tr>
+                  </ContextMenuTrigger>
+
+                  <ContextMenuContent className="w-56">
+                    <ContextMenuLabel className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      {m.letterNumber} — {m.recipientEntity}
+                    </ContextMenuLabel>
+                    <ContextMenuSeparator />
+
+                    <ContextMenuItem onSelect={() => navigate(`/app/outgoing/${m.id}`)}>
+                      <Eye className="ml-2 h-4 w-4 opacity-60" />
+                      فتح الخطاب
+                      <ContextMenuShortcut>↵</ContextMenuShortcut>
+                    </ContextMenuItem>
+
+                    <ContextMenuItem onSelect={() => window.open(`/app/outgoing/${m.id}`, '_blank')}>
+                      <FolderOpen className="ml-2 h-4 w-4 opacity-60" />
+                      فتح في نافذة جديدة
+                    </ContextMenuItem>
+
+                    {(canApprove || canArchive) && <ContextMenuSeparator />}
+
+                    {canApprove && (
+                      <ContextMenuItem onSelect={() => navigate(`/app/outgoing/${m.id}`)}>
+                        <BadgeCheck className="ml-2 h-4 w-4 opacity-60" />
+                        اعتماد
+                      </ContextMenuItem>
+                    )}
+
+                    {canArchive && (
+                      <ContextMenuItem onSelect={() => navigate(`/app/outgoing/${m.id}`)}>
+                        <Archive className="ml-2 h-4 w-4 opacity-60" />
+                        أرشفة
+                      </ContextMenuItem>
+                    )}
+
+                    <ContextMenuSeparator />
+
+                    <ContextMenuItem onSelect={() => copyNumber(m.letterNumber)}>
+                      <Copy className="ml-2 h-4 w-4 opacity-60" />
+                      نسخ رقم الخطاب
+                      <ContextMenuShortcut>⌘C</ContextMenuShortcut>
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               )
             })}
           </tbody>

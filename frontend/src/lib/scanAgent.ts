@@ -50,4 +50,21 @@ export const scanAgent = {
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
     return { blob, fileName: `scan-${stamp}.${ext}` }
   },
+
+  // Print a file (PDF or image) on a local printer queue via the agent.
+  async print(file: Blob, opts: { printer?: string | null; ext?: string } = {}): Promise<{ status: string; printer: string; pages: number }> {
+    const params = new URLSearchParams()
+    if (opts.printer) params.set('printer', opts.printer)
+    params.set('ext', (opts.ext ?? 'pdf').replace(/^\./, '').toLowerCase())
+    const res = await fetch(`${BASE}/print?${params.toString()}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: file,
+    })
+    if (!res.ok) {
+      const msg = await res.text().catch(() => '')
+      throw new Error(msg || `فشل الطباعة (${res.status})`)
+    }
+    return (await res.json()) as { status: string; printer: string; pages: number }
+  },
 }

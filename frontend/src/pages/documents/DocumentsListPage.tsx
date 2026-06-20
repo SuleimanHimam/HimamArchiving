@@ -6,6 +6,12 @@ import { auth } from '../../lib/auth'
 import { documents, type DocumentListItem, DOC_STATUS_LABELS } from '../../lib/documents'
 import { type PagedResult, CONFIDENTIALITY_LABELS } from '../../lib/incomingMail'
 import { useToast } from '../../components/toast'
+import { useAutoRefresh } from '../../lib/useAutoRefresh'
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel,
+  ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger,
+} from '../../components/ui/context-menu'
+import { Eye, FolderOpen, Pencil, Copy, Printer } from 'lucide-react'
 import '../incoming/incoming.css'
 
 export default function DocumentsListPage() {
@@ -22,6 +28,10 @@ export default function DocumentsListPage() {
   const [printing, setPrinting] = useState(false)
   const wantPrint = useRef(false)
   const toast = useToast()
+
+  const canEdit = auth.hasPermission('Documents.Edit')
+  const canPrint = auth.hasPermission('Documents.Print')
+  const copyNumber = (num: string) => navigator.clipboard.writeText(num).catch(() => {})
 
   const STATUSES = [
     { v: '', label: t('documents.statuses.all') },
@@ -61,8 +71,9 @@ export default function DocumentsListPage() {
     } finally { setPrinting(false) }
   }
 
-  const load = useCallback(async () => {
-    setLoading(true); setError('')
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    setError('')
     try {
       const res = await documents.list({
         search: search || undefined,
@@ -71,11 +82,12 @@ export default function DocumentsListPage() {
       })
       setData(res)
     } catch {
-      setError(t('documents.loadError'))
-    } finally { setLoading(false) }
+      if (!silent) setError(t('documents.loadError'))
+    } finally { if (!silent) setLoading(false) }
   }, [search, status, page, t])
 
   useEffect(() => { load() }, [load])
+  useAutoRefresh(() => load(true), 30000)
 
   // keep the URL in sync with the search box (and pick up deep-links like /app/documents?search=...)
   useEffect(() => {
@@ -159,14 +171,66 @@ export default function DocumentsListPage() {
             {!loading && data?.items.map((d) => {
               const c = CONFIDENTIALITY_LABELS[d.confidentiality] ?? { ar: d.confidentiality, cls: 'internal' }
               return (
-                <tr key={d.id} onClick={() => navigate(`/app/documents/${d.id}`)} className="reg-row">
-                  <td className="reg-subject">{d.title}</td>
-                  <td>{d.documentTypeName}</td>
-                  <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
-                  <td><span className={`status-pill s-${d.status.toLowerCase()}`}>{DOC_STATUS_LABELS[d.status] ?? d.status}</span></td>
-                  <td>{d.physicalLocationName ? `${d.physicalLocationName}${d.boxNumber ? ` · ${d.boxNumber}` : ''}` : '—'}</td>
-                  <td className="mono">{d.expiryDate ?? '—'}</td>
-                </tr>
+                <ContextMenu key={d.id}>
+                  <ContextMenuTrigger asChild>
+                    <tr
+                      onClick={() => navigate(`/app/documents/${d.id}`)}
+                      className="reg-row"
+                      title="انقر للفتح · انقر بالزر الأيمن للإجراءات السريعة"
+                    >
+                      <td className="reg-subject">{d.title}</td>
+                      <td>{d.documentTypeName}</td>
+                      <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
+                      <td><span className={`status-pill s-${d.status.toLowerCase()}`}>{DOC_STATUS_LABELS[d.status] ?? d.status}</span></td>
+                      <td>{d.physicalLocationName ? `${d.physicalLocationName}${d.boxNumber ? ` · ${d.boxNumber}` : ''}` : '—'}</td>
+                      <td className="mono">{d.expiryDate ?? '—'}</td>
+                    </tr>
+                  </ContextMenuTrigger>
+
+                  <ContextMenuContent className="w-56">
+                    <ContextMenuLabel className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      {d.documentNumber} — {d.title}
+                    </ContextMenuLabel>
+                    <ContextMenuSeparator />
+
+                    <ContextMenuItem onSelect={() => navigate(`/app/documents/${d.id}`)}>
+                      <Eye className="ml-2 h-4 w-4 opacity-60" />
+                      فتح الوثيقة
+                      <ContextMenuShortcut>↵</ContextMenuShortcut>
+                    </ContextMenuItem>
+
+                    <ContextMenuItem onSelect={() => window.open(`/app/documents/${d.id}`, '_blank')}>
+                      <FolderOpen className="ml-2 h-4 w-4 opacity-60" />
+                      فتح في نافذة جديدة
+                    </ContextMenuItem>
+
+                    {canEdit && (
+                      <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onSelect={() => navigate(`/app/documents/${d.id}/edit`)}>
+                          <Pencil className="ml-2 h-4 w-4 opacity-60" />
+                          تعديل
+                        </ContextMenuItem>
+                      </>
+                    )}
+
+                    <ContextMenuSeparator />
+
+                    <ContextMenuItem onSelect={() => copyNumber(d.documentNumber)}>
+                      <Copy className="ml-2 h-4 w-4 opacity-60" />
+                      نسخ رقم الوثيقة
+                      <ContextMenuShortcut>⌘C</ContextMenuShortcut>
+                    </ContextMenuItem>
+
+                    {canPrint && (
+                      <ContextMenuItem onSelect={() => navigate(`/app/documents/${d.id}`)}>
+                        <Printer className="ml-2 h-4 w-4 opacity-60" />
+                        طباعة
+                        <ContextMenuShortcut>⌘P</ContextMenuShortcut>
+                      </ContextMenuItem>
+                    )}
+                  </ContextMenuContent>
+                </ContextMenu>
               )
             })}
           </tbody>

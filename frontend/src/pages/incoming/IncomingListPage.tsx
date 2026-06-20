@@ -10,6 +10,7 @@ import {
   incomingMail, type IncomingMailListItem, type PagedResult,
   CONFIDENTIALITY_LABELS, STATUS_LABELS, PRIORITY_LABELS,
 } from '../../lib/incomingMail'
+import { useAutoRefresh } from '../../lib/useAutoRefresh'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -46,8 +47,9 @@ export default function IncomingListPage() {
     { v: '5', label: t('incoming.statuses.archived') },
   ]
 
-  const load = useCallback(async () => {
-    setLoading(true); setError('')
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    setError('')
     try {
       const res = await incomingMail.list({
         search: search || undefined,
@@ -56,11 +58,12 @@ export default function IncomingListPage() {
       })
       setData(res)
     } catch {
-      setError(t('incoming.loadError'))
-    } finally { setLoading(false) }
+      if (!silent) setError(t('incoming.loadError'))
+    } finally { if (!silent) setLoading(false) }
   }, [search, status, page, t])
 
   useEffect(() => { load() }, [load])
+  useAutoRefresh(() => load(true), 30000)
 
   function copyNumber(num: string) {
     navigator.clipboard.writeText(num).catch(() => {})

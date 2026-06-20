@@ -28,7 +28,7 @@ export default function AboutSettings() {
       <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2.5 text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="contents">
-            <dt className="text-muted">{label}</dt>
+            <dt className="text-muted-foreground">{label}</dt>
             <dd className="text-ink-text">{value}</dd>
           </div>
         ))}

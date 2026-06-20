@@ -19,7 +19,7 @@
   --color-parchment-2: #ebdfc4;
   --color-parchment-3: #e2d3b2;
   --color-ink-text: #211d17;
-  --color-muted: #6e6552;
+  --color-muted: #ebdfc4;   /* light surface (shadcn bg-muted); muted TEXT is --color-muted-foreground */
   --color-faint: #9a8f78;
   --color-ok: #2f5d3a;
   --color-warn: #9a6312;
@@ -42,4 +42,12 @@
   --color-muted-foreground:    #6e6552;   /* muted */
   --color-destructive:         #9b2226;   /* seal */
   --color-destructive-foreground: #fbf7ec;
+  --color-card:                #fffdf6;   /* near-paper surface */
+  --color-card-foreground:     #211d17;   /* ink-text */
+  --color-primary:             #14213d;   /* ink */
+  --color-primary-foreground:  #fbf7ec;   /* paper */
+  --color-secondary:           #ebdfc4;   /* parchment-2 */
+  --color-secondary-foreground: #14213d;  /* ink */
+  --color-input:               #e2d3b2;   /* parchment-3 */
+  --color-ring:                #b0892d;   /* brass */
 }

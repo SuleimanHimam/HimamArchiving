@@ -8,8 +8,9 @@ using System.Text.Json;
 // cloud-hosted web app can acquire scans. Browsers allow an HTTPS page to call http://127.0.0.1, so
 // this works even though the system itself is in the cloud.
 //
-//   GET  /status            -> { "status":"ok", "scanners":[ "..." ], "mock": bool }
-//   POST /scan  {format}     -> binary body of the scan (application/pdf | image/jpeg)
+//   GET  /status                       -> { "status":"ok", "scanners":[..], "printers":[..], "mock": bool }
+//   POST /scan  {format}                -> binary body of the scan (application/pdf | image/jpeg)
+//   POST /print?printer=..&ext=pdf      -> body = file bytes; prints to the queue -> { "status":"printed", pages }
 //
 // Run:  archiving-scan-agent            (real scanner via Windows WIA)
 //       archiving-scan-agent --mock     (no scanner needed; returns a sample page — for testing the pipeline)
@@ -48,7 +49,28 @@ static async Task HandleAsync(HttpListenerContext ctx, bool mock)
         if (req.HttpMethod == "GET" && req.Url?.AbsolutePath == "/status")
         {
             var scanners = mock ? new[] { "Mock Scanner" } : SafeListScanners();
-            await WriteJsonAsync(res, new { status = "ok", scanners, mock });
+            var printers = mock ? new[] { "Mock Printer" } : SafeListPrinters();
+            await WriteJsonAsync(res, new { status = "ok", scanners, printers, mock });
+            return;
+        }
+
+        if (req.HttpMethod == "POST" && req.Url?.AbsolutePath == "/print")
+        {
+            var printer = req.QueryString["printer"];
+            var ext = (req.QueryString["ext"] ?? "pdf").Trim().ToLowerInvariant();
+
+            using var ms = new MemoryStream();
+            await req.InputStream.CopyToAsync(ms);
+            var data = ms.ToArray();
+            if (data.Length == 0)
+            {
+                res.StatusCode = 400;
+                await WriteJsonAsync(res, new { error = "لا يوجد ملف للطباعة" });
+                return;
+            }
+
+            var pages = mock ? 1 : Print.PrintFile(data, ext, printer);
+            await WriteJsonAsync(res, new { status = "printed", printer = printer ?? "(افتراضية)", pages });
             return;
         }
 
@@ -121,5 +143,11 @@ static async Task<(string Format, string? Scanner)> ReadScanRequestAsync(HttpLis
 static string[] SafeListScanners()
 {
     try { return Wia.ListScanners(); }
+    catch { return Array.Empty<string>(); }
+}
+
+static string[] SafeListPrinters()
+{
+    try { return Print.ListPrinters(); }
     catch { return Array.Empty<string>(); }
 }

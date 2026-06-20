@@ -10,4 +10,11 @@
     <EnableComHosting>false</EnableComHosting>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Printing: enumerate queues + render/print pages. PDFtoImage rasterizes PDFs so the
+         agent prints them without any external app (System.Drawing handles spooling). -->
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+    <PackageReference Include="PDFtoImage" Version="5.2.1" />
+  </ItemGroup>
+
 </Project>
