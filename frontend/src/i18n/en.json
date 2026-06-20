@@ -22,7 +22,8 @@
     "monitoring": "Activity Log",
     "settings": "Settings",
     "logout": "Log Out",
-    "menu": "Menu"
+    "menu": "Menu",
+    "notes": "Notepad"
   },
   "auth": {
     "login": "Sign In",

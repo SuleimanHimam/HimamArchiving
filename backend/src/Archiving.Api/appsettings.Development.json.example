@@ -16,5 +16,7 @@
   "Fixity": { "IntervalMinutes": 1440, "BatchSize": 50 },
   "Search": { "IndexingEnabled": true, "OcrEnabled": true, "OcrLanguages": "ara+eng", "BatchSize": 5, "IdleSeconds": 60 },
   "Downloads": { "ScanAgentPath": "C:\\path\\to\\tools\\scan-agent\\publish\\archiving-scan-agent.exe" },
-  "Preservation": { "VeraPdfPath": "" }
+  "Preservation": { "VeraPdfPath": "" },
+  "//Storage": "Set EncryptionKey to a 32-byte base64 value to encrypt stored files at rest (AES-256). Leave empty to store plaintext.",
+  "Storage": { "RootPath": "", "EncryptionKey": "" }
 }

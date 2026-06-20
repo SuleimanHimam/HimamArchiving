@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
+import { BellRing } from 'lucide-react'
 import { type NotificationDto } from '../lib/notifications'
 import {
   useNotifications, useUnreadCount, useMarkRead, useMarkAllRead,
@@ -61,7 +62,7 @@ export default function NotificationBell() {
   return (
     <div className="bell" ref={ref}>
       <button className="bell__btn" onClick={toggle} title={t('notifications.title')} aria-label={t('notifications.title')}>
-        <span className="bell__icon">🔔</span>
+        <span className="bell__icon"><BellRing size={19} strokeWidth={1.75} /></span>
         {unread > 0 && <span className="bell__badge">{unread > 99 ? '99+' : unread}</span>}
       </button>
 

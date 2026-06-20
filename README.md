@@ -81,6 +81,15 @@ Config (all optional, under `Search`): `IndexingEnabled` (true), `BatchSize` (5)
 `OcrEnabled` (true), `OcrLanguages` ("ara+eng"), `OcrDpi` (200), `OcrMaxPages` (30),
 `EmbeddedTextMinChars` (12), `TessDataPath` (defaults to the app's `tessdata` folder).
 
+## Per-user productivity features
+- **Favorites** — star any document; filter the list to favorites (`★`).
+- **Personal folders** — organize your documents into folders (filter by folder; move a document via its detail page).
+- **Sharing** — share a document with specific users (view, or view+edit); "shared with me" filter. Shared users get access regardless of ownership (still bounded by clearance is bypassed only via an explicit share).
+- **Notepad** — a per-user notes page (الـمفكّرة).
+- **Advanced search** — by number/title/keywords, **inside file content (OCR)**, **attachment file names**, plus filters for status, **date range**, folder, favorites and shared-with-me.
+- **Export / ZIP** — download a single document's files as a ZIP, or export many documents (optionally favorites / a folder) as one ZIP with a manifest.
+- **Encryption at rest** — set a 32-byte base64 `Storage:EncryptionKey` to transparently AES-256 encrypt stored files; the recorded checksum stays over the plaintext so fixity/OCR/preservation/download keep working. Existing plaintext files keep opening (magic-header detection).
+
 ## Configuration (local setup)
 Secrets are **not** committed. `appsettings.json` ships with placeholders; real local values live in a
 gitignored override. After cloning:

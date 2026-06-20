@@ -28,10 +28,11 @@ export default function DocumentScanPage() {
   useEffect(() => {
     Promise.all([documents.types(), documents.orgUnits()])
       .then(([t, u]) => {
-        setTypes(t); setUnits(u)
+        const active = t.filter((x) => x.isActive)
+        setTypes(active); setUnits(u)
         setForm((f) => ({
           ...f,
-          documentTypeId: t[0] ? String(t[0].id) : '',
+          documentTypeId: active[0] ? String(active[0].id) : '',
           owningOrgUnitId: u[0] ? String(u[0].id) : '',
         }))
       })

@@ -16,6 +16,7 @@ public class Institution : BaseEntity
     public string? Phone { get; set; }
     public string? Email { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? HiddenNavKeys { get; set; }        // CSV of navbar section keys hidden for all users
 
     public ICollection<OrgUnit> OrgUnits { get; set; } = new List<OrgUnit>();
 }

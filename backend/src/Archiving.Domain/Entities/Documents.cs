@@ -54,6 +54,8 @@ public class Document : SoftDeleteEntity
     public long? ParentDocumentId { get; set; }
     public bool IsLatestVersion { get; set; } = true;
 
+    public long? FolderId { get; set; }                        // optional personal folder of the creator
+
     public DocumentType DocumentType { get; set; } = null!;
     public DocumentCategory? Category { get; set; }
     public OrgUnit OwningOrgUnit { get; set; } = null!;
@@ -74,6 +76,10 @@ public class DocumentAttachment : BaseEntity
     public string ChecksumAlgorithm { get; set; } = "SHA-256"; // ISO 16363 — algorithm used for the fixity value
     public DateTime? LastFixityCheckAt { get; set; }           // last time the stored file was re-verified
     public bool IsScanned { get; set; }
+
+    // Encryption at rest (optional): when set, the stored bytes are AES-encrypted with this IV.
+    public bool IsEncrypted { get; set; }
+    public string? EncryptionIv { get; set; }
 
     // Full-text search (extracted from the file: embedded PDF text or OCR for scans)
     public string? ExtractedText { get; set; }                 // searchable text content

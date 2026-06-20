@@ -24,6 +24,19 @@ export interface DocumentCategoryDto {
   isActive: boolean
 }
 
+// UploadSource flags: Scanner=1, Pdf=2, Image=4, AnyFile=8, All=15
+export interface DocumentTypeInput {
+  name: string
+  nameEn?: string | null
+  code?: string | null
+  categoryId?: number | null
+  defaultConfidentiality: number
+  retentionMonths: number
+  requiresApproval: boolean
+  allowedUploadSources: number
+  isActive?: boolean
+}
+
 export interface DocumentListItem {
   id: number
   documentNumber: string
@@ -62,6 +75,8 @@ export interface DocumentDetail extends DocumentListItem {
   isLatestVersion: boolean
   attachments: DocumentAttachmentDto[]
   physicalLocationId: number | null
+  folderId: number | null
+  isFavorite: boolean
   // physicalLocationName, boxNumber, fileNumber inherited from DocumentListItem
 }
 
@@ -93,7 +108,8 @@ export interface OrgUnitDto {
 }
 
 export const documents = {
-  list: (params: { search?: string; status?: number; documentTypeId?: number; page?: number; pageSize?: number }) =>
+  list: (params: { search?: string; status?: number; documentTypeId?: number; page?: number; pageSize?: number;
+    dateFrom?: string; dateTo?: string; favoritesOnly?: boolean; sharedWithMe?: boolean; folderId?: number }) =>
     api.get<PagedResult<DocumentListItem>>('/documents', { params }).then((r) => r.data),
 
   get: (id: number) => api.get<DocumentDetail>(`/documents/${id}`).then((r) => r.data),
@@ -106,9 +122,13 @@ export const documents = {
   remove: (id: number) => api.delete(`/documents/${id}`),
 
   types: () => api.get<DocumentTypeDto[]>('/documents/types').then((r) => r.data),
+  createType: (body: DocumentTypeInput) => api.post<DocumentTypeDto>('/documents/types', body).then((r) => r.data),
+  updateType: (id: number, body: DocumentTypeInput) => api.put<DocumentTypeDto>(`/documents/types/${id}`, body).then((r) => r.data),
+  deleteType: (id: number) => api.delete(`/documents/types/${id}`),
   categories: () => api.get<DocumentCategoryDto[]>('/documents/categories').then((r) => r.data),
 
   orgUnits: () => api.get<OrgUnitDto[]>('/organization/org-units').then((r) => r.data),
+  users: () => api.get<{ id: number; fullName: string; email: string }[]>('/organization/users').then((r) => r.data),
 
   upload: (id: number, file: File) => {
     const fd = new FormData()

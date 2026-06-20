@@ -42,10 +42,45 @@ public sealed class DocumentService(
         db.DocumentTypes.Add(e);
         await db.SaveChangesAsync(ct);
         await audit.WriteAsync("Created", "DocumentType", e.Id, e.Name, ct: ct);
-        return Result<DocumentTypeDto>.Ok(new DocumentTypeDto(e.Id, e.Name, e.NameEn, e.Code, e.CategoryId,
-            e.DefaultConfidentiality.ToString(), e.RetentionMonths, e.RequiresApproval,
-            e.AllowedUploadSources.ToString(), e.IsActive));
+        return Result<DocumentTypeDto>.Ok(ToTypeDto(e));
     }
+
+    public async Task<Result<DocumentTypeDto>> UpdateTypeAsync(long id, UpdateDocumentTypeRequest r, CancellationToken ct = default)
+    {
+        var e = await db.DocumentTypes.FirstOrDefaultAsync(t => t.Id == id, ct);
+        if (e is null) return Result<DocumentTypeDto>.Fail("نوع الوثيقة غير موجود");
+        if (string.IsNullOrWhiteSpace(r.Name)) return Result<DocumentTypeDto>.Fail("اسم النوع مطلوب");
+        if (r.CategoryId is { } cid && !await db.DocumentCategories.AnyAsync(c => c.Id == cid, ct))
+            return Result<DocumentTypeDto>.Fail("التصنيف غير موجود");
+
+        e.Name = r.Name; e.NameEn = r.NameEn; e.Code = r.Code; e.CategoryId = r.CategoryId;
+        e.DefaultConfidentiality = r.DefaultConfidentiality;
+        e.RetentionMonths = r.RetentionMonths <= 0 ? 120 : r.RetentionMonths;
+        e.RequiresApproval = r.RequiresApproval;
+        e.AllowedUploadSources = r.AllowedUploadSources == UploadSource.None ? UploadSource.All : r.AllowedUploadSources;
+        e.IsActive = r.IsActive;
+        await db.SaveChangesAsync(ct);
+        await audit.WriteAsync("Edited", "DocumentType", e.Id, e.Name, ct: ct);
+        return Result<DocumentTypeDto>.Ok(ToTypeDto(e));
+    }
+
+    public async Task<Result<bool>> DeleteTypeAsync(long id, CancellationToken ct = default)
+    {
+        var e = await db.DocumentTypes.FirstOrDefaultAsync(t => t.Id == id, ct);
+        if (e is null) return Result<bool>.Fail("نوع الوثيقة غير موجود");
+        if (await db.Documents.AnyAsync(d => d.DocumentTypeId == id, ct))
+            return Result<bool>.Fail("لا يمكن حذف نوع مستخدم في وثائق — يمكنك تعطيله بدلاً من ذلك");
+
+        db.DocumentTypes.Remove(e);
+        await db.SaveChangesAsync(ct);
+        await audit.WriteAsync("Deleted", "DocumentType", e.Id, e.Name, ct: ct);
+        return Result<bool>.Ok(true);
+    }
+
+    private static DocumentTypeDto ToTypeDto(DocumentType e) => new(
+        e.Id, e.Name, e.NameEn, e.Code, e.CategoryId,
+        e.DefaultConfidentiality.ToString(), e.RetentionMonths, e.RequiresApproval,
+        e.AllowedUploadSources.ToString(), e.IsActive);
 
     // ---- Categories ----
 
@@ -80,16 +115,24 @@ public sealed class DocumentService(
         if (query.Status is { } status) q = q.Where(d => d.Status == status);
         if (query.DocumentTypeId is { } typeId) q = q.Where(d => d.DocumentTypeId == typeId);
         if (query.OwningOrgUnitId is { } unitId) q = q.Where(d => d.OwningOrgUnitId == unitId);
+        if (query.DateFrom is { } df) q = q.Where(d => d.DocumentDate >= df);
+        if (query.DateTo is { } dt) q = q.Where(d => d.DocumentDate <= dt);
+        if (query.FolderId is { } folderId) q = q.Where(d => d.FolderId == folderId);
+        if (query.FavoritesOnly)
+            q = q.Where(d => db.DocumentFavorites.Any(f => f.DocumentId == d.Id && f.UserId == currentUser.UserId));
+        if (query.SharedWithMe)
+            q = q.Where(d => db.DocumentShares.Any(sh => sh.DocumentId == d.Id && sh.SharedWithUserId == currentUser.UserId));
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var s = query.Search.Trim();
-            // Match words *inside* files via the MySQL full-text index, plus the usual metadata fields.
+            // Match words *inside* files via the MySQL full-text index, plus metadata and attachment file names.
             var contentDocIds = await db.Database
                 .SqlQuery<long>($"SELECT DISTINCT DocumentId AS Value FROM DocumentAttachments WHERE MATCH(ExtractedText) AGAINST({s} IN NATURAL LANGUAGE MODE)")
                 .ToListAsync(ct);
             q = q.Where(d => d.DocumentNumber.Contains(s) || d.Title.Contains(s)
                 || (d.Keywords != null && d.Keywords.Contains(s))
+                || d.Attachments.Any(a => a.FileName.Contains(s))
                 || contentDocIds.Contains(d.Id));
         }
 
@@ -117,8 +160,10 @@ public sealed class DocumentService(
         var doc = await db.Documents.Include(d => d.DocumentType).Include(d => d.Attachments)
             .FirstOrDefaultAsync(d => d.Id == id, ct);
         if (doc is null) return Result<DocumentDetail>.Fail("الوثيقة غير موجودة");
-        if (!CanAccess(doc)) return Result<DocumentDetail>.Fail("لا تملك صلاحية الوصول لهذه الوثيقة");
-        return Result<DocumentDetail>.Ok(WithPhysical(ToDetail(doc), await GetPhysicalItemAsync(doc.Id, ct)));
+        if (!await CanAccessAsync(doc, ct)) return Result<DocumentDetail>.Fail("لا تملك صلاحية الوصول لهذه الوثيقة");
+        var isFav = await db.DocumentFavorites.AnyAsync(f => f.DocumentId == id && f.UserId == currentUser.UserId, ct);
+        var detail = WithPhysical(ToDetail(doc), await GetPhysicalItemAsync(doc.Id, ct)) with { FolderId = doc.FolderId, IsFavorite = isFav };
+        return Result<DocumentDetail>.Ok(detail);
     }
 
     public async Task<Result<DocumentDetail>> CreateAsync(CreateDocumentRequest r, CancellationToken ct = default)
@@ -272,7 +317,7 @@ public sealed class DocumentService(
     {
         var doc = await db.Documents.FirstOrDefaultAsync(d => d.Id == documentId, ct);
         if (doc is null) return Result<AttachmentDownload>.Fail("الوثيقة غير موجودة");
-        if (!CanAccess(doc)) return Result<AttachmentDownload>.Fail("لا تملك صلاحية الوصول لهذه الوثيقة");
+        if (!await CanAccessAsync(doc, ct)) return Result<AttachmentDownload>.Fail("لا تملك صلاحية الوصول لهذه الوثيقة");
 
         var att = await db.DocumentAttachments.FirstOrDefaultAsync(a => a.Id == attachmentId && a.DocumentId == documentId, ct);
         if (att is null) return Result<AttachmentDownload>.Fail("المرفق غير موجود");
@@ -303,6 +348,10 @@ public sealed class DocumentService(
     // ---- helpers ----
 
     private bool CanAccess(Document d) => (int)d.Confidentiality <= (int)currentUser.Clearance;
+
+    // Clearance access, or the document was explicitly shared with the current user.
+    private async Task<bool> CanAccessAsync(Document d, CancellationToken ct) =>
+        CanAccess(d) || await db.DocumentShares.AnyAsync(s => s.DocumentId == d.Id && s.SharedWithUserId == currentUser.UserId, ct);
 
     private static DateOnly? ComputeExpiry(DateOnly? documentDate, int retentionMonths) =>
         documentDate is { } date && retentionMonths > 0 ? date.AddMonths(retentionMonths) : null;

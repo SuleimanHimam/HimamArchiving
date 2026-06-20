@@ -7,6 +7,7 @@ import { documents, type DocumentListItem, DOC_STATUS_LABELS } from '../../lib/d
 import { type PagedResult, CONFIDENTIALITY_LABELS } from '../../lib/incomingMail'
 import { useToast } from '../../components/toast'
 import { useAutoRefresh } from '../../lib/useAutoRefresh'
+import { foldersApi, exportApi, type Folder } from '../../lib/userFeatures'
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel,
   ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger,
@@ -21,11 +22,18 @@ export default function DocumentsListPage() {
   const [data, setData] = useState<PagedResult<DocumentListItem> | null>(null)
   const [search, setSearch] = useState(searchParams.get('search') ?? '')
   const [status, setStatus] = useState('')
+  const [favOnly, setFavOnly] = useState(false)
+  const [sharedOnly, setSharedOnly] = useState(false)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [folderId, setFolderId] = useState('')
+  const [folders, setFolders] = useState<Folder[]>([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [printRows, setPrintRows] = useState<DocumentListItem[] | null>(null)
   const [printing, setPrinting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const wantPrint = useRef(false)
   const toast = useToast()
 
@@ -78,16 +86,29 @@ export default function DocumentsListPage() {
       const res = await documents.list({
         search: search || undefined,
         status: status === '' ? undefined : Number(status),
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        favoritesOnly: favOnly || undefined,
+        sharedWithMe: sharedOnly || undefined,
+        folderId: folderId ? Number(folderId) : undefined,
         page, pageSize: 15,
       })
       setData(res)
     } catch {
       if (!silent) setError(t('documents.loadError'))
     } finally { if (!silent) setLoading(false) }
-  }, [search, status, page, t])
+  }, [search, status, dateFrom, dateTo, favOnly, sharedOnly, folderId, page, t])
 
   useEffect(() => { load() }, [load])
   useAutoRefresh(() => load(true), 30000)
+  useEffect(() => { foldersApi.list().then(setFolders).catch(() => {}) }, [])
+
+  async function exportAll() {
+    setExporting(true)
+    try { await exportApi.exportAll({ favoritesOnly: favOnly || undefined, folderId: folderId ? Number(folderId) : undefined }) }
+    catch { toast.error(t('documents.loadError')) }
+    finally { setExporting(false) }
+  }
 
   // keep the URL in sync with the search box (and pick up deep-links like /app/documents?search=...)
   useEffect(() => {
@@ -111,21 +132,21 @@ export default function DocumentsListPage() {
           <h1>{t('documents.title')}</h1>
         </div>
         <div className="page__headactions">
+          <button className="btn btn-ghost" disabled={exporting} onClick={exportAll} title="تصدير الوثائق كملف مضغوط">
+            {exporting ? '…' : '⬇ تصدير ZIP'}
+          </button>
           {auth.hasPermission('Documents.Print') && (
             <button className="btn btn-ghost" disabled={printing} onClick={printAll}>
               {printing ? t('common.loading') : `🖨 ${t('common.actions.print')}`}
             </button>
           )}
           {auth.hasPermission('Documents.Create') && (
-            <>
-              <Link to="/app/documents/scan" className="btn btn-seal">⎙ {t('documents.scanButton')}</Link>
-              <Link to="/app/documents/new" className="btn btn-primary">{t('documents.newButton')}</Link>
-            </>
+            <Link to="/app/documents/new" className="btn btn-primary">{t('documents.newButton')}</Link>
           )}
         </div>
       </header>
 
-      <div className="filters">
+      <div className="filters" style={{ flexWrap: 'wrap', gap: '.5rem' }}>
         <input
           className="filters__search"
           placeholder={t('documents.searchPlaceholder')}
@@ -135,6 +156,23 @@ export default function DocumentsListPage() {
         <select className="filters__status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }}>
           {STATUSES.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
         </select>
+        <select className="filters__status" value={folderId} onChange={(e) => { setFolderId(e.target.value); setPage(1) }} title="المجلد">
+          <option value="">كل المجلدات</option>
+          {folders.map((f) => <option key={f.id} value={f.id}>{f.name} ({f.documentCount})</option>)}
+        </select>
+        <button className="btn btn-ghost btn-sm" title="إنشاء مجلد" onClick={async () => {
+          const name = window.prompt('اسم المجلد الجديد')?.trim()
+          if (!name) return
+          try { await foldersApi.create({ name }); setFolders(await foldersApi.list()) } catch { toast.error('تعذّر إنشاء المجلد') }
+        }}>+ مجلد</button>
+        <input type="date" className="filters__status" dir="ltr" value={dateFrom} title="من تاريخ"
+          onChange={(e) => { setDateFrom(e.target.value); setPage(1) }} />
+        <input type="date" className="filters__status" dir="ltr" value={dateTo} title="إلى تاريخ"
+          onChange={(e) => { setDateTo(e.target.value); setPage(1) }} />
+        <button className={`btn btn-sm ${favOnly ? 'btn-primary' : 'btn-ghost'}`}
+          onClick={() => { setFavOnly((v) => !v); setPage(1) }}>★ المفضلة</button>
+        <button className={`btn btn-sm ${sharedOnly ? 'btn-primary' : 'btn-ghost'}`}
+          onClick={() => { setSharedOnly((v) => !v); setPage(1) }}>👥 مشاركة معي</button>
       </div>
 
       {error && <p className="login__error">{error}</p>}

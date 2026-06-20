@@ -136,3 +136,9 @@
   box-shadow: 0 24px 60px -16px rgba(20,33,61,.4);
 }
 .pwdlg__sub { font-size: .82rem; color: var(--text-muted); margin: .1rem 0 1rem; }
+
+/* Navbar visibility toggles (Settings → القائمة الجانبية) */
+.nav-toggle-list { list-style: none; margin: .6rem 0 1rem; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+.nav-toggle { display: flex; align-items: center; gap: .7rem; padding: .55rem .85rem; border: 1px solid var(--color-border, #e2d3b2); border-radius: 6px; cursor: pointer; }
+.nav-toggle input { width: 1.05rem; height: 1.05rem; cursor: pointer; }
+.nav-toggle > span:first-of-type { flex: 1; }

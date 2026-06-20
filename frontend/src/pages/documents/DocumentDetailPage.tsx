@@ -6,6 +6,8 @@ import { auth } from '../../lib/auth'
 import { documents, type DocumentDetail, type ScanFormat, DOC_STATUS_LABELS, formatBytes } from '../../lib/documents'
 import { scanAgent } from '../../lib/scanAgent'
 import { scannerSettings } from '../../lib/scannerSettings'
+import { archive, type PhysicalLocationDto } from '../../lib/archive'
+import { favoritesApi, sharingApi, exportApi, foldersApi, type Share, type Folder } from '../../lib/userFeatures'
 import { CONFIDENTIALITY_LABELS } from '../../lib/incomingMail'
 import { useToast } from '../../components/toast'
 import PreservationPackagesPanel from '../../components/PreservationPackagesPanel'
@@ -28,6 +30,15 @@ export default function DocumentDetailPage() {
   const [scanName, setScanName] = useState('')
   const [scanFormat, setScanFormat] = useState<ScanFormat>('pdf')
   const [preview, setPreview] = useState<{ url: string; name: string; type: string } | null>(null)
+  const [archiveOpen, setArchiveOpen] = useState(false)
+  const [locations, setLocations] = useState<PhysicalLocationDto[]>([])
+  const [archForm, setArchForm] = useState({ physicalLocationId: '', boxNumber: '', fileNumber: '', notes: '' })
+  const [fav, setFav] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shares, setShares] = useState<Share[]>([])
+  const [shareUsers, setShareUsers] = useState<{ id: number; fullName: string }[]>([])
+  const [shareForm, setShareForm] = useState({ userId: '', canEdit: false })
+  const [folders, setFolders] = useState<Folder[]>([])
 
   const load = useCallback(async () => {
     setError('')
@@ -36,6 +47,48 @@ export default function DocumentDetailPage() {
   }, [docId])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => { setFav(!!doc?.isFavorite) }, [doc?.isFavorite])
+  useEffect(() => { foldersApi.list().then(setFolders).catch(() => {}) }, [])
+
+  async function toggleFavorite() {
+    try {
+      if (fav) { await favoritesApi.remove(docId); setFav(false) }
+      else { await favoritesApi.add(docId); setFav(true) }
+    } catch { toast.error('تعذّر تحديث المفضلة') }
+  }
+
+  async function downloadZip() {
+    if (!doc) return
+    try { await exportApi.documentZip(docId, doc.documentNumber) }
+    catch { toast.error('تعذّر تنزيل الملف المضغوط') }
+  }
+
+  async function moveToFolder(folderId: number | null) {
+    try { await foldersApi.moveDocument(docId, folderId); await load(); toast.success('تم نقل الوثيقة') }
+    catch { toast.error('تعذّر نقل الوثيقة') }
+  }
+
+  async function openShare() {
+    setShareOpen(true)
+    try {
+      const [s, u] = await Promise.all([sharingApi.list(docId), documents.users()])
+      setShares(s); setShareUsers(u)
+    } catch { toast.error('تعذّر تحميل المشاركات') }
+  }
+  async function doShare(e: React.FormEvent) {
+    e.preventDefault()
+    if (!shareForm.userId) return
+    try {
+      await sharingApi.share(docId, Number(shareForm.userId), shareForm.canEdit)
+      setShareForm({ userId: '', canEdit: false })
+      setShares(await sharingApi.list(docId))
+      toast.success('تمت المشاركة')
+    } catch { toast.error('تعذّر المشاركة') }
+  }
+  async function removeShare(userId: number) {
+    try { await sharingApi.unshare(docId, userId); setShares(await sharingApi.list(docId)) }
+    catch { toast.error('تعذّر إلغاء المشاركة') }
+  }
 
   // Modal a11y: lock body scroll and close on Escape while a preview is open.
   useEffect(() => {
@@ -235,6 +288,39 @@ export default function DocumentDetailPage() {
     } catch { toast.error('تعذّر حذف الوثيقة (تحقق من صلاحياتك)'); setBusy(false) }
   }
 
+  // Archive this document at a physical location (creates/links a physical-archive item).
+  async function openArchive() {
+    setArchForm({
+      physicalLocationId: doc?.physicalLocationId ? String(doc.physicalLocationId) : '',
+      boxNumber: doc?.boxNumber ?? '',
+      fileNumber: doc?.fileNumber ?? '',
+      notes: '',
+    })
+    setArchiveOpen(true)
+    if (locations.length === 0) archive.locations().then(setLocations).catch(() => {})
+  }
+
+  async function saveArchive(e: React.FormEvent) {
+    e.preventDefault()
+    if (!archForm.physicalLocationId) { toast.error('اختر مكان الحفظ'); return }
+    setBusy(true)
+    try {
+      await archive.createItem({
+        documentId: docId,
+        physicalLocationId: Number(archForm.physicalLocationId),
+        boxNumber: archForm.boxNumber || null,
+        fileNumber: archForm.fileNumber || null,
+        notes: archForm.notes || null,
+      })
+      setArchiveOpen(false)
+      await load()
+      toast.success('تمت أرشفة الوثيقة في المكان الفيزيائي')
+    } catch (err) {
+      const ax = err as { response?: { data?: { error?: string } } }
+      toast.error(ax.response?.data?.error ?? 'تعذّر أرشفة الوثيقة')
+    } finally { setBusy(false) }
+  }
+
   if (error && !doc) return (
     <div><Link to="/app/documents" className="btn btn-ghost">← رجوع</Link><p className="login__error">{error}</p></div>
   )
@@ -256,6 +342,13 @@ export default function DocumentDetailPage() {
           <h1>{doc.title}</h1>
         </div>
         <div className="page__headactions">
+          <button className="btn btn-ghost" title={fav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'} onClick={toggleFavorite}>
+            {fav ? '★' : '☆'} مفضلة
+          </button>
+          <button className="btn btn-ghost" title="تنزيل كملف مضغوط" onClick={downloadZip}>⬇ ZIP</button>
+          {auth.hasPermission('Organization.View') && (
+            <button className="btn btn-ghost" onClick={openShare}>👥 مشاركة</button>
+          )}
           {auth.hasPermission('Documents.Edit') && (
             <Link to={`/app/documents/${docId}/edit`} className="btn btn-primary">✏️ تعديل</Link>
           )}
@@ -283,12 +376,27 @@ export default function DocumentDetailPage() {
             <dd>{doc.physicalLocationName
               ? `${doc.physicalLocationName}${doc.boxNumber ? ` · صندوق ${doc.boxNumber}` : ''}${doc.fileNumber ? ` · ملف ${doc.fileNumber}` : ''}`
               : '—'}</dd>
+            <dt>المجلد</dt>
+            <dd>
+              <select value={doc.folderId ?? ''} onChange={(e) => moveToFolder(e.target.value ? Number(e.target.value) : null)}
+                style={{ maxWidth: 220 }}>
+                <option value="">— بدون مجلد —</option>
+                {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </dd>
             <dt>الوصف</dt><dd>{doc.description ?? '—'}</dd>
           </dl>
 
-          {auth.hasPermission('Documents.Delete') && (
+          {(auth.hasPermission('Archive.Archive') || auth.hasPermission('Documents.Delete')) && (
             <div className="action-bar">
-              <button className="btn btn-ghost" disabled={busy} onClick={remove}>حذف الوثيقة</button>
+              {auth.hasPermission('Archive.Archive') && (
+                <button className="btn btn-seal" disabled={busy} onClick={openArchive}>
+                  🗄 {doc.physicalLocationName ? 'تغيير مكان الحفظ' : 'أرشفة في مكان فيزيائي'}
+                </button>
+              )}
+              {auth.hasPermission('Documents.Delete') && (
+                <button className="btn btn-ghost" disabled={busy} onClick={remove}>حذف الوثيقة</button>
+              )}
             </div>
           )}
           {error && <p className="login__error">{error}</p>}
@@ -377,6 +485,75 @@ export default function DocumentDetailPage() {
 
       <PreservationPackagesPanel docId={docId} documentNumber={doc.documentNumber} />
       <RecordMetadataPanel docId={docId} />
+
+      {shareOpen && (
+        <div className="preview-overlay" onClick={() => setShareOpen(false)}>
+          <motion.div className="preview-modal" onClick={(e) => e.stopPropagation()}
+            style={{ width: 'min(560px, 92vw)', height: 'auto', maxHeight: '90vh', color: 'var(--ink-text, #211d17)' }}
+            initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
+            <header className="preview-head">
+              <span className="preview-title">مشاركة الوثيقة · {doc.documentNumber}</span>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShareOpen(false)}>✕ إغلاق</button>
+            </header>
+            <div style={{ padding: '1rem', overflow: 'auto' }}>
+              <form className="form-grid" onSubmit={doShare}>
+                <label className="field"><span>مشاركة مع</span>
+                  <select value={shareForm.userId} onChange={(e) => setShareForm((f) => ({ ...f, userId: e.target.value }))}>
+                    <option value="">— اختر مستخدمًا —</option>
+                    {shareUsers.map((u) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                  </select></label>
+                <label className="field"><span>الصلاحية</span>
+                  <select value={shareForm.canEdit ? '1' : '0'} onChange={(e) => setShareForm((f) => ({ ...f, canEdit: e.target.value === '1' }))}>
+                    <option value="0">عرض فقط</option><option value="1">عرض وتعديل</option>
+                  </select></label>
+                <div className="form-actions"><button className="btn btn-primary" disabled={!shareForm.userId}>مشاركة</button></div>
+              </form>
+              <h4 className="detail-h3" style={{ marginTop: '1rem' }}>مُشاركة معهم ({shares.length})</h4>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '.35rem' }}>
+                {shares.length === 0 && <li className="muted">لم تتم المشاركة بعد</li>}
+                {shares.map((s) => (
+                  <li key={s.sharedWithUserId} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', padding: '.4rem .6rem', border: '1px solid var(--color-border,#e2d3b2)', borderRadius: 6 }}>
+                    <span style={{ flex: 1 }}>{s.userName}</span>
+                    <span className="badge internal">{s.canEdit ? 'عرض وتعديل' : 'عرض'}</span>
+                    <button className="btn btn-ghost btn-sm" onClick={() => removeShare(s.sharedWithUserId)}>إزالة</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {archiveOpen && (
+        <div className="preview-overlay" onClick={() => !busy && setArchiveOpen(false)}>
+          <motion.form className="preview-modal" onClick={(e) => e.stopPropagation()} onSubmit={saveArchive}
+            style={{ width: 'min(560px, 92vw)', height: 'auto', maxHeight: '90vh' }}
+            initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
+            <header className="preview-head">
+              <span className="preview-title">أرشفة الوثيقة في مكان فيزيائي · {doc.documentNumber}</span>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setArchiveOpen(false)}>✕ إغلاق</button>
+            </header>
+            <div className="form-grid" style={{ padding: '1rem', overflow: 'auto', color: 'var(--ink-text, #211d17)' }}>
+              <label className="field field--wide"><span>مكان الحفظ *</span>
+                <select value={archForm.physicalLocationId} onChange={(e) => setArchForm((f) => ({ ...f, physicalLocationId: e.target.value }))}>
+                  <option value="">— اختر —</option>
+                  {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select></label>
+              <label className="field"><span>رقم الصندوق</span>
+                <input value={archForm.boxNumber} dir="ltr" onChange={(e) => setArchForm((f) => ({ ...f, boxNumber: e.target.value }))} /></label>
+              <label className="field"><span>رقم الملف</span>
+                <input value={archForm.fileNumber} dir="ltr" onChange={(e) => setArchForm((f) => ({ ...f, fileNumber: e.target.value }))} /></label>
+              <label className="field field--wide"><span>ملاحظات</span>
+                <input value={archForm.notes} onChange={(e) => setArchForm((f) => ({ ...f, notes: e.target.value }))} /></label>
+              {locations.length === 0 && <p className="muted field--wide">لا توجد مواقع — أضِف موقعًا من صفحة الأرشيف أولًا.</p>}
+            </div>
+            <div className="form-actions" style={{ padding: '0 1rem 1rem' }}>
+              <button className="btn btn-primary" disabled={busy || !archForm.physicalLocationId}>{busy ? '…' : 'أرشفة'}</button>
+              <button type="button" className="btn btn-ghost" onClick={() => setArchiveOpen(false)}>إلغاء</button>
+            </div>
+          </motion.form>
+        </div>
+      )}
 
       {preview && (
         <div className="preview-overlay" onClick={closePreview}>

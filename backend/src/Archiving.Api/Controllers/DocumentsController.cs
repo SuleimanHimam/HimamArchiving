@@ -42,6 +42,22 @@ public sealed class DocumentsController(
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
     }
 
+    [HttpPut("types/{id:long}")]
+    [HasPermission("Classification.Edit")]
+    public async Task<IActionResult> UpdateType(long id, [FromBody] UpdateDocumentTypeRequest req, CancellationToken ct)
+    {
+        var r = await service.UpdateTypeAsync(id, req, ct);
+        return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
+    }
+
+    [HttpDelete("types/{id:long}")]
+    [HasPermission("Classification.Edit")]
+    public async Task<IActionResult> DeleteType(long id, CancellationToken ct)
+    {
+        var r = await service.DeleteTypeAsync(id, ct);
+        return r.Succeeded ? NoContent() : BadRequest(new { error = r.Error });
+    }
+
     [HttpGet("categories")]
     [HasPermission("Documents.View")]
     public async Task<IActionResult> Categories(CancellationToken ct) => Ok(await service.ListCategoriesAsync(ct));
@@ -62,10 +78,16 @@ public sealed class DocumentsController(
         [FromQuery] DocumentStatus? status,
         [FromQuery] long? documentTypeId,
         [FromQuery] long? owningOrgUnitId,
+        [FromQuery] DateOnly? dateFrom,
+        [FromQuery] DateOnly? dateTo,
+        [FromQuery] bool favoritesOnly = false,
+        [FromQuery] bool sharedWithMe = false,
+        [FromQuery] long? folderId = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
-        => Ok(await service.ListAsync(new DocumentQuery(search, status, documentTypeId, owningOrgUnitId, page, pageSize), ct));
+        => Ok(await service.ListAsync(new DocumentQuery(search, status, documentTypeId, owningOrgUnitId,
+            dateFrom, dateTo, favoritesOnly, sharedWithMe, folderId, page, pageSize), ct));
 
     [HttpGet("{id:long}")]
     [HasPermission("Documents.View")]

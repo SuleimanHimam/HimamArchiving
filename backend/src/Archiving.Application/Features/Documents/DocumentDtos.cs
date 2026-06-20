@@ -26,6 +26,17 @@ public sealed record CreateDocumentTypeRequest(
     bool RequiresApproval,
     UploadSource AllowedUploadSources = UploadSource.All);
 
+public sealed record UpdateDocumentTypeRequest(
+    string Name,
+    string? NameEn,
+    string? Code,
+    long? CategoryId,
+    ConfidentialityLevel DefaultConfidentiality,
+    int RetentionMonths,
+    bool RequiresApproval,
+    UploadSource AllowedUploadSources,
+    bool IsActive);
+
 public sealed record DocumentCategoryDto(long Id, long? ParentId, string Name, string? Code, bool IsActive);
 
 public sealed record CreateDocumentCategoryRequest(long? ParentId, string Name, string? Code);
@@ -86,7 +97,9 @@ public sealed record DocumentDetail(
     long? PhysicalLocationId = null,
     string? PhysicalLocationName = null,
     string? BoxNumber = null,
-    string? FileNumber = null);
+    string? FileNumber = null,
+    long? FolderId = null,
+    bool IsFavorite = false);
 
 public sealed record CreateDocumentRequest(
     string Title,
@@ -117,5 +130,10 @@ public sealed record DocumentQuery(
     DocumentStatus? Status,
     long? DocumentTypeId,
     long? OwningOrgUnitId,
+    DateOnly? DateFrom = null,
+    DateOnly? DateTo = null,
+    bool FavoritesOnly = false,
+    bool SharedWithMe = false,
+    long? FolderId = null,
     int Page = 1,
     int PageSize = 20);

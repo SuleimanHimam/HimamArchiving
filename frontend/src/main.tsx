@@ -15,7 +15,7 @@ import IncomingDetailPage from './pages/incoming/IncomingDetailPage'
 import DocumentsListPage from './pages/documents/DocumentsListPage'
 import DocumentCreatePage from './pages/documents/DocumentCreatePage'
 import DocumentEditPage from './pages/documents/DocumentEditPage'
-import DocumentScanPage from './pages/documents/DocumentScanPage'
+import NotepadPage from './pages/notes/NotepadPage'
 import DocumentDetailPage from './pages/documents/DocumentDetailPage'
 import OutgoingListPage from './pages/outgoing/OutgoingListPage'
 import OutgoingCreatePage from './pages/outgoing/OutgoingCreatePage'
@@ -53,9 +53,11 @@ createRoot(document.getElementById('root')!).render(
           <Route path="incoming/:id" element={<IncomingDetailPage />} />
           <Route path="documents" element={<DocumentsListPage />} />
           <Route path="documents/new" element={<DocumentCreatePage />} />
-          <Route path="documents/scan" element={<DocumentScanPage />} />
+          {/* Scanning is merged into the single create form. */}
+          <Route path="documents/scan" element={<Navigate to="/app/documents/new" replace />} />
           <Route path="documents/:id/edit" element={<DocumentEditPage />} />
           <Route path="documents/:id" element={<DocumentDetailPage />} />
+          <Route path="notes" element={<NotepadPage />} />
           <Route path="outgoing" element={<OutgoingListPage />} />
           <Route path="outgoing/new" element={<OutgoingCreatePage />} />
           <Route path="outgoing/:id" element={<OutgoingDetailPage />} />

@@ -1,11 +1,14 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, useRef, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
-import { documents, type DocumentTypeDto, type OrgUnitDto } from '../../lib/documents'
+import { documents, type DocumentTypeDto, type OrgUnitDto, type ScanFormat } from '../../lib/documents'
 import { archive, type PhysicalLocationDto } from '../../lib/archive'
+import { scanAgent } from '../../lib/scanAgent'
+import { scannerSettings } from '../../lib/scannerSettings'
 import { type Confidentiality } from '../../lib/incomingMail'
+import { useToast } from '../../components/toast'
 import '../incoming/incoming.css'
 
 const today = new Date().toISOString().slice(0, 10)
@@ -13,6 +16,8 @@ const today = new Date().toISOString().slice(0, 10)
 export default function DocumentCreatePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const toast = useToast()
+  const fallbackInput = useRef<HTMLInputElement>(null)
   const [types, setTypes] = useState<DocumentTypeDto[]>([])
   const [units, setUnits] = useState<OrgUnitDto[]>([])
   const [locations, setLocations] = useState<PhysicalLocationDto[]>([])
@@ -21,17 +26,20 @@ export default function DocumentCreatePage() {
     confidentiality: 1 as Confidentiality, keywords: '', documentDate: today,
     physicalLocationId: '', boxNumber: '', fileNumber: '',
   })
+  const [format, setFormat] = useState<ScanFormat>('pdf')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [scanMsg, setScanMsg] = useState('')
 
   useEffect(() => {
     Promise.all([documents.types(), documents.orgUnits()])
       .then(([t, u]) => {
-        setTypes(t)
+        const active = t.filter((x) => x.isActive)
+        setTypes(active)
         setUnits(u)
         setForm((f) => ({
           ...f,
-          documentTypeId: t[0] ? String(t[0].id) : '',
+          documentTypeId: active[0] ? String(active[0].id) : '',
           owningOrgUnitId: u[0] ? String(u[0].id) : '',
         }))
       })
@@ -42,31 +50,79 @@ export default function DocumentCreatePage() {
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
 
+  function validate(): string | null {
+    if (!form.title || !form.documentTypeId || !form.owningOrgUnitId) return t('documents.create.errors.required')
+    return null
+  }
+
+  function buildCreateBody() {
+    return {
+      title: form.title,
+      description: form.description || null,
+      documentTypeId: Number(form.documentTypeId),
+      owningOrgUnitId: Number(form.owningOrgUnitId),
+      confidentiality: Number(form.confidentiality) as Confidentiality,
+      keywords: form.keywords || null,
+      documentDate: form.documentDate || null,
+      physicalLocationId: form.physicalLocationId ? Number(form.physicalLocationId) : null,
+      boxNumber: form.boxNumber || null,
+      fileNumber: form.fileNumber || null,
+    }
+  }
+
+  // Create only (metadata).
   async function submit(e: FormEvent) {
     e.preventDefault()
     setError('')
-    if (!form.title || !form.documentTypeId || !form.owningOrgUnitId) {
-      setError(t('documents.create.errors.required')); return
-    }
+    const v = validate(); if (v) { setError(v); return }
     setSaving(true)
     try {
-      const created = await documents.create({
-        title: form.title,
-        description: form.description || null,
-        documentTypeId: Number(form.documentTypeId),
-        owningOrgUnitId: Number(form.owningOrgUnitId),
-        confidentiality: Number(form.confidentiality) as Confidentiality,
-        keywords: form.keywords || null,
-        documentDate: form.documentDate || null,
-        physicalLocationId: form.physicalLocationId ? Number(form.physicalLocationId) : null,
-        boxNumber: form.boxNumber || null,
-        fileNumber: form.fileNumber || null,
-      })
+      const created = await documents.create(buildCreateBody())
       navigate(`/app/documents/${created.id}`, { replace: true })
     } catch (err) {
       const ax = err as AxiosError<{ error?: string }>
       setError(ax.response?.data?.error ?? t('documents.create.errors.failed'))
     } finally { setSaving(false) }
+  }
+
+  // Create + attach a scanned page in one step.
+  async function createAndAttach(blob: Blob) {
+    setScanMsg('جارٍ إنشاء الوثيقة وإرفاق المسح…')
+    const created = await documents.create(buildCreateBody())
+    await documents.scan(created.id, blob, `${form.title.trim()}.${format}`, format)
+    toast.success('تم إنشاء الوثيقة وإرفاق المسح الضوئي')
+    navigate(`/app/documents/${created.id}`, { replace: true })
+  }
+
+  async function startScan() {
+    const v = validate(); if (v) { setError(v); return }
+    setError(''); setSaving(true); setScanMsg('جارٍ الاتصال بالماسح الضوئي…')
+    try {
+      const status = await scanAgent.status()
+      if (!status) { setScanMsg(''); setSaving(false); fallbackInput.current?.click(); return }
+      const chosen = scannerSettings.get() ?? undefined
+      setScanMsg(chosen ? `جارٍ المسح من: ${chosen}…` : 'جارٍ المسح الضوئي…')
+      const { blob } = await scanAgent.scan('jpeg', chosen)
+      await createAndAttach(blob)
+    } catch (err) {
+      reportScanError(err)
+    }
+  }
+
+  async function onFallbackFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (fallbackInput.current) fallbackInput.current.value = ''
+    if (!file) return
+    const v = validate(); if (v) { setError(v); return }
+    setSaving(true); setError('')
+    try { await createAndAttach(file) }
+    catch (err) { reportScanError(err) }
+  }
+
+  function reportScanError(err: unknown) {
+    const e = err as AxiosError<{ error?: string }> & { message?: string }
+    const m = e.response?.data?.error ?? e.message ?? 'تعذّر المسح الضوئي'
+    setError(m); toast.error(m); setSaving(false); setScanMsg('')
   }
 
   return (
@@ -102,6 +158,12 @@ export default function DocumentCreatePage() {
             </select></label>
           <label className="field"><span>{t('documents.columns.date')}</span>
             <input type="date" value={form.documentDate} onChange={set('documentDate')} dir="ltr" /></label>
+          <label className="field"><span>صيغة المستند الممسوح</span>
+            <select value={format} onChange={(e) => setFormat(e.target.value as ScanFormat)}>
+              <option value="pdf">PDF</option>
+              <option value="jpg">JPG (صورة)</option>
+              <option value="png">PNG (صورة)</option>
+            </select></label>
           <label className="field field--wide"><span>{t('incoming.create.keywords')}</span>
             <input value={form.keywords} onChange={set('keywords')} placeholder={t('incoming.create.keywordsPlaceholder')} /></label>
           <label className="field field--wide"><span>{t('documents.create.body')}</span>
@@ -123,10 +185,16 @@ export default function DocumentCreatePage() {
         </div>
 
         {error && <p className="login__error">{error}</p>}
+        {scanMsg && <p className="muted scan-msg">{scanMsg}</p>}
+
+        <input ref={fallbackInput} type="file" style={{ display: 'none' }} onChange={onFallbackFile} accept=".pdf,.jpg,.jpeg,.png" />
 
         <div className="form-actions">
           <button className="btn btn-primary" disabled={saving}>
             {saving ? t('documents.create.submitting') : t('documents.create.submit')}
+          </button>
+          <button type="button" className="btn btn-seal" disabled={saving} onClick={startScan}>
+            ⎙ {t('documents.scanButton')}
           </button>
           <Link to="/app/documents" className="btn btn-ghost">{t('documents.create.cancel')}</Link>
         </div>

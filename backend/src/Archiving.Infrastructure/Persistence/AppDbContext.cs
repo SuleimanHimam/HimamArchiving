@@ -30,6 +30,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentAttachment> DocumentAttachments => Set<DocumentAttachment>();
 
+    // Per-user features
+    public DbSet<Folder> Folders => Set<Folder>();
+    public DbSet<DocumentFavorite> DocumentFavorites => Set<DocumentFavorite>();
+    public DbSet<DocumentShare> DocumentShares => Set<DocumentShare>();
+    public DbSet<UserNote> UserNotes => Set<UserNote>();
+
     // Preservation (ISO 16363 fixity + policy)
     public DbSet<FixityCheck> FixityChecks => Set<FixityCheck>();
     public DbSet<PreservationPolicy> PreservationPolicies => Set<PreservationPolicy>();
@@ -119,6 +125,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         b.Entity<Document>().Property(x => x.Keywords).HasColumnType("longtext");
         b.Entity<DocumentAttachment>().Property(x => x.ExtractedText).HasColumnType("longtext");
         b.Entity<DocumentAttachment>().HasIndex(x => x.ExtractionStatus);
+        b.Entity<UserNote>().Property(x => x.Content).HasColumnType("longtext");
+        b.Entity<DocumentFavorite>().HasIndex(x => new { x.UserId, x.DocumentId }).IsUnique();
+        b.Entity<DocumentShare>().HasIndex(x => new { x.DocumentId, x.SharedWithUserId }).IsUnique();
+        b.Entity<Folder>().HasIndex(x => x.UserId);
+        b.Entity<DocumentFavorite>().HasOne(x => x.Document).WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<DocumentShare>().HasOne(x => x.Document).WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<IncomingMail>().Property(x => x.Body).HasColumnType("longtext");
         b.Entity<IncomingMail>().Property(x => x.Keywords).HasColumnType("longtext");
         b.Entity<OutgoingMail>().Property(x => x.Body).HasColumnType("longtext");

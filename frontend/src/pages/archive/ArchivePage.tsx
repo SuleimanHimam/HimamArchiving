@@ -1,13 +1,18 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
+import { Eye, FolderOpen, Pencil, Trash2, Copy } from 'lucide-react'
 import { auth } from '../../lib/auth'
 import {
   archive, type PhysicalLocationDto, type PhysicalArchiveItemDto, type LocationType,
   LOCATION_TYPE_LABELS,
 } from '../../lib/archive'
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel,
+  ContextMenuSeparator, ContextMenuTrigger,
+} from '../../components/ui/context-menu'
 import '../incoming/incoming.css'
 
 const TYPE_NAMES = ['Building', 'Room', 'Cabinet', 'Shelf', 'Box']
@@ -17,6 +22,8 @@ const errOf = (err: unknown, fallback: string) =>
 
 export default function ArchivePage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const copyNumber = (n: string) => navigator.clipboard.writeText(n).catch(() => {})
   const [locations, setLocations] = useState<PhysicalLocationDto[]>([])
   const [items, setItems] = useState<PhysicalArchiveItemDto[]>([])
   const [selected, setSelected] = useState<number | ''>('')
@@ -27,6 +34,7 @@ export default function ArchivePage() {
   const [locEditId, setLocEditId] = useState<number | null>(null)
   const [item, setItem] = useState({ documentId: '', physicalLocationId: '', boxNumber: '', fileNumber: '', notes: '' })
   const [itemEditId, setItemEditId] = useState<number | null>(null)
+  const [tab, setTab] = useState<'items' | 'locations'>('items')
 
   const canCreate = auth.hasPermission('Archive.Create')
   const canArchive = auth.hasPermission('Archive.Archive')
@@ -104,35 +112,66 @@ export default function ArchivePage() {
           <span className="kicker">{t('archive.kicker')}</span>
           <h1>{t('archive.title')}</h1>
         </div>
+        {auth.hasPermission('Documents.Create') && (
+          <Link to="/app/documents/new" className="btn btn-primary">{t('documents.newButton')}</Link>
+        )}
       </header>
 
       {error && <p className="login__error">{error}</p>}
 
-      <div className="detail-grid">
-        {/* Locations */}
+      <div className="filters" style={{ marginBottom: '1rem', gap: '.5rem' }}>
+        <button type="button" className={`btn ${tab === 'items' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('items')}>
+          📦 {t('archive.items')} ({filteredItems.length})
+        </button>
+        <button type="button" className={`btn ${tab === 'locations' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('locations')}>
+          🗄️ {t('archive.locations')} ({locations.length})
+        </button>
+      </div>
+
+      {tab === 'locations' && (
         <motion.section className="doc-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <h3 className="detail-h3">{t('archive.locations')} ({locations.length})</h3>
           <table className="reg-table">
             <thead><tr>
               <th>{t('archive.columns.name')}</th><th>{t('archive.columns.type')}</th>
-              <th>{t('archive.columns.code')}</th><th>{t('archive.columns.status')}</th>{canCreate && <th></th>}
+              <th>{t('archive.columns.code')}</th><th>{t('archive.columns.status')}</th>
             </tr></thead>
             <tbody>
-              {locations.length === 0 && <tr><td colSpan={5} className="reg-empty">{t('archive.noLocations')}</td></tr>}
-              {locations.map((l) => (
-                <tr key={l.id} className={locEditId === l.id ? 'reg-row is-editing' : ''}>
-                  <td>{l.name}</td>
-                  <td>{locTypeLabel(l.type)}</td>
-                  <td className="mono">{l.code ?? '—'}</td>
-                  <td>{l.isActive ? <span className="badge internal">{t('archive.active')}</span> : <span className="badge">{t('archive.inactive')}</span>}</td>
-                  {canCreate && (
-                    <td className="row-actions">
-                      <button className="btn btn-ghost btn-sm" title={t('common.actions.edit')} onClick={() => editLocation(l)}>✏️</button>
-                      <button className="btn btn-ghost btn-sm" title={t('common.actions.delete')} onClick={() => deleteLocation(l)}>🗑</button>
-                    </td>
-                  )}
-                </tr>
-              ))}
+              {locations.length === 0 && <tr><td colSpan={4} className="reg-empty">{t('archive.noLocations')}</td></tr>}
+              {locations.map((l) => {
+                const cells = (
+                  <>
+                    <td>{l.name}</td>
+                    <td>{locTypeLabel(l.type)}</td>
+                    <td className="mono">{l.code ?? '—'}</td>
+                    <td>{l.isActive ? <span className="badge internal">{t('archive.active')}</span> : <span className="badge">{t('archive.inactive')}</span>}</td>
+                  </>
+                )
+                if (!canCreate) return <tr key={l.id} className="reg-row">{cells}</tr>
+                return (
+                  <ContextMenu key={l.id}>
+                    <ContextMenuTrigger asChild>
+                      <tr
+                        onClick={() => editLocation(l)}
+                        className={`reg-row${locEditId === l.id ? ' is-editing' : ''}`}
+                        title="انقر للتعديل · انقر بالزر الأيمن للإجراءات"
+                      >
+                        {cells}
+                      </tr>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-56">
+                      <ContextMenuLabel className="truncate text-xs text-muted-foreground max-w-[200px]">{l.name}</ContextMenuLabel>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem onSelect={() => editLocation(l)}>
+                        <Pencil className="ml-2 h-4 w-4 opacity-60" />{t('common.actions.edit')}
+                      </ContextMenuItem>
+                      <ContextMenuItem onSelect={() => deleteLocation(l)}>
+                        <Trash2 className="ml-2 h-4 w-4 opacity-60" />{t('common.actions.delete')}
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                )
+              })}
             </tbody>
           </table>
 
@@ -165,9 +204,10 @@ export default function ArchivePage() {
             </form>
           )}
         </motion.section>
+      )}
 
-        {/* Archived items */}
-        <motion.section className="doc-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+      {tab === 'items' && (
+        <motion.section className="doc-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <h3 className="detail-h3">{t('archive.items')} ({filteredItems.length})</h3>
           <div className="filters" style={{ gap: '.5rem' }}>
             <input className="filters__search" placeholder={t('archive.searchItems')}
@@ -180,27 +220,62 @@ export default function ArchivePage() {
           <table className="reg-table" style={{ marginTop: '.6rem' }}>
             <thead><tr>
               <th>{t('archive.columns.document')}</th><th>{t('archive.columns.location')}</th>
-              <th>{t('archive.columns.box')}</th><th>{t('archive.columns.file')}</th>{canArchive && <th></th>}
+              <th>{t('archive.columns.box')}</th><th>{t('archive.columns.file')}</th>
             </tr></thead>
             <tbody>
-              {filteredItems.length === 0 && <tr><td colSpan={5} className="reg-empty">{t('archive.noItems')}</td></tr>}
+              {filteredItems.length === 0 && <tr><td colSpan={4} className="reg-empty">{t('archive.noItems')}</td></tr>}
               {filteredItems.map((it) => (
-                <tr key={it.id} className={itemEditId === it.id ? 'reg-row is-editing' : ''}>
-                  <td className="mono">
-                    {it.documentId
-                      ? <Link to={`/app/documents/${it.documentId}`} title={it.documentTitle ?? ''}>{it.documentNumber ?? `#${it.documentId}`}</Link>
-                      : it.incomingMailId ? `${t('archive.incoming')} #${it.incomingMailId}` : '—'}
-                  </td>
-                  <td>{it.locationName}</td>
-                  <td className="mono">{it.boxNumber ?? '—'}</td>
-                  <td className="mono">{it.fileNumber ?? '—'}</td>
-                  {canArchive && (
-                    <td className="row-actions">
-                      <button className="btn btn-ghost btn-sm" title={t('common.actions.edit')} onClick={() => editItem(it)}>✏️</button>
-                      <button className="btn btn-ghost btn-sm" title={t('common.actions.delete')} onClick={() => deleteItem(it)}>🗑</button>
-                    </td>
-                  )}
-                </tr>
+                <ContextMenu key={it.id}>
+                  <ContextMenuTrigger asChild>
+                    <tr
+                      onClick={() => it.documentId && navigate(`/app/documents/${it.documentId}`)}
+                      className={`reg-row${itemEditId === it.id ? ' is-editing' : ''}`}
+                      title="انقر للفتح · انقر بالزر الأيمن للإجراءات"
+                    >
+                      <td className="mono">
+                        {it.documentId
+                          ? <Link to={`/app/documents/${it.documentId}`} title={it.documentTitle ?? ''} onClick={(e) => e.stopPropagation()}>{it.documentNumber ?? `#${it.documentId}`}</Link>
+                          : it.incomingMailId ? `${t('archive.incoming')} #${it.incomingMailId}` : '—'}
+                      </td>
+                      <td>{it.locationName}</td>
+                      <td className="mono">{it.boxNumber ?? '—'}</td>
+                      <td className="mono">{it.fileNumber ?? '—'}</td>
+                    </tr>
+                  </ContextMenuTrigger>
+
+                  <ContextMenuContent className="w-56">
+                    <ContextMenuLabel className="truncate text-xs text-muted-foreground max-w-[200px]">
+                      {it.documentNumber ?? it.locationName}
+                    </ContextMenuLabel>
+                    <ContextMenuSeparator />
+                    {it.documentId && (
+                      <>
+                        <ContextMenuItem onSelect={() => navigate(`/app/documents/${it.documentId}`)}>
+                          <Eye className="ml-2 h-4 w-4 opacity-60" />فتح الوثيقة
+                        </ContextMenuItem>
+                        <ContextMenuItem onSelect={() => window.open(`/app/documents/${it.documentId}`, '_blank')}>
+                          <FolderOpen className="ml-2 h-4 w-4 opacity-60" />فتح في نافذة جديدة
+                        </ContextMenuItem>
+                        {it.documentNumber && (
+                          <ContextMenuItem onSelect={() => copyNumber(it.documentNumber!)}>
+                            <Copy className="ml-2 h-4 w-4 opacity-60" />نسخ رقم الوثيقة
+                          </ContextMenuItem>
+                        )}
+                      </>
+                    )}
+                    {canArchive && (
+                      <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onSelect={() => editItem(it)}>
+                          <Pencil className="ml-2 h-4 w-4 opacity-60" />{t('archive.editItemTitle')}
+                        </ContextMenuItem>
+                        <ContextMenuItem onSelect={() => deleteItem(it)}>
+                          <Trash2 className="ml-2 h-4 w-4 opacity-60" />{t('common.actions.delete')}
+                        </ContextMenuItem>
+                      </>
+                    )}
+                  </ContextMenuContent>
+                </ContextMenu>
               ))}
             </tbody>
           </table>
@@ -228,7 +303,7 @@ export default function ArchivePage() {
             </form>
           )}
         </motion.section>
-      </div>
+      )}
     </div>
   )
 }

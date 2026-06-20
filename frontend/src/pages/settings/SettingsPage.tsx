@@ -10,6 +10,8 @@ import PreservationPolicySettings from '../../components/PreservationPolicySetti
 import BackupSettings from '../../components/BackupSettings'
 import RolesAdmin from '../../components/RolesAdmin'
 import ClassificationSettings from '../../components/ClassificationSettings'
+import DocumentTypesSettings from '../../components/DocumentTypesSettings'
+import NavigationSettings from '../../components/NavigationSettings'
 import BrandingSettings from '../../components/BrandingSettings'
 import '../incoming/incoming.css'
 import './settings.css'
@@ -21,10 +23,12 @@ export default function SettingsPage() {
 
   const sections: Section[] = [
     { key: 'branding', label: 'هوية المؤسسة', icon: '◉', show: auth.hasPermission('Organization.View'), render: () => <BrandingSettings /> },
+    { key: 'navbar', label: 'القائمة الجانبية', icon: '☰', show: auth.hasPermission('Organization.Edit'), render: () => <NavigationSettings /> },
     { key: 'scanner', label: t('settings.sections.scanner'), icon: '⎙', show: auth.hasPermission('Scanner.View'), render: () => <ScannerSettings /> },
     { key: 'users', label: t('settings.sections.users'), icon: '◔', show: auth.hasPermission('Users.View'), render: () => <UsersAdmin /> },
     { key: 'roles', label: t('settings.sections.roles'), icon: '⊙', show: auth.hasPermission('Users.View'), render: () => <RolesAdmin /> },
     { key: 'classification', label: t('settings.sections.classification'), icon: '◈', show: auth.hasPermission('Classification.View'), render: () => <ClassificationSettings /> },
+    { key: 'docTypes', label: 'أنواع الوثائق', icon: '▤', show: auth.hasPermission('Documents.View'), render: () => <DocumentTypesSettings /> },
     { key: 'preservation', label: t('settings.sections.preservation'), icon: '⛁', show: auth.hasPermission('Preservation.View'), render: () => (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
         <PreservationPolicySettings />
