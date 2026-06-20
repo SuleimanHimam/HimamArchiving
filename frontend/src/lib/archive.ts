@@ -23,19 +23,34 @@ export interface PhysicalArchiveItemDto {
   fileNumber: string | null
   archivedAt: string
   notes: string | null
+  documentNumber: string | null
+  documentTitle: string | null
 }
+
+type LocationBody = { parentId?: number | null; name: string; type: LocationType; code?: string | null; rfidTag?: string | null; isActive?: boolean }
+type ItemBody = { documentId?: number | null; incomingMailId?: number | null; physicalLocationId: number; boxNumber?: string | null; fileNumber?: string | null; notes?: string | null }
 
 export const archive = {
   locations: () => api.get<PhysicalLocationDto[]>('/physical-archive/locations').then((r) => r.data),
 
-  createLocation: (body: { parentId?: number | null; name: string; type: LocationType; code?: string | null; rfidTag?: string | null }) =>
+  createLocation: (body: LocationBody) =>
     api.post<PhysicalLocationDto>('/physical-archive/locations', body).then((r) => r.data),
+
+  updateLocation: (id: number, body: LocationBody) =>
+    api.put<PhysicalLocationDto>(`/physical-archive/locations/${id}`, body).then((r) => r.data),
+
+  deleteLocation: (id: number) => api.delete(`/physical-archive/locations/${id}`),
 
   items: (locationId?: number) =>
     api.get<PhysicalArchiveItemDto[]>('/physical-archive/items', { params: { locationId } }).then((r) => r.data),
 
-  createItem: (body: { documentId?: number | null; incomingMailId?: number | null; physicalLocationId: number; boxNumber?: string | null; fileNumber?: string | null; notes?: string | null }) =>
+  createItem: (body: ItemBody) =>
     api.post<PhysicalArchiveItemDto>('/physical-archive/items', body).then((r) => r.data),
+
+  updateItem: (id: number, body: { physicalLocationId: number; boxNumber?: string | null; fileNumber?: string | null; notes?: string | null }) =>
+    api.put<PhysicalArchiveItemDto>(`/physical-archive/items/${id}`, body).then((r) => r.data),
+
+  deleteItem: (id: number) => api.delete(`/physical-archive/items/${id}`),
 }
 
 export const LOCATION_TYPE_LABELS = ['مبنى', 'غرفة', 'خزانة', 'رف', 'صندوق']

@@ -18,6 +18,14 @@ public sealed record CreatePhysicalLocationRequest(
     string? Code,
     string? RfidTag);
 
+public sealed record UpdatePhysicalLocationRequest(
+    long? ParentId,
+    string Name,
+    PhysicalLocationType Type,
+    string? Code,
+    string? RfidTag,
+    bool IsActive);
+
 public sealed record PhysicalArchiveItemDto(
     long Id,
     long? DocumentId,
@@ -27,11 +35,19 @@ public sealed record PhysicalArchiveItemDto(
     string? BoxNumber,
     string? FileNumber,
     DateTime ArchivedAt,
-    string? Notes);
+    string? Notes,
+    string? DocumentNumber = null,
+    string? DocumentTitle = null);
 
 public sealed record CreatePhysicalArchiveItemRequest(
     long? DocumentId,
     long? IncomingMailId,
+    long PhysicalLocationId,
+    string? BoxNumber,
+    string? FileNumber,
+    string? Notes);
+
+public sealed record UpdatePhysicalArchiveItemRequest(
     long PhysicalLocationId,
     string? BoxNumber,
     string? FileNumber,

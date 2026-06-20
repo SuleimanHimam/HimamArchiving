@@ -56,12 +56,17 @@ public static class DependencyInjection
         services.AddScoped<IRecordMetadataService, Services.RecordMetadataService>();
         services.AddScoped<IPreservationPolicyService, Services.PreservationPolicyService>();
 
+        // Full-text search (extract words inside files): managed PDF text + Tesseract OCR for scans.
+        services.AddSingleton<ITextExtractionService, Services.TextExtractionService>();
+        services.AddScoped<ITextIndexingService, Services.TextIndexingService>();
+
         // QuestPDF runs under the Community License (see docs/iso-compliance.md — confirm eligibility).
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
         // Background jobs
         services.AddHostedService<Services.EscalationBackgroundService>();
         services.AddHostedService<Services.FixityVerificationBackgroundService>();
+        services.AddHostedService<Services.TextExtractionBackgroundService>();
 
         return services;
     }

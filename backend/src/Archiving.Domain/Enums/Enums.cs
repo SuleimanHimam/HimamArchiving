@@ -10,6 +10,15 @@ public enum ConfidentialityLevel
     HighlyConfidential = 3 // سري للغاية
 }
 
+/// <summary>State of full-text extraction (embedded text or OCR) for a stored file.</summary>
+public enum TextExtractionStatus
+{
+    Pending = 0,   // queued for the background extractor
+    Done = 1,      // text extracted (or none found) successfully
+    Failed = 2,    // extraction/OCR threw; left for retry/inspection
+    Skipped = 3    // file type not text-extractable (e.g. zip)
+}
+
 /// <summary>Granular RBAC action verbs applied per resource/module.</summary>
 public enum PermissionAction
 {

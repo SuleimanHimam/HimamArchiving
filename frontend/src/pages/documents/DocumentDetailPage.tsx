@@ -233,6 +233,9 @@ export default function DocumentDetailPage() {
           <h1>{doc.title}</h1>
         </div>
         <div className="page__headactions">
+          {auth.hasPermission('Documents.Edit') && (
+            <Link to={`/app/documents/${docId}/edit`} className="btn btn-primary">✏️ تعديل</Link>
+          )}
           {auth.hasPermission('Documents.Print') && (
             <button className="btn btn-ghost" onClick={() => window.print()}>🖨 طباعة</button>
           )}

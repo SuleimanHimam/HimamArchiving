@@ -11,6 +11,7 @@ import IncomingCreatePage from './pages/incoming/IncomingCreatePage'
 import IncomingDetailPage from './pages/incoming/IncomingDetailPage'
 import DocumentsListPage from './pages/documents/DocumentsListPage'
 import DocumentCreatePage from './pages/documents/DocumentCreatePage'
+import DocumentEditPage from './pages/documents/DocumentEditPage'
 import DocumentScanPage from './pages/documents/DocumentScanPage'
 import DocumentDetailPage from './pages/documents/DocumentDetailPage'
 import OutgoingListPage from './pages/outgoing/OutgoingListPage'
@@ -45,6 +46,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="documents" element={<DocumentsListPage />} />
           <Route path="documents/new" element={<DocumentCreatePage />} />
           <Route path="documents/scan" element={<DocumentScanPage />} />
+          <Route path="documents/:id/edit" element={<DocumentEditPage />} />
           <Route path="documents/:id" element={<DocumentDetailPage />} />
           <Route path="outgoing" element={<OutgoingListPage />} />
           <Route path="outgoing/new" element={<OutgoingCreatePage />} />

@@ -97,7 +97,7 @@ export default function DocumentsListPage() {
       <div className="filters">
         <input
           className="filters__search"
-          placeholder="بحث برقم الوثيقة أو العنوان أو الكلمات المفتاحية…"
+          placeholder="بحث برقم الوثيقة، العنوان، الكلمات المفتاحية، أو داخل محتوى الملفات…"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
         />
@@ -113,17 +113,17 @@ export default function DocumentsListPage() {
           <thead>
             <tr>
               <th>رقم الوثيقة</th><th>العنوان</th><th>النوع</th>
-              <th>السرية</th><th>الإصدار</th><th>الحالة</th><th>تاريخ الانتهاء</th>
+              <th>السرية</th><th>الإصدار</th><th>الحالة</th><th>المكان</th><th>تاريخ الانتهاء</th>
             </tr>
           </thead>
           <tbody>
             {loading && Array.from({ length: 6 }).map((_, i) => (
               <tr key={`sk${i}`} className="reg-row reg-skel">
-                {Array.from({ length: 7 }).map((_, j) => <td key={j}><span className="skel-bar" /></td>)}
+                {Array.from({ length: 8 }).map((_, j) => <td key={j}><span className="skel-bar" /></td>)}
               </tr>
             ))}
             {!loading && data?.items.length === 0 && (
-              <tr><td colSpan={7} className="reg-empty">
+              <tr><td colSpan={8} className="reg-empty">
                 <div className="empty-state">
                   <span className="empty-state__icon" aria-hidden>▤</span>
                   <span className="empty-state__text">لا توجد وثائق مطابقة</span>
@@ -143,6 +143,7 @@ export default function DocumentsListPage() {
                   <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
                   <td className="mono">v{d.version}</td>
                   <td><span className={`status-pill s-${d.status.toLowerCase()}`}>{DOC_STATUS_LABELS[d.status] ?? d.status}</span></td>
+                  <td>{d.physicalLocationName ? `${d.physicalLocationName}${d.boxNumber ? ` · ${d.boxNumber}` : ''}` : '—'}</td>
                   <td className="mono">{d.expiryDate ?? '—'}</td>
                 </tr>
               )

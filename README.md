@@ -30,7 +30,7 @@ docs/
 - ✅ Full Phase-1 domain model + EF Core migrations (applied to MySQL 8.4 — see `docs/local-dev.md`)
 - ✅ Auth (JWT + RBAC + permission policies) and RBAC/admin seeding
 - ✅ Module APIs implemented & smoke-tested end-to-end:
-  - **Documents** — types/categories, CRUD, versioning fields, attachment upload/download (local disk storage), clearance-gated
+  - **Documents** — types/categories, CRUD, versioning fields, attachment upload/download (local disk storage), clearance-gated; **full-text search inside files** (digital-PDF text + Arabic/English OCR for scans)
   - **Incoming Mail** — register, route/forward, lifecycle actions, timeline
   - **Outgoing Mail** — draft → submit → approve → send (auto-archive), official numbering
   - **Workflow engine** — admin-defined definitions/stages, instances, position-based worklist (`my-tasks`), act (approve/reject/forward/return/hold/close) with stage advancement + SLA due dates
@@ -66,6 +66,20 @@ Work to align with ISO 15489 / 14721 (OAIS) / 23081 / 19005 (PDF/A) / 16363 is t
   UI: Settings → الحفظ الرقمي.
 
 Fixity cadence is configurable via `Fixity:IntervalMinutes` (default 1440) and `Fixity:BatchSize` (default 50).
+
+## Full-text search inside files
+The document search box also matches words **inside** attachments, not just metadata:
+- **Digital PDFs** → text layer extracted with PdfPig (managed, fast).
+- **Scanned PDFs / images** → OCR with **Tesseract** (Arabic `ara` + English `eng`); pages are
+  rasterized with PDFtoImage. Models ship in `backend/src/Archiving.Api/tessdata/`.
+- Extracted text is stored on the attachment and indexed with a **MySQL `FULLTEXT`** index
+  (`MATCH … AGAINST`). Extraction runs in a **background worker** (OCR is slow), so newly uploaded
+  files become searchable shortly after upload.
+- Re-extract everything (e.g. after changing OCR settings): `POST /api/documents/reindex` (Settings.Edit).
+
+Config (all optional, under `Search`): `IndexingEnabled` (true), `BatchSize` (5), `IdleSeconds` (60),
+`OcrEnabled` (true), `OcrLanguages` ("ara+eng"), `OcrDpi` (200), `OcrMaxPages` (30),
+`EmbeddedTextMinChars` (12), `TessDataPath` (defaults to the app's `tessdata` folder).
 
 ## Configuration (local setup)
 Secrets are **not** committed. `appsettings.json` ships with placeholders; real local values live in a

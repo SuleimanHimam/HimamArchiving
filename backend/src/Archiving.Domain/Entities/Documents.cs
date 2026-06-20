@@ -74,7 +74,12 @@ public class DocumentAttachment : BaseEntity
     public string ChecksumAlgorithm { get; set; } = "SHA-256"; // ISO 16363 — algorithm used for the fixity value
     public DateTime? LastFixityCheckAt { get; set; }           // last time the stored file was re-verified
     public bool IsScanned { get; set; }
-    public string? OcrText { get; set; }                       // populated in Phase 2 (OCR)
+
+    // Full-text search (extracted from the file: embedded PDF text or OCR for scans)
+    public string? ExtractedText { get; set; }                 // searchable text content
+    public TextExtractionStatus ExtractionStatus { get; set; } = TextExtractionStatus.Pending;
+    public string? ExtractionSource { get; set; }              // "Embedded" | "OCR"
+    public DateTime? TextExtractedAt { get; set; }
 
     // OAIS / PDF-A preservation (ISO 14721, 19005)
     public AttachmentKind Kind { get; set; } = AttachmentKind.Original; // submitted original vs preservation master

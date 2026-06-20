@@ -111,3 +111,7 @@
 .empty-state__icon { font-size: 2rem; opacity: .5; }
 .empty-state__text { font-size: .95rem; }
 .btn-sm { padding: .3rem .7rem; font-size: .85rem; }
+
+/* Archive page: inline row actions + editing highlight */
+.row-actions { display: flex; gap: .25rem; white-space: nowrap; justify-content: flex-end; }
+.reg-table tr.is-editing { background: color-mix(in srgb, var(--accent, #8a6d3b) 10%, transparent); }

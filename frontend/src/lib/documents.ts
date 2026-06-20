@@ -35,6 +35,9 @@ export interface DocumentListItem {
   documentDate: string | null
   expiryDate: string | null
   createdAt: string
+  physicalLocationName: string | null
+  boxNumber: string | null
+  fileNumber: string | null
 }
 
 export interface DocumentAttachmentDto {
@@ -59,9 +62,7 @@ export interface DocumentDetail extends DocumentListItem {
   isLatestVersion: boolean
   attachments: DocumentAttachmentDto[]
   physicalLocationId: number | null
-  physicalLocationName: string | null
-  boxNumber: string | null
-  fileNumber: string | null
+  // physicalLocationName, boxNumber, fileNumber inherited from DocumentListItem
 }
 
 export interface CreateDocument {

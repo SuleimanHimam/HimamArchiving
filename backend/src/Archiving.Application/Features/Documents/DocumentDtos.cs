@@ -42,7 +42,11 @@ public sealed record DocumentListItem(
     int Version,
     DateOnly? DocumentDate,
     DateOnly? ExpiryDate,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    // Physical storage place (latest linked location)
+    string? PhysicalLocationName = null,
+    string? BoxNumber = null,
+    string? FileNumber = null);
 
 public sealed record DocumentAttachmentDto(
     long Id,

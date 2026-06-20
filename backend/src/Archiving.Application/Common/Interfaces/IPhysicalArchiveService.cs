@@ -7,7 +7,11 @@ public interface IPhysicalArchiveService
 {
     Task<IReadOnlyList<PhysicalLocationDto>> ListLocationsAsync(CancellationToken ct = default);
     Task<Result<PhysicalLocationDto>> CreateLocationAsync(CreatePhysicalLocationRequest request, CancellationToken ct = default);
+    Task<Result<PhysicalLocationDto>> UpdateLocationAsync(long id, UpdatePhysicalLocationRequest request, CancellationToken ct = default);
+    Task<Result<bool>> DeleteLocationAsync(long id, CancellationToken ct = default);
 
     Task<IReadOnlyList<PhysicalArchiveItemDto>> ListItemsAsync(long? locationId, CancellationToken ct = default);
     Task<Result<PhysicalArchiveItemDto>> CreateItemAsync(CreatePhysicalArchiveItemRequest request, CancellationToken ct = default);
+    Task<Result<PhysicalArchiveItemDto>> UpdateItemAsync(long id, UpdatePhysicalArchiveItemRequest request, CancellationToken ct = default);
+    Task<Result<bool>> DeleteItemAsync(long id, CancellationToken ct = default);
 }

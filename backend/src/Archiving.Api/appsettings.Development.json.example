@@ -14,6 +14,7 @@
   },
   "Escalation": { "IntervalSeconds": 300 },
   "Fixity": { "IntervalMinutes": 1440, "BatchSize": 50 },
+  "Search": { "IndexingEnabled": true, "OcrEnabled": true, "OcrLanguages": "ara+eng", "BatchSize": 5, "IdleSeconds": 60 },
   "Downloads": { "ScanAgentPath": "C:\\path\\to\\tools\\scan-agent\\publish\\archiving-scan-agent.exe" },
   "Preservation": { "VeraPdfPath": "" }
 }

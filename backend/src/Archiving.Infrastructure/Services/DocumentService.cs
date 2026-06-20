@@ -84,8 +84,13 @@ public sealed class DocumentService(
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var s = query.Search.Trim();
+            // Match words *inside* files via the MySQL full-text index, plus the usual metadata fields.
+            var contentDocIds = await db.Database
+                .SqlQuery<long>($"SELECT DISTINCT DocumentId AS Value FROM DocumentAttachments WHERE MATCH(ExtractedText) AGAINST({s} IN NATURAL LANGUAGE MODE)")
+                .ToListAsync(ct);
             q = q.Where(d => d.DocumentNumber.Contains(s) || d.Title.Contains(s)
-                || (d.Keywords != null && d.Keywords.Contains(s)));
+                || (d.Keywords != null && d.Keywords.Contains(s))
+                || contentDocIds.Contains(d.Id));
         }
 
         var total = await q.CountAsync(ct);
@@ -95,7 +100,13 @@ public sealed class DocumentService(
             .Select(d => new DocumentListItem(
                 d.Id, d.DocumentNumber, d.Title, d.DocumentType.Name,
                 d.Confidentiality.ToString(), d.Status.ToString(), d.Version,
-                d.DocumentDate, d.ExpiryDate, d.CreatedAt))
+                d.DocumentDate, d.ExpiryDate, d.CreatedAt,
+                db.PhysicalArchiveItems.Where(i => i.DocumentId == d.Id).OrderByDescending(i => i.Id)
+                    .Select(i => i.PhysicalLocation.Name).FirstOrDefault(),
+                db.PhysicalArchiveItems.Where(i => i.DocumentId == d.Id).OrderByDescending(i => i.Id)
+                    .Select(i => i.BoxNumber).FirstOrDefault(),
+                db.PhysicalArchiveItems.Where(i => i.DocumentId == d.Id).OrderByDescending(i => i.Id)
+                    .Select(i => i.FileNumber).FirstOrDefault()))
             .ToListAsync(ct);
 
         return new PagedResult<DocumentListItem> { Items = items, Page = page, PageSize = size, TotalCount = total };

@@ -111,7 +111,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // ---- Long text columns ----
         b.Entity<Document>().Property(x => x.Description).HasColumnType("longtext");
         b.Entity<Document>().Property(x => x.Keywords).HasColumnType("longtext");
-        b.Entity<DocumentAttachment>().Property(x => x.OcrText).HasColumnType("longtext");
+        b.Entity<DocumentAttachment>().Property(x => x.ExtractedText).HasColumnType("longtext");
+        b.Entity<DocumentAttachment>().HasIndex(x => x.ExtractionStatus);
         b.Entity<IncomingMail>().Property(x => x.Body).HasColumnType("longtext");
         b.Entity<IncomingMail>().Property(x => x.Keywords).HasColumnType("longtext");
         b.Entity<OutgoingMail>().Property(x => x.Body).HasColumnType("longtext");

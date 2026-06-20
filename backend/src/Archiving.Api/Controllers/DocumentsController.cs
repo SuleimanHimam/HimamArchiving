@@ -17,8 +17,18 @@ public sealed class DocumentsController(
     IPreservationService preservation,
     IPreservationPackageService packages,
     IRecordMetadataService metadata,
-    IPreservationPolicyService policy) : ControllerBase
+    IPreservationPolicyService policy,
+    ITextIndexingService indexing) : ControllerBase
 {
+    // ---- Full-text search reindex (re-extract text/OCR from every attachment) ----
+    [HttpPost("reindex")]
+    [HasPermission("Settings.Edit")]
+    public async Task<IActionResult> Reindex(CancellationToken ct)
+    {
+        var queued = await indexing.ReindexAllAsync(ct);
+        return Ok(new { queued });
+    }
+
     // ---- Configuration: types & categories ----
     [HttpGet("types")]
     [HasPermission("Documents.View")]

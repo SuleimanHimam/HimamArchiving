@@ -19,6 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tesseract OCR language models (copied next to the app for the text-extraction service) -->
+    <Content Include="tessdata\**\*.traineddata" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Archiving.Infrastructure\Archiving.Infrastructure.csproj" />
     <ProjectReference Include="..\Archiving.Application\Archiving.Application.csproj" />
   </ItemGroup>
