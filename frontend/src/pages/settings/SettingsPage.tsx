@@ -5,12 +5,13 @@ import { auth } from '../../lib/auth'
 import ScannerSettings from '../../components/ScannerSettings'
 import UsersAdmin from '../../components/UsersAdmin'
 import AboutSettings from '../../components/AboutSettings'
-import DesignatedCommunitySettings from '../../components/DesignatedCommunitySettings'
-import PreservationPolicySettings from '../../components/PreservationPolicySettings'
 import BackupSettings from '../../components/BackupSettings'
 import RolesAdmin from '../../components/RolesAdmin'
 import ClassificationSettings from '../../components/ClassificationSettings'
 import DocumentTypesSettings from '../../components/DocumentTypesSettings'
+import TableColumnsSettings from '../../components/TableColumnsSettings'
+import CustomFieldsSettings from '../../components/CustomFieldsSettings'
+import DestructionMethodsSettings from '../../components/DestructionMethodsSettings'
 import NavigationSettings from '../../components/NavigationSettings'
 import BrandingSettings from '../../components/BrandingSettings'
 import '../incoming/incoming.css'
@@ -29,12 +30,9 @@ export default function SettingsPage() {
     { key: 'roles', label: t('settings.sections.roles'), icon: '⊙', show: auth.hasPermission('Users.View'), render: () => <RolesAdmin /> },
     { key: 'classification', label: t('settings.sections.classification'), icon: '◈', show: auth.hasPermission('Classification.View'), render: () => <ClassificationSettings /> },
     { key: 'docTypes', label: 'أنواع الوثائق', icon: '▤', show: auth.hasPermission('Documents.View'), render: () => <DocumentTypesSettings /> },
-    { key: 'preservation', label: t('settings.sections.preservation'), icon: '⛁', show: auth.hasPermission('Preservation.View'), render: () => (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-        <PreservationPolicySettings />
-        <DesignatedCommunitySettings />
-      </div>
-    ) },
+    { key: 'tableColumns', label: 'أعمدة الجداول', icon: '▦', show: auth.hasPermission('TableColumns.Edit'), render: () => <TableColumnsSettings /> },
+    { key: 'customFields', label: 'الحقول المخصصة', icon: '◇', show: auth.hasPermission('CustomFields.Edit'), render: () => <CustomFieldsSettings /> },
+    { key: 'destructionMethods', label: 'طرق الإتلاف', icon: '⊗', show: auth.hasPermission('Destruction.Approve'), render: () => <DestructionMethodsSettings /> },
     { key: 'backup', label: t('settings.sections.backup'), icon: '⛃', show: auth.hasPermission('Backup.Edit'), render: () => <BackupSettings /> },
     { key: 'about', label: t('settings.sections.about'), icon: 'ℹ', show: true, render: () => <AboutSettings /> },
   ].filter((s) => s.show)

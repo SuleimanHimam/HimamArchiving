@@ -146,10 +146,6 @@ export default function LoginPage() {
               {loading ? t('auth.loginLoading') : t('auth.loginAction')}
             </button>
 
-            <div className="login__or"><span>{i18n.language === 'ar' ? 'أو' : 'or'}</span></div>
-
-            <button type="button" className="btn btn-ghost login__ad">{t('auth.adLogin')}</button>
-
             <p className="login__mfa muted">
               <span className="badge secret">{t('common.mfa')}</span>
               {t('auth.mfaNote')}

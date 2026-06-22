@@ -14,9 +14,8 @@ export const NAV_SECTIONS: { key: string; labelKey: string }[] = [
   { key: 'incoming', labelKey: 'nav.incoming' },
   { key: 'outgoing', labelKey: 'nav.outgoing' },
   { key: 'documents', labelKey: 'nav.documents' },
-  { key: 'notes', labelKey: 'nav.notes' },
-  { key: 'workflow', labelKey: 'nav.workflow' },
   { key: 'archive', labelKey: 'nav.archive' },
-  { key: 'reports', labelKey: 'nav.reports' },
+  { key: 'locations', labelKey: 'nav.locations' },
+  { key: 'disposition', labelKey: 'nav.disposition' },
   { key: 'monitoring', labelKey: 'nav.monitoring' },
 ]

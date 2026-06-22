@@ -15,6 +15,8 @@ public interface IDocumentService
     Task<Result<bool>> DeleteTypeAsync(long id, CancellationToken ct = default);
     Task<IReadOnlyList<DocumentCategoryDto>> ListCategoriesAsync(CancellationToken ct = default);
     Task<Result<DocumentCategoryDto>> CreateCategoryAsync(CreateDocumentCategoryRequest request, CancellationToken ct = default);
+    Task<Result<DocumentCategoryDto>> UpdateCategoryAsync(long id, UpdateDocumentCategoryRequest request, CancellationToken ct = default);
+    Task<Result<bool>> DeleteCategoryAsync(long id, CancellationToken ct = default);
 
     // Documents
     Task<PagedResult<DocumentListItem>> ListAsync(DocumentQuery query, CancellationToken ct = default);

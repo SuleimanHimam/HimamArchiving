@@ -33,7 +33,8 @@ public sealed class DocumentService(
     {
         var e = new DocumentType
         {
-            Name = r.Name, NameEn = r.NameEn, Code = r.Code, CategoryId = r.CategoryId,
+            Name = r.Name, NameEn = r.NameEn, CategoryId = r.CategoryId,
+            Code = string.IsNullOrWhiteSpace(r.Code) ? null : r.Code.Trim(),   // optional identification code
             DefaultConfidentiality = r.DefaultConfidentiality,
             RetentionMonths = r.RetentionMonths <= 0 ? 120 : r.RetentionMonths,
             RequiresApproval = r.RequiresApproval,
@@ -53,7 +54,8 @@ public sealed class DocumentService(
         if (r.CategoryId is { } cid && !await db.DocumentCategories.AnyAsync(c => c.Id == cid, ct))
             return Result<DocumentTypeDto>.Fail("التصنيف غير موجود");
 
-        e.Name = r.Name; e.NameEn = r.NameEn; e.Code = r.Code; e.CategoryId = r.CategoryId;
+        e.Name = r.Name; e.NameEn = r.NameEn; e.CategoryId = r.CategoryId;
+        e.Code = string.IsNullOrWhiteSpace(r.Code) ? null : r.Code.Trim();   // optional identification code
         e.DefaultConfidentiality = r.DefaultConfidentiality;
         e.RetentionMonths = r.RetentionMonths <= 0 ? 120 : r.RetentionMonths;
         e.RequiresApproval = r.RequiresApproval;
@@ -101,6 +103,36 @@ public sealed class DocumentService(
         return Result<DocumentCategoryDto>.Ok(new DocumentCategoryDto(e.Id, e.ParentId, e.Name, e.Code, e.IsActive));
     }
 
+    public async Task<Result<DocumentCategoryDto>> UpdateCategoryAsync(long id, UpdateDocumentCategoryRequest r, CancellationToken ct = default)
+    {
+        var e = await db.DocumentCategories.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (e is null) return Result<DocumentCategoryDto>.Fail("التصنيف غير موجود");
+        if (string.IsNullOrWhiteSpace(r.Name)) return Result<DocumentCategoryDto>.Fail("اسم التصنيف مطلوب");
+        if (r.ParentId == id) return Result<DocumentCategoryDto>.Fail("لا يمكن جعل التصنيف أبًا لنفسه");
+        if (r.ParentId is { } pid && !await db.DocumentCategories.AnyAsync(c => c.Id == pid, ct))
+            return Result<DocumentCategoryDto>.Fail("التصنيف الأب غير موجود");
+
+        e.Name = r.Name.Trim(); e.Code = r.Code; e.ParentId = r.ParentId; e.IsActive = r.IsActive;
+        await db.SaveChangesAsync(ct);
+        await audit.WriteAsync("Edited", "DocumentCategory", e.Id, e.Name, ct: ct);
+        return Result<DocumentCategoryDto>.Ok(new DocumentCategoryDto(e.Id, e.ParentId, e.Name, e.Code, e.IsActive));
+    }
+
+    public async Task<Result<bool>> DeleteCategoryAsync(long id, CancellationToken ct = default)
+    {
+        var e = await db.DocumentCategories.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (e is null) return Result<bool>.Fail("التصنيف غير موجود");
+        if (await db.DocumentCategories.AnyAsync(c => c.ParentId == id, ct))
+            return Result<bool>.Fail("لا يمكن حذف تصنيف يحتوي على تصنيفات فرعية");
+        if (await db.Documents.AnyAsync(d => d.CategoryId == id, ct) || await db.DocumentTypes.AnyAsync(tp => tp.CategoryId == id, ct))
+            return Result<bool>.Fail("لا يمكن حذف تصنيف مستخدم — يمكنك تعطيله بدلاً من ذلك");
+
+        db.DocumentCategories.Remove(e);
+        await db.SaveChangesAsync(ct);
+        await audit.WriteAsync("Deleted", "DocumentCategory", e.Id, e.Name, ct: ct);
+        return Result<bool>.Ok(true);
+    }
+
     // ---- Documents ----
 
     public async Task<PagedResult<DocumentListItem>> ListAsync(DocumentQuery query, CancellationToken ct = default)
@@ -122,6 +154,15 @@ public sealed class DocumentService(
             q = q.Where(d => db.DocumentFavorites.Any(f => f.DocumentId == d.Id && f.UserId == currentUser.UserId));
         if (query.SharedWithMe)
             q = q.Where(d => db.DocumentShares.Any(sh => sh.DocumentId == d.Id && sh.SharedWithUserId == currentUser.UserId));
+
+        // Filter by an admin-defined custom field value.
+        if (query.CustomFieldId is { } cfId)
+        {
+            var cfVal = query.CustomFieldValue?.Trim();
+            q = q.Where(d => db.CustomFieldValues.Any(v =>
+                v.FieldId == cfId && v.EntityType == "Document" && v.EntityId == d.Id
+                && (string.IsNullOrEmpty(cfVal) || v.Value.Contains(cfVal!))));
+        }
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -149,8 +190,25 @@ public sealed class DocumentService(
                 db.PhysicalArchiveItems.Where(i => i.DocumentId == d.Id).OrderByDescending(i => i.Id)
                     .Select(i => i.BoxNumber).FirstOrDefault(),
                 db.PhysicalArchiveItems.Where(i => i.DocumentId == d.Id).OrderByDescending(i => i.Id)
-                    .Select(i => i.FileNumber).FirstOrDefault()))
+                    .Select(i => i.FileNumber).FirstOrDefault(),
+                db.Boxes.Where(b => b.Id == d.BoxId).Select(b => b.BoxCode).FirstOrDefault()))
             .ToListAsync(ct);
+
+        // Attach admin-defined custom field values for the documents on this page.
+        var ids = items.Select(i => i.Id).ToList();
+        if (ids.Count > 0)
+        {
+            var values = await db.CustomFieldValues
+                .Where(v => v.EntityType == "Document" && ids.Contains(v.EntityId))
+                .Select(v => new { v.EntityId, v.FieldId, v.Value })
+                .ToListAsync(ct);
+            if (values.Count > 0)
+            {
+                var byDoc = values.GroupBy(v => v.EntityId)
+                    .ToDictionary(g => g.Key, g => g.ToDictionary(x => x.FieldId, x => x.Value));
+                items = items.Select(it => byDoc.TryGetValue(it.Id, out var cv) ? it with { CustomValues = cv } : it).ToList();
+            }
+        }
 
         return new PagedResult<DocumentListItem> { Items = items, Page = page, PageSize = size, TotalCount = total };
     }
@@ -162,7 +220,8 @@ public sealed class DocumentService(
         if (doc is null) return Result<DocumentDetail>.Fail("الوثيقة غير موجودة");
         if (!await CanAccessAsync(doc, ct)) return Result<DocumentDetail>.Fail("لا تملك صلاحية الوصول لهذه الوثيقة");
         var isFav = await db.DocumentFavorites.AnyAsync(f => f.DocumentId == id && f.UserId == currentUser.UserId, ct);
-        var detail = WithPhysical(ToDetail(doc), await GetPhysicalItemAsync(doc.Id, ct)) with { FolderId = doc.FolderId, IsFavorite = isFav };
+        var boxCode = doc.BoxId is { } bid ? await db.Boxes.Where(b => b.Id == bid).Select(b => b.BoxCode).FirstOrDefaultAsync(ct) : null;
+        var detail = WithPhysical(ToDetail(doc), await GetPhysicalItemAsync(doc.Id, ct)) with { FolderId = doc.FolderId, IsFavorite = isFav, BoxCode = boxCode };
         return Result<DocumentDetail>.Ok(detail);
     }
 
@@ -190,10 +249,12 @@ public sealed class DocumentService(
             RetentionMonths = type.RetentionMonths,
             DocumentDate = r.DocumentDate,
             ExpiryDate = ComputeExpiry(r.DocumentDate, type.RetentionMonths),
+            BoxId = r.BoxId,
         };
 
         db.Documents.Add(doc);
         await db.SaveChangesAsync(ct);
+        await AdjustBoxCountAsync(null, r.BoxId, ct);   // filing into a box bumps its CurrentCount
         await audit.WriteAsync("Created", EntityType, doc.Id, doc.Title, ct: ct);
 
         // Link the physical storage location at entry time, if provided.
@@ -229,7 +290,15 @@ public sealed class DocumentService(
         doc.Confidentiality = r.Confidentiality;
         doc.Keywords = r.Keywords;
         doc.DocumentDate = r.DocumentDate;
-        doc.ExpiryDate = ComputeExpiry(r.DocumentDate, doc.RetentionMonths);
+        // Admin-set expiry wins; otherwise derive it from the document date + retention.
+        doc.ExpiryDate = r.ExpiryDate ?? ComputeExpiry(r.DocumentDate, doc.RetentionMonths);
+
+        var oldBox = doc.BoxId;
+        if (oldBox != r.BoxId)
+        {
+            doc.BoxId = r.BoxId;
+            await AdjustBoxCountAsync(oldBox, r.BoxId, ct);   // move between boxes updates both counts
+        }
 
         await db.SaveChangesAsync(ct);
         await audit.WriteAsync("Edited", EntityType, doc.Id, doc.Title, ct: ct);
@@ -241,6 +310,8 @@ public sealed class DocumentService(
         var doc = await db.Documents.FirstOrDefaultAsync(d => d.Id == id, ct);
         if (doc is null) return Result<bool>.Fail("الوثيقة غير موجودة");
         if (!CanAccess(doc)) return Result<bool>.Fail("لا تملك صلاحية الوصول لهذه الوثيقة");
+
+        if (doc.BoxId is not null) await AdjustBoxCountAsync(doc.BoxId, null, ct);   // free a slot in the box
 
         // The AuditableEntityInterceptor converts this into a soft delete (stamps IsDeleted/DeletedAt/By).
         db.Documents.Remove(doc);
@@ -380,6 +451,22 @@ public sealed class DocumentService(
             FileNumber = item.FileNumber,
         };
 
+    // Keep Box.CurrentCount in sync as documents are filed / moved / unfiled.
+    private async Task AdjustBoxCountAsync(long? oldBoxId, long? newBoxId, CancellationToken ct)
+    {
+        if (oldBoxId == newBoxId) return;
+        if (oldBoxId is { } ob)
+        {
+            var b = await db.Boxes.FirstOrDefaultAsync(x => x.Id == ob, ct);
+            if (b is { CurrentCount: > 0 }) { b.CurrentCount--; await db.SaveChangesAsync(ct); }
+        }
+        if (newBoxId is { } nb)
+        {
+            var b = await db.Boxes.FirstOrDefaultAsync(x => x.Id == nb, ct);
+            if (b is not null) { b.CurrentCount++; await db.SaveChangesAsync(ct); }
+        }
+    }
+
     private static DocumentDetail ToDetail(Document d) => new(
         d.Id, d.DocumentNumber, d.Title, d.Description, d.DocumentTypeId, d.DocumentType.Name,
         d.CategoryId, d.OwningOrgUnitId, d.OwnerPositionId, d.Confidentiality.ToString(), d.Status.ToString(),
@@ -387,5 +474,10 @@ public sealed class DocumentService(
         d.CreatedAt,
         d.Attachments.OrderBy(a => a.Id).Select(a => new DocumentAttachmentDto(
             a.Id, a.FileName, a.ContentType, a.FileExtension, a.SizeBytes, a.IsScanned, a.CreatedAt,
-            a.Kind.ToString(), a.SourceAttachmentId, a.PdfAConformance, a.PreservationValidated)).ToList());
+            a.Kind.ToString(), a.SourceAttachmentId, a.PdfAConformance, a.PreservationValidated)).ToList())
+    {
+        IsTombstone = d.IsTombstone,
+        DestroyedAtUtc = d.DestroyedAtUtc,
+        BoxId = d.BoxId,
+    };
 }

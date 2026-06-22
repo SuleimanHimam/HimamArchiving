@@ -8,16 +8,20 @@ import { type PagedResult, CONFIDENTIALITY_LABELS } from '../../lib/incomingMail
 import { useToast } from '../../components/toast'
 import { useAutoRefresh } from '../../lib/useAutoRefresh'
 import { foldersApi, exportApi, type Folder } from '../../lib/userFeatures'
+import { useTableColumns } from '../../hooks/useTableColumns'
+import { customFields, optionList, type CustomFieldDef } from '../../lib/customFields'
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel,
   ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger,
 } from '../../components/ui/context-menu'
-import { Eye, FolderOpen, Pencil, Copy, Printer } from 'lucide-react'
+import { Eye, FolderOpen, Pencil, Copy, Printer, Trash2 } from 'lucide-react'
+import RequestDispositionModal from '../../components/RequestDispositionModal'
 import '../incoming/incoming.css'
 
 export default function DocumentsListPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const { columns } = useTableColumns('documents')
   const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState<PagedResult<DocumentListItem> | null>(null)
   const [search, setSearch] = useState(searchParams.get('search') ?? '')
@@ -28,6 +32,9 @@ export default function DocumentsListPage() {
   const [dateTo, setDateTo] = useState('')
   const [folderId, setFolderId] = useState('')
   const [folders, setFolders] = useState<Folder[]>([])
+  const [cfDefs, setCfDefs] = useState<CustomFieldDef[]>([])
+  const [cfFieldId, setCfFieldId] = useState('')
+  const [cfValue, setCfValue] = useState('')
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,6 +43,8 @@ export default function DocumentsListPage() {
   const [exporting, setExporting] = useState(false)
   const wantPrint = useRef(false)
   const toast = useToast()
+  const canDestroy = auth.hasPermission('Disposition.Create')
+  const [reqFor, setReqFor] = useState<{ id: number; number: string } | null>(null)
 
   const canEdit = auth.hasPermission('Documents.Edit')
   const canPrint = auth.hasPermission('Documents.Print')
@@ -91,17 +100,20 @@ export default function DocumentsListPage() {
         favoritesOnly: favOnly || undefined,
         sharedWithMe: sharedOnly || undefined,
         folderId: folderId ? Number(folderId) : undefined,
+        customFieldId: cfFieldId ? Number(cfFieldId) : undefined,
+        customFieldValue: cfFieldId && cfValue ? cfValue : undefined,
         page, pageSize: 15,
       })
       setData(res)
     } catch {
       if (!silent) setError(t('documents.loadError'))
     } finally { if (!silent) setLoading(false) }
-  }, [search, status, dateFrom, dateTo, favOnly, sharedOnly, folderId, page, t])
+  }, [search, status, dateFrom, dateTo, favOnly, sharedOnly, folderId, cfFieldId, cfValue, page, t])
 
   useEffect(() => { load() }, [load])
   useAutoRefresh(() => load(true), 30000)
   useEffect(() => { foldersApi.list().then(setFolders).catch(() => {}) }, [])
+  useEffect(() => { customFields.list('Document').then((d) => setCfDefs(d.filter((x) => x.isActive && x.searchable))).catch(() => {}) }, [])
 
   async function exportAll() {
     setExporting(true)
@@ -132,9 +144,11 @@ export default function DocumentsListPage() {
           <h1>{t('documents.title')}</h1>
         </div>
         <div className="page__headactions">
-          <button className="btn btn-ghost" disabled={exporting} onClick={exportAll} title="تصدير الوثائق كملف مضغوط">
-            {exporting ? '…' : '⬇ تصدير ZIP'}
-          </button>
+          {auth.hasPermission('Export.View') && (
+            <button className="btn btn-ghost" disabled={exporting} onClick={exportAll} title="تصدير الوثائق كملف مضغوط">
+              {exporting ? '…' : '⬇ تصدير ZIP'}
+            </button>
+          )}
           {auth.hasPermission('Documents.Print') && (
             <button className="btn btn-ghost" disabled={printing} onClick={printAll}>
               {printing ? t('common.loading') : `🖨 ${t('common.actions.print')}`}
@@ -173,6 +187,31 @@ export default function DocumentsListPage() {
           onClick={() => { setFavOnly((v) => !v); setPage(1) }}>★ المفضلة</button>
         <button className={`btn btn-sm ${sharedOnly ? 'btn-primary' : 'btn-ghost'}`}
           onClick={() => { setSharedOnly((v) => !v); setPage(1) }}>👥 مشاركة معي</button>
+
+        {cfDefs.length > 0 && (
+          <>
+            <select className="filters__status" value={cfFieldId} title="بحث بحقل مخصص"
+              onChange={(e) => { setCfFieldId(e.target.value); setCfValue(''); setPage(1) }}>
+              <option value="">حقل مخصص…</option>
+              {cfDefs.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+            </select>
+            {cfFieldId && (() => {
+              const def = cfDefs.find((d) => String(d.id) === cfFieldId)
+              if (def?.fieldType === 3) return (
+                <select className="filters__status" value={cfValue} onChange={(e) => { setCfValue(e.target.value); setPage(1) }}>
+                  <option value="">—</option>
+                  {optionList(def).map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              )
+              return (
+                <input className="filters__status" placeholder="القيمة" value={cfValue}
+                  dir={def?.fieldType === 1 ? 'ltr' : undefined}
+                  type={def?.fieldType === 2 ? 'date' : def?.fieldType === 1 ? 'number' : 'text'}
+                  onChange={(e) => { setCfValue(e.target.value); setPage(1) }} />
+              )
+            })()}
+          </>
+        )}
       </div>
 
       {error && <p className="login__error">{error}</p>}
@@ -181,22 +220,17 @@ export default function DocumentsListPage() {
         <table className="reg-table">
           <thead>
             <tr>
-              <th>{t('documents.columns.title')}</th>
-              <th>{t('documents.columns.type')}</th>
-              <th>{t('documents.columns.confidentiality')}</th>
-              <th>{t('documents.columns.status')}</th>
-              <th>{t('documents.columns.location')}</th>
-              <th>{t('documents.columns.date')}</th>
+              {columns.map((col) => <th key={col.key}>{col.label}</th>)}
             </tr>
           </thead>
           <tbody>
             {loading && Array.from({ length: 6 }).map((_, i) => (
               <tr key={`sk${i}`} className="reg-row reg-skel">
-                {Array.from({ length: 6 }).map((_, j) => <td key={j}><span className="skel-bar" /></td>)}
+                {columns.map((col) => <td key={col.key}><span className="skel-bar" /></td>)}
               </tr>
             ))}
             {!loading && data?.items.length === 0 && (
-              <tr><td colSpan={6} className="reg-empty">
+              <tr><td colSpan={columns.length} className="reg-empty">
                 <div className="empty-state">
                   <span className="empty-state__icon" aria-hidden>▤</span>
                   <span className="empty-state__text">{t('documents.empty')}</span>
@@ -216,12 +250,27 @@ export default function DocumentsListPage() {
                       className="reg-row"
                       title="انقر للفتح · انقر بالزر الأيمن للإجراءات السريعة"
                     >
-                      <td className="reg-subject">{d.title}</td>
-                      <td>{d.documentTypeName}</td>
-                      <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
-                      <td><span className={`status-pill s-${d.status.toLowerCase()}`}>{DOC_STATUS_LABELS[d.status] ?? d.status}</span></td>
-                      <td>{d.physicalLocationName ? `${d.physicalLocationName}${d.boxNumber ? ` · ${d.boxNumber}` : ''}` : '—'}</td>
-                      <td className="mono">{d.expiryDate ?? '—'}</td>
+                      {columns.map((col) => {
+                        switch (col.key) {
+                          case 'title': return <td key={col.key} className="reg-subject">{d.title}</td>
+                          case 'type': return <td key={col.key}>{d.documentTypeName}</td>
+                          case 'confidentiality': return <td key={col.key}><span className={`badge ${c.cls}`}>{c.ar}</span></td>
+                          case 'status': return <td key={col.key}><span className={`status-pill s-${d.status.toLowerCase()}`}>{DOC_STATUS_LABELS[d.status] ?? d.status}</span></td>
+                          case 'location': return <td key={col.key}>{d.boxCode ? `📦 ${d.boxCode}` : d.physicalLocationName ? `${d.physicalLocationName}${d.boxNumber ? ` · ${d.boxNumber}` : ''}` : '—'}</td>
+                          case 'date': return <td key={col.key} className="mono">{d.expiryDate ?? '—'}</td>
+                          case 'documentNumber': return <td key={col.key} className="mono num">{d.documentNumber}</td>
+                          case 'documentDate': return <td key={col.key} className="mono">{d.documentDate ?? '—'}</td>
+                          case 'version': return <td key={col.key} className="mono">{d.version}</td>
+                          case 'box': return <td key={col.key} className="mono">{d.boxNumber ?? '—'}</td>
+                          case 'file': return <td key={col.key} className="mono">{d.fileNumber ?? '—'}</td>
+                          case 'createdAt': return <td key={col.key} className="mono">{d.createdAt?.slice(0, 10) ?? '—'}</td>
+                          default:
+                            if (col.key.startsWith('cf_')) {
+                              return <td key={col.key}>{d.customValues?.[col.key.slice(3)] ?? '—'}</td>
+                            }
+                            return null
+                        }
+                      })}
                     </tr>
                   </ContextMenuTrigger>
 
@@ -266,6 +315,16 @@ export default function DocumentsListPage() {
                         طباعة
                         <ContextMenuShortcut>⌘P</ContextMenuShortcut>
                       </ContextMenuItem>
+                    )}
+
+                    {canDestroy && (
+                      <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem className="text-destructive focus:text-destructive" onSelect={() => setReqFor({ id: d.id, number: d.documentNumber })}>
+                          <Trash2 className="ml-2 h-4 w-4 opacity-60" />
+                          طلب إتلاف
+                        </ContextMenuItem>
+                      </>
                     )}
                   </ContextMenuContent>
                 </ContextMenu>
@@ -319,6 +378,11 @@ export default function DocumentsListPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {reqFor && (
+        <RequestDispositionModal documentId={reqFor.id} documentNumber={reqFor.number}
+          onClose={() => setReqFor(null)} />
       )}
     </div>
   )

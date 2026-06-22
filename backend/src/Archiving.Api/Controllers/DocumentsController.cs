@@ -70,6 +70,22 @@ public sealed class DocumentsController(
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
     }
 
+    [HttpPut("categories/{id:long}")]
+    [HasPermission("Classification.Edit")]
+    public async Task<IActionResult> UpdateCategory(long id, [FromBody] UpdateDocumentCategoryRequest req, CancellationToken ct)
+    {
+        var r = await service.UpdateCategoryAsync(id, req, ct);
+        return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
+    }
+
+    [HttpDelete("categories/{id:long}")]
+    [HasPermission("Classification.Edit")]
+    public async Task<IActionResult> DeleteCategory(long id, CancellationToken ct)
+    {
+        var r = await service.DeleteCategoryAsync(id, ct);
+        return r.Succeeded ? NoContent() : BadRequest(new { error = r.Error });
+    }
+
     // ---- Documents ----
     [HttpGet]
     [HasPermission("Documents.View")]
@@ -83,11 +99,13 @@ public sealed class DocumentsController(
         [FromQuery] bool favoritesOnly = false,
         [FromQuery] bool sharedWithMe = false,
         [FromQuery] long? folderId = null,
+        [FromQuery] long? customFieldId = null,
+        [FromQuery] string? customFieldValue = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
         => Ok(await service.ListAsync(new DocumentQuery(search, status, documentTypeId, owningOrgUnitId,
-            dateFrom, dateTo, favoritesOnly, sharedWithMe, folderId, page, pageSize), ct));
+            dateFrom, dateTo, favoritesOnly, sharedWithMe, folderId, customFieldId, customFieldValue, page, pageSize), ct));
 
     [HttpGet("{id:long}")]
     [HasPermission("Documents.View")]

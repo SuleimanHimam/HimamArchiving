@@ -96,3 +96,36 @@ Escalation: when `DueAt` passes, a background job notifies (in-app/email/SMS) an
 5. **MySQL target version** — assuming **MySQL 8.0+** (needed for proper `utf8mb4`, full-text, window functions). Confirm.
 
 **Reply "approve" (or with changes) and I'll generate the initial EF Core migration** — once a MySQL 8 instance is available (not currently installed on this machine).
+
+## Destruction / Disposition entities (Phase: Secure Destruction)
+
+- **LegalHold** — `Reason`, `Scope` (Document|Folder|OrgUnit|Query), scope target id, `PlacedBy/At`,
+  `ReleasedBy/At?` (null = active). Active holds block destruction.
+- **DestructionRequest** — `Status` (Draft→PendingApproval→Approved→Executing→Completed; +Rejected/
+  Cancelled/Failed), `Reason`, `RetentionBasisId?`, requester/approver/executor ids + UTC timestamps,
+  `ScheduledForUtc?`, `CertificateId?`, `WorkflowInstanceId?`.
+- **DestructionItem** — links a request to a document; `Method` (CryptoShred|SecureOverwrite|
+  DeleteFixityVoid|Shredding|Incineration|Pulping|Degaussing), `ChecksumBefore`, `Outcome`.
+- **DestructionCertificate** — `CertificateNumber`, `PdfStorageKey`, `IssuedAtUtc`.
+- **Document** gains `IsTombstone`, `DestroyedAtUtc`, `DestructionCertificateId`.
+- **DocumentAttachment** gains `ContentDestroyed`, `ContentDestroyedAt`.
+
+Storage: files use per-file wrapped data keys (`AENC2` header) to enable crypto-shredding.
+
+## Physical Location Module (normalized hierarchy)
+
+Normalized entities for the paper-archive hierarchy (alongside the legacy single-table model until migrated):
+
+- **Building** → **Room** → **Cabinet** (الخزانة) → **Shelf** → **Box** → Document.
+- **Room** belongs to one Building; **RoomConnection** is a self-referencing adjacency
+  (Door/Corridor/Internal Passage) stored one row per direction and **mirrored** by the service.
+- **Cabinet** ∈ Room, **Shelf** ∈ Cabinet, **Box** ∈ Shelf *or* directly a Room (3-level mode).
+- Each level: `NameAr`/number + optional code, `IsActive` (no hard delete while children exist).
+- **Box** has `BoxCode` (unique), `Barcode`, `Capacity`, `CurrentCount` (auto inc/dec as documents are
+  filed/moved/unfiled; `IsFull` when `CurrentCount ≥ Capacity`). **Document** gains `BoxId`.
+- `GET /api/locations/tree` and `/api/locations/{box}/breadcrumb` (path + `GenerateLocationCode`,
+  e.g. `B1-R103-C2-S4-BX12`).
+- `POST /api/locations/migrate-legacy` — best-effort, idempotent migration of the old
+  `PhysicalLocation` + `PhysicalArchiveItem` data into the new model (creates default intermediate
+  levels where the legacy chain skipped one, links documents to their new box).
+- Rules: delete blocked while children/documents exist; no self-connection; no duplicate room pair.

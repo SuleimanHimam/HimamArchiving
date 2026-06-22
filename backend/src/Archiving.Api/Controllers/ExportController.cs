@@ -20,6 +20,7 @@ public sealed class ExportController(AppDbContext db, IFileStorage storage, ICur
 
     // Single document → ZIP of its attachments.
     [HttpGet("{id:long}/zip")]
+    [HasPermission("Export.View")]
     public async Task<IActionResult> DocumentZip(long id, CancellationToken ct)
     {
         var doc = await db.Documents.Include(d => d.Attachments).FirstOrDefaultAsync(d => d.Id == id, ct);
@@ -36,6 +37,7 @@ public sealed class ExportController(AppDbContext db, IFileStorage storage, ICur
 
     // Bulk: every document the caller can see (optionally only favorites / a folder), zipped per document.
     [HttpGet("export")]
+    [HasPermission("Export.View")]
     public async Task<IActionResult> Export([FromQuery] bool favoritesOnly, [FromQuery] long? folderId, CancellationToken ct)
     {
         var q = db.Documents.Include(d => d.Attachments)

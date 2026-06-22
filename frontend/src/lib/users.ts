@@ -107,6 +107,12 @@ export const RESOURCE_LABELS: Record<string, string> = {
   Preservation:   'سياسات الحفظ',
   Backup:         'النسخ الاحتياطي',
   Scanner:        'الأجهزة (طابعة / ماسح)',
+  CustomFields:   'الحقول المخصصة',
+  Notes:          'الملاحظات',
+  Export:         'التصدير',
+  TableColumns:   'تخصيص أعمدة الجداول',
+  Destruction:    'الإتلاف',
+  LegalHold:      'الحجز القانوني',
 }
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -127,7 +133,7 @@ export const ACTION_ORDER = ['View', 'Create', 'Edit', 'Delete', 'Approve', 'For
 export const RESOURCE_GROUPS: { label: string; resources: string[]; actionLabels: Record<string, string> }[] = [
   {
     label: 'المراسلات والوثائق',
-    resources: ['IncomingMail', 'OutgoingMail', 'Documents', 'Workflow'],
+    resources: ['IncomingMail', 'OutgoingMail', 'Documents', 'Workflow', 'Notes', 'Export'],
     actionLabels: {
       View:    'استعراض',
       Create:  'تسجيل',
@@ -141,7 +147,7 @@ export const RESOURCE_GROUPS: { label: string; resources: string[]; actionLabels
   },
   {
     label: 'الحفظ والرقابة',
-    resources: ['Archive', 'Reports', 'Audit'],
+    resources: ['Archive', 'Reports', 'Audit', 'LegalHold', 'Destruction'],
     actionLabels: {
       View:    'استعراض',
       Create:  'إدراج',
@@ -155,7 +161,7 @@ export const RESOURCE_GROUPS: { label: string; resources: string[]; actionLabels
   },
   {
     label: 'إدارة النظام',
-    resources: ['Users', 'Organization', 'Classification', 'Preservation', 'Backup', 'Scanner'],
+    resources: ['Users', 'Organization', 'Classification', 'Preservation', 'Backup', 'Scanner', 'CustomFields', 'TableColumns'],
     actionLabels: {
       View:    'استعراض',
       Create:  'إنشاء',

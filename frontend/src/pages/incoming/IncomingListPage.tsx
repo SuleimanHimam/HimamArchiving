@@ -11,6 +11,7 @@ import {
   CONFIDENTIALITY_LABELS, STATUS_LABELS, PRIORITY_LABELS,
 } from '../../lib/incomingMail'
 import { useAutoRefresh } from '../../lib/useAutoRefresh'
+import { useTableColumns } from '../../hooks/useTableColumns'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -25,6 +26,7 @@ import './incoming.css'
 export default function IncomingListPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { columns } = useTableColumns('incoming')
   const [data, setData] = useState<PagedResult<IncomingMailListItem> | null>(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
@@ -103,19 +105,13 @@ export default function IncomingListPage() {
         <table className="reg-table">
           <thead>
             <tr>
-              <th>{t('incoming.columns.number')}</th>
-              <th>{t('incoming.columns.sender')}</th>
-              <th>{t('incoming.columns.subject')}</th>
-              <th>{t('incoming.columns.confidentiality')}</th>
-              <th>{t('incoming.columns.priority')}</th>
-              <th>{t('incoming.columns.status')}</th>
-              <th>{t('incoming.columns.date')}</th>
+              {columns.map((col) => <th key={col.key}>{col.label}</th>)}
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={7} className="reg-empty">{t('incoming.loading')}</td></tr>}
+            {loading && <tr><td colSpan={columns.length} className="reg-empty">{t('incoming.loading')}</td></tr>}
             {!loading && data?.items.length === 0 && (
-              <tr><td colSpan={7} className="reg-empty">{t('incoming.empty')}</td></tr>
+              <tr><td colSpan={columns.length} className="reg-empty">{t('incoming.empty')}</td></tr>
             )}
             {!loading && data?.items.map((m) => {
               const c = CONFIDENTIALITY_LABELS[m.confidentiality] ?? { ar: m.confidentiality, cls: 'internal' }
@@ -127,13 +123,19 @@ export default function IncomingListPage() {
                       className="reg-row"
                       title="انقر للفتح · انقر بالزر الأيمن للإجراءات السريعة"
                     >
-                      <td className="mono num">{m.transactionNumber}</td>
-                      <td>{m.senderEntity}</td>
-                      <td className="reg-subject">{m.subject}</td>
-                      <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
-                      <td>{PRIORITY_LABELS[m.priority] ?? m.priority}</td>
-                      <td><span className={`status-pill s-${m.status.toLowerCase()}`}>{STATUS_LABELS[m.status] ?? m.status}</span></td>
-                      <td className="mono">{m.receivedDate}</td>
+                      {columns.map((col) => {
+                        switch (col.key) {
+                          case 'number': return <td key={col.key} className="mono num">{m.transactionNumber}</td>
+                          case 'sender': return <td key={col.key}>{m.senderEntity}</td>
+                          case 'subject': return <td key={col.key} className="reg-subject">{m.subject}</td>
+                          case 'confidentiality': return <td key={col.key}><span className={`badge ${c.cls}`}>{c.ar}</span></td>
+                          case 'priority': return <td key={col.key}>{PRIORITY_LABELS[m.priority] ?? m.priority}</td>
+                          case 'status': return <td key={col.key}><span className={`status-pill s-${m.status.toLowerCase()}`}>{STATUS_LABELS[m.status] ?? m.status}</span></td>
+                          case 'date': return <td key={col.key} className="mono">{m.receivedDate}</td>
+                          case 'createdAt': return <td key={col.key} className="mono">{m.createdAt?.slice(0, 10) ?? '—'}</td>
+                          default: return null
+                        }
+                      })}
                     </tr>
                   </ContextMenuTrigger>
 

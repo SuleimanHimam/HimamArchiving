@@ -10,6 +10,15 @@ public class Folder : BaseEntity
     public long? ParentId { get; set; }
 }
 
+/// <summary>Per-user column layout (rename + show/hide + order) for one data table.
+/// ConfigJson is an opaque JSON array of { key, label?, hidden? } owned by the frontend.</summary>
+public class UserTablePref : BaseEntity
+{
+    public long UserId { get; set; }
+    public string TableKey { get; set; } = string.Empty;
+    public string ConfigJson { get; set; } = string.Empty;
+}
+
 /// <summary>A document a user has marked as favorite (quick access).</summary>
 public class DocumentFavorite : BaseEntity
 {
@@ -28,11 +37,11 @@ public class DocumentShare : BaseEntity
     public Document Document { get; set; } = null!;
 }
 
-/// <summary>A per-user notepad note.</summary>
-public class UserNote : BaseEntity
+/// <summary>A note/comment attached to a specific document (visible to everyone who can see it).</summary>
+public class DocumentNote : BaseEntity
 {
+    public long DocumentId { get; set; }
     public long UserId { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string? Content { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    public string Content { get; set; } = string.Empty;
+    public Document Document { get; set; } = null!;
 }

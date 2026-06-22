@@ -55,6 +55,12 @@ public class Document : SoftDeleteEntity
     public bool IsLatestVersion { get; set; } = true;
 
     public long? FolderId { get; set; }                        // optional personal folder of the creator
+    public long? BoxId { get; set; }                           // exact physical box (normalized location hierarchy)
+
+    // Disposition / destruction (tombstone): content destroyed but the record's metadata is retained as proof.
+    public bool IsTombstone { get; set; }
+    public DateTime? DestroyedAtUtc { get; set; }
+    public long? DestructionCertificateId { get; set; }
 
     public DocumentType DocumentType { get; set; } = null!;
     public DocumentCategory? Category { get; set; }
@@ -80,6 +86,11 @@ public class DocumentAttachment : BaseEntity
     // Encryption at rest (optional): when set, the stored bytes are AES-encrypted with this IV.
     public bool IsEncrypted { get; set; }
     public string? EncryptionIv { get; set; }
+
+    // Disposition: set when the content has been destroyed (crypto-shred / secure-overwrite). The row and
+    // its checksum survive as proof-of-prior-existence; the bytes are gone.
+    public bool ContentDestroyed { get; set; }
+    public DateTime? ContentDestroyedAt { get; set; }
 
     // Full-text search (extracted from the file: embedded PDF text or OCR for scans)
     public string? ExtractedText { get; set; }                 // searchable text content

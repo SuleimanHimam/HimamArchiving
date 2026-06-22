@@ -1,5 +1,8 @@
 /* ── Shell / layout ── */
-.shell { min-height: 100vh; display: flex; flex-direction: column; }
+/* overflow-x: clip keeps the off-screen mobile drawer from creating a phantom
+   horizontal scroll, without establishing a scroll container (so the sticky
+   navbar keeps working — unlike overflow: hidden). */
+.shell { min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip; }
 
 /* ── Top navbar ── */
 .shell__navbar {

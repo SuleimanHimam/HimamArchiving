@@ -25,7 +25,7 @@ export default function PreservationPolicySettings() {
 
   return (
     <motion.section className="doc-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <h3 className="detail-h3">سياسة الحفظ (ISO 16363)</h3>
+      <h3 className="detail-h3">سياسة الحفظ</h3>
       <p className="muted">قواعد الحفظ طويل الأمد: صيغة الحفظ، التحويل التلقائي عند الإدخال، وخوارزمية ودورية التحقق من السلامة.</p>
       <form className="form-grid" onSubmit={save}>
         <label className="field"><span>صيغة الحفظ (PDF/A)</span>

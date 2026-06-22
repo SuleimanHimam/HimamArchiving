@@ -15,7 +15,9 @@ public sealed record BrandingDto(
     string? Email,
     string? LogoBase64,
     string? ColorPrimary,
-    string? ColorAccent);
+    string? ColorAccent,
+    string? ColorSeal,
+    string? ColorBg);
 
 public sealed record UpdateBrandingRequest(
     string  NameAr,
@@ -26,7 +28,9 @@ public sealed record UpdateBrandingRequest(
     string? Email,
     string? LogoBase64,
     string? ColorPrimary,
-    string? ColorAccent);
+    string? ColorAccent,
+    string? ColorSeal,
+    string? ColorBg);
 
 [ApiController]
 [Route("api/branding")]
@@ -34,7 +38,7 @@ public sealed class BrandingController(AppDbContext db) : ControllerBase
 {
     private static BrandingDto ToDto(Archiving.Domain.Entities.Institution inst) => new(
         inst.Name, inst.NameEn, inst.Code, inst.Address, inst.Phone, inst.Email,
-        inst.LogoBase64, inst.ColorPrimary, inst.ColorAccent);
+        inst.LogoBase64, inst.ColorPrimary, inst.ColorAccent, inst.ColorSeal, inst.ColorBg);
 
     [HttpGet]
     [AllowAnonymous]
@@ -42,7 +46,7 @@ public sealed class BrandingController(AppDbContext db) : ControllerBase
     {
         var inst = await db.Institutions.FirstOrDefaultAsync(ct);
         if (inst is null)
-            return Ok(new BrandingDto("", null, null, null, null, null, null, null, null));
+            return Ok(new BrandingDto("", null, null, null, null, null, null, null, null, null, null));
 
         return Ok(ToDto(inst));
     }
@@ -71,6 +75,8 @@ public sealed class BrandingController(AppDbContext db) : ControllerBase
         inst.LogoBase64   = req.LogoBase64;
         inst.ColorPrimary = req.ColorPrimary;
         inst.ColorAccent  = req.ColorAccent;
+        inst.ColorSeal    = req.ColorSeal;
+        inst.ColorBg      = req.ColorBg;
         await db.SaveChangesAsync(ct);
 
         return Ok(ToDto(inst));

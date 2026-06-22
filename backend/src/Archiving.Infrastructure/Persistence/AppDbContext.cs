@@ -34,7 +34,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Folder> Folders => Set<Folder>();
     public DbSet<DocumentFavorite> DocumentFavorites => Set<DocumentFavorite>();
     public DbSet<DocumentShare> DocumentShares => Set<DocumentShare>();
-    public DbSet<UserNote> UserNotes => Set<UserNote>();
+    public DbSet<DocumentNote> DocumentNotes => Set<DocumentNote>();
+    public DbSet<UserTablePref> UserTablePrefs => Set<UserTablePref>();
+    public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
+    public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
+    public DbSet<LegalHold> LegalHolds => Set<LegalHold>();
+    public DbSet<DestructionRequest> DestructionRequests => Set<DestructionRequest>();
+    public DbSet<DestructionItem> DestructionItems => Set<DestructionItem>();
+    public DbSet<DestructionCertificate> DestructionCertificates => Set<DestructionCertificate>();
+    public DbSet<DestructionMethodOption> DestructionMethodOptions => Set<DestructionMethodOption>();
+    public DbSet<Building> Buildings => Set<Building>();
+    public DbSet<Room> Rooms => Set<Room>();
+    public DbSet<RoomConnection> RoomConnections => Set<RoomConnection>();
+    public DbSet<Cabinet> Cabinets => Set<Cabinet>();
+    public DbSet<Shelf> Shelves => Set<Shelf>();
+    public DbSet<Box> Boxes => Set<Box>();
 
     // Preservation (ISO 16363 fixity + policy)
     public DbSet<FixityCheck> FixityChecks => Set<FixityCheck>();
@@ -65,6 +79,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<RetentionPolicy> RetentionPolicies => Set<RetentionPolicy>();
     public DbSet<RetentionAlert> RetentionAlerts => Set<RetentionAlert>();
     public DbSet<DisposalRequest> DisposalRequests => Set<DisposalRequest>();
+    public DbSet<DocumentRetention> DocumentRetentions => Set<DocumentRetention>();
+    public DbSet<DispositionRequest> DispositionRequests => Set<DispositionRequest>();
+    public DbSet<DispositionCertificate> DispositionCertificates => Set<DispositionCertificate>();
 
     // Physical archive
     public DbSet<PhysicalLocation> PhysicalLocations => Set<PhysicalLocation>();
@@ -125,10 +142,77 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         b.Entity<Document>().Property(x => x.Keywords).HasColumnType("longtext");
         b.Entity<DocumentAttachment>().Property(x => x.ExtractedText).HasColumnType("longtext");
         b.Entity<DocumentAttachment>().HasIndex(x => x.ExtractionStatus);
-        b.Entity<UserNote>().Property(x => x.Content).HasColumnType("longtext");
+        b.Entity<DocumentNote>().Property(x => x.Content).HasColumnType("longtext");
+        b.Entity<DocumentNote>().HasIndex(x => x.DocumentId);
+        b.Entity<DocumentNote>().HasOne(x => x.Document).WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<DocumentFavorite>().HasIndex(x => new { x.UserId, x.DocumentId }).IsUnique();
         b.Entity<DocumentShare>().HasIndex(x => new { x.DocumentId, x.SharedWithUserId }).IsUnique();
         b.Entity<Folder>().HasIndex(x => x.UserId);
+        b.Entity<UserTablePref>().Property(x => x.ConfigJson).HasColumnType("longtext");
+        b.Entity<UserTablePref>().HasIndex(x => new { x.UserId, x.TableKey }).IsUnique();
+        b.Entity<CustomFieldDefinition>().Property(x => x.Options).HasColumnType("longtext");
+        b.Entity<CustomFieldDefinition>().HasIndex(x => x.EntityType);
+        b.Entity<CustomFieldDefinition>().HasIndex(x => new { x.EntityType, x.FieldKey }).IsUnique();
+        b.Entity<CustomFieldValue>().Property(x => x.Value).HasColumnType("longtext");
+        b.Entity<CustomFieldValue>().HasIndex(x => new { x.EntityType, x.EntityId });
+        b.Entity<CustomFieldValue>().HasIndex(x => new { x.FieldId, x.EntityId }).IsUnique();
+        b.Entity<LegalHold>().Property(x => x.Reason).HasColumnType("longtext");
+        b.Entity<LegalHold>().Property(x => x.QueryExpression).HasColumnType("longtext");
+        b.Entity<LegalHold>().HasIndex(x => new { x.Scope, x.DocumentId });
+        b.Entity<LegalHold>().HasIndex(x => x.ReleasedAtUtc);
+        b.Entity<DestructionRequest>().Property(x => x.Reason).HasColumnType("longtext");
+        b.Entity<DestructionRequest>().Property(x => x.DecisionNote).HasColumnType("longtext");
+        b.Entity<DestructionRequest>().HasIndex(x => x.Status);
+        b.Entity<DestructionItem>().Property(x => x.Outcome).HasColumnType("longtext");
+        b.Entity<DestructionItem>().HasIndex(x => x.DocumentId);
+        b.Entity<DestructionItem>().HasOne(x => x.Request).WithMany(x => x.Items)
+            .HasForeignKey(x => x.DestructionRequestId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<DestructionCertificate>().HasIndex(x => x.DestructionRequestId);
+
+        // ---- Retention & two-step Disposition ----
+        b.Entity<DocumentRetention>().HasIndex(x => x.DocumentId);
+        b.Entity<DocumentRetention>().HasIndex(x => x.ExpiryDate);
+        b.Entity<DocumentRetention>().HasIndex(x => x.Status);
+        b.Entity<DocumentRetention>().HasOne(x => x.Document).WithMany()
+            .HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<DocumentRetention>().HasOne(x => x.RetentionPolicy).WithMany()
+            .HasForeignKey(x => x.RetentionPolicyId).OnDelete(DeleteBehavior.SetNull);
+
+        b.Entity<DispositionRequest>().Property(x => x.Reason).HasColumnType("longtext");
+        b.Entity<DispositionRequest>().Property(x => x.VerificationNotes).HasColumnType("longtext");
+        b.Entity<DispositionRequest>().Property(x => x.FinalApprovalNotes).HasColumnType("longtext");
+        b.Entity<DispositionRequest>().Property(x => x.RejectionReason).HasColumnType("longtext");
+        b.Entity<DispositionRequest>().Property(x => x.CustomMethod).HasColumnType("longtext");
+        b.Entity<DispositionRequest>().HasIndex(x => x.Status);
+        b.Entity<DispositionRequest>().HasIndex(x => x.DocumentId);
+        b.Entity<DispositionRequest>().HasIndex(x => x.RequestedAction);
+        b.Entity<DispositionRequest>().HasOne(x => x.Document).WithMany()
+            .HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
+
+        b.Entity<DispositionCertificate>().Property(x => x.DocumentIds).HasColumnType("longtext");
+        b.Entity<DispositionCertificate>().HasIndex(x => x.DispositionRequestId);
+        b.Entity<DispositionCertificate>().HasIndex(x => x.CertificateNumber).IsUnique();
+
+        // ---- Normalized physical-location hierarchy ----
+        b.Entity<Building>().HasIndex(x => x.Code).IsUnique();
+        b.Entity<Building>().Property(x => x.Notes).HasColumnType("longtext");
+        b.Entity<Room>().HasIndex(x => x.BuildingId);
+        b.Entity<Room>().Property(x => x.Notes).HasColumnType("longtext");
+        b.Entity<Room>().HasOne(x => x.Building).WithMany(x => x.Rooms).HasForeignKey(x => x.BuildingId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<RoomConnection>().HasIndex(x => new { x.RoomId, x.ConnectedRoomId }).IsUnique();
+        b.Entity<RoomConnection>().HasOne(x => x.Room).WithMany().HasForeignKey(x => x.RoomId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<RoomConnection>().HasOne(x => x.ConnectedRoom).WithMany().HasForeignKey(x => x.ConnectedRoomId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<Cabinet>().HasIndex(x => x.RoomId);
+        b.Entity<Cabinet>().Property(x => x.Notes).HasColumnType("longtext");
+        b.Entity<Cabinet>().HasOne(x => x.Room).WithMany(x => x.Cabinets).HasForeignKey(x => x.RoomId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<Shelf>().HasIndex(x => x.CabinetId);
+        b.Entity<Shelf>().HasOne(x => x.Cabinet).WithMany(x => x.Shelves).HasForeignKey(x => x.CabinetId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<Box>().HasIndex(x => x.BoxCode).IsUnique();
+        b.Entity<Box>().HasIndex(x => x.ShelfId);
+        b.Entity<Box>().Property(x => x.Notes).HasColumnType("longtext");
+        b.Entity<Box>().HasOne(x => x.Shelf).WithMany(x => x.Boxes).HasForeignKey(x => x.ShelfId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<Box>().HasOne(x => x.Room).WithMany().HasForeignKey(x => x.RoomId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<Document>().HasIndex(x => x.BoxId);
         b.Entity<DocumentFavorite>().HasOne(x => x.Document).WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<DocumentShare>().HasOne(x => x.Document).WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<IncomingMail>().Property(x => x.Body).HasColumnType("longtext");

@@ -13,4 +13,12 @@ public interface IFileStorage
     Task<Stream?> OpenAsync(string storageKey, CancellationToken ct = default);
 
     Task DeleteAsync(string storageKey, CancellationToken ct = default);
+
+    /// <summary>Crypto-shred: irreversibly destroy this file's wrapped data key (and its bytes), so the
+    /// ciphertext can never be decrypted again. Falls back to <see cref="SecureOverwriteAsync"/> for
+    /// legacy/plaintext files. Returns the method actually applied.</summary>
+    Task<string> CryptoShredAsync(string storageKey, CancellationToken ct = default);
+
+    /// <summary>Overwrite the file with random data (<paramref name="passes"/> times), truncate, and delete.</summary>
+    Task<string> SecureOverwriteAsync(string storageKey, int passes = 3, CancellationToken ct = default);
 }

@@ -14,7 +14,8 @@ public static class DbSeeder
     private static readonly string[] Resources =
     [
         "Documents", "IncomingMail", "OutgoingMail", "Workflow", "Archive",
-        "Reports", "Users", "Organization", "Classification", "Preservation", "Backup", "Audit", "Scanner"
+        "Reports", "Users", "Organization", "Classification", "Preservation", "Backup", "Audit", "Scanner",
+        "CustomFields", "Notes", "Export", "TableColumns", "Destruction", "LegalHold", "Disposition"
     ];
 
     public static async Task SeedAsync(AppDbContext db, IPasswordHasher hasher, CancellationToken ct = default)
@@ -25,6 +26,20 @@ public static class DbSeeder
         await SeedOrganizationAsync(db, ct);
         await SeedClassificationTypesAsync(db, ct);
         await SeedRoleClassificationsAsync(db, ct);
+        await SeedDestructionMethodsAsync(db, ct);
+    }
+
+    private static async Task SeedDestructionMethodsAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.DestructionMethodOptions.AnyAsync(ct)) return;
+        string[] defaults =
+        [
+            "محو التشفير (Crypto-Shred)", "كتابة آمنة فوقية", "حذف وإبطال البصمة",
+            "تقطيع", "حرق", "تذويب", "إزالة مغناطيسية",
+        ];
+        for (var i = 0; i < defaults.Length; i++)
+            db.DestructionMethodOptions.Add(new DestructionMethodOption { Label = defaults[i], SortOrder = i + 1 });
+        await db.SaveChangesAsync(ct);
     }
 
     private static async Task SeedRoleClassificationsAsync(AppDbContext db, CancellationToken ct)
@@ -116,17 +131,30 @@ public static class DbSeeder
                     or PermissionAction.Forward or PermissionAction.Print
                     || p.Resource == "Reports"
                     || (p.Resource == "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)
-                    || (p.Resource is "Classification" or "Preservation" && p.Action == PermissionAction.View)),
+                    || (p.Resource is "Classification" or "Preservation" && p.Action == PermissionAction.View)
+                    || p.Resource == "TableColumns"
+                    || p.Resource == "Destruction"   // managers may request, approve, and execute destruction directly
+                    || (p.Resource == "LegalHold" && p.Action is PermissionAction.View or PermissionAction.Edit)
+                    // Legal / Department Head: the SECOND (final) approval step of disposition
+                    || (p.Resource == "Disposition" && p.Action is PermissionAction.View or PermissionAction.Approve)),
             ("Archive Officer", "إدخال وتصنيف وحفظ الوثائق وإدارة المواقع",
                 p => p.Resource is "Documents" or "Archive"
                     || (p.Resource is "IncomingMail" or "OutgoingMail" && p.Action == PermissionAction.View)
                     || (p.Resource == "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)
                     || (p.Resource == "Classification" && p.Action is PermissionAction.View or PermissionAction.Edit)
-                    || (p.Resource == "Preservation" && p.Action == PermissionAction.View)),
+                    || (p.Resource == "Preservation" && p.Action == PermissionAction.View)
+                    || p.Resource is "CustomFields" or "Notes" or "Export" or "TableColumns"
+                    || (p.Resource == "Destruction" && p.Action is PermissionAction.View or PermissionAction.Create)
+                    || (p.Resource == "LegalHold" && p.Action == PermissionAction.View)
+                    // Records Officer: raises and VERIFIES (first step of) disposition requests
+                    || (p.Resource == "Disposition" && p.Action is PermissionAction.View or PermissionAction.Create or PermissionAction.Edit)),
             ("Employee", "استلام المعاملات والرد والإحالة والمتابعة",
                 p => (p.Resource is "Documents" or "IncomingMail" or "OutgoingMail")
                     && p.Action is PermissionAction.View or PermissionAction.Create or PermissionAction.Forward
-                    || (p.Resource == "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)),
+                    || (p.Resource == "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)
+                    || ((p.Resource is "Notes" or "Export") && p.Action is PermissionAction.View or PermissionAction.Create)
+                    || (p.Resource == "CustomFields" && p.Action == PermissionAction.View)
+                    || p.Resource == "TableColumns"),
         };
 
         foreach (var (name, desc, pick) in roleDefs)

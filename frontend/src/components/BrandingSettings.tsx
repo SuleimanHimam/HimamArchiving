@@ -42,7 +42,7 @@ export default function BrandingSettings() {
   }
 
   function resetColors() {
-    set({ colorPrimary: null, colorAccent: null })
+    set({ colorPrimary: null, colorAccent: null, colorSeal: null, colorBg: null })
   }
 
   return (
@@ -166,12 +166,40 @@ export default function BrandingSettings() {
               <input
                 type="color"
                 className="branding-color-picker"
-                value={form.colorAccent ?? '#B0892D'}
+                value={form.colorAccent ?? '#ebe9e6'}
                 onChange={(e) => set({ colorAccent: e.target.value })}
                 disabled={!canEdit}
               />
-              <span className="branding-color-hex mono">{form.colorAccent ?? '#B0892D'}</span>
-              <div className="branding-color-swatch" style={{ background: form.colorAccent ?? '#B0892D' }} />
+              <span className="branding-color-hex mono">{form.colorAccent ?? '#ebe9e6'}</span>
+              <div className="branding-color-swatch" style={{ background: form.colorAccent ?? '#ebe9e6' }} />
+            </div>
+          </div>
+          <div className="branding-color-item">
+            <label className="branding-label">لون الختم والتنبيهات (الأحمر)</label>
+            <div className="branding-color-row">
+              <input
+                type="color"
+                className="branding-color-picker"
+                value={form.colorSeal ?? '#9B2226'}
+                onChange={(e) => set({ colorSeal: e.target.value })}
+                disabled={!canEdit}
+              />
+              <span className="branding-color-hex mono">{form.colorSeal ?? '#9B2226'}</span>
+              <div className="branding-color-swatch" style={{ background: form.colorSeal ?? '#9B2226' }} />
+            </div>
+          </div>
+          <div className="branding-color-item">
+            <label className="branding-label">لون خلفية الصفحة</label>
+            <div className="branding-color-row">
+              <input
+                type="color"
+                className="branding-color-picker"
+                value={form.colorBg ?? '#e6e6e6'}
+                onChange={(e) => set({ colorBg: e.target.value })}
+                disabled={!canEdit}
+              />
+              <span className="branding-color-hex mono">{form.colorBg ?? '#e6e6e6'}</span>
+              <div className="branding-color-swatch" style={{ background: form.colorBg ?? '#e6e6e6' }} />
             </div>
           </div>
         </div>

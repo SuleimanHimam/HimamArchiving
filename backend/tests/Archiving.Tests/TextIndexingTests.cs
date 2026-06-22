@@ -21,6 +21,8 @@ public class TextIndexingTests
         public Task<Stream?> OpenAsync(string key, CancellationToken ct = default) =>
             Task.FromResult<Stream?>(new MemoryStream(new byte[] { 1, 2, 3 }));
         public Task DeleteAsync(string key, CancellationToken ct = default) => Task.CompletedTask;
+        public Task<string> CryptoShredAsync(string key, CancellationToken ct = default) => Task.FromResult("CryptoShred");
+        public Task<string> SecureOverwriteAsync(string key, int passes = 3, CancellationToken ct = default) => Task.FromResult("SecureOverwrite");
     }
 
     private sealed class FakeExtractor : ITextExtractionService

@@ -23,7 +23,7 @@ export default function RecordMetadataPanel({ docId }: { docId: number }) {
   return (
     <motion.section className="doc-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
       <div className="attach-header">
-        <span className="kicker">METADATA · البيانات الوصفية (ISO 23081)</span>
+        <span className="kicker">METADATA · البيانات الوصفية</span>
         {!open && <button className="btn btn-ghost btn-sm" onClick={load} disabled={busy}>{busy ? '…' : 'عرض'}</button>}
       </div>
 

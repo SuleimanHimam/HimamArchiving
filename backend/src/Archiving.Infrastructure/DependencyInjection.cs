@@ -42,7 +42,13 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowService, Services.WorkflowService>();
         services.AddScoped<INotificationService, Services.NotificationService>();
         services.AddScoped<IPhysicalArchiveService, Services.PhysicalArchiveService>();
+        services.AddScoped<ILocationService, Services.LocationService>();
         services.AddScoped<ILifecycleService, Services.LifecycleService>();
+        services.AddScoped<IDestructionEligibilityService, Services.DestructionEligibilityService>();
+        services.AddScoped<ILegalHoldService, Services.LegalHoldService>();
+        services.AddScoped<IDispositionService, Services.DispositionService>();
+        services.AddScoped<ICertificateService, Services.CertificateService>();
+        services.AddScoped<IDestructionService, Services.DestructionService>();
         services.AddScoped<IReportService, Services.ReportService>();
         services.AddScoped<IUserAdminService, Services.UserAdminService>();
 
@@ -65,6 +71,7 @@ public static class DependencyInjection
 
         // Background jobs
         services.AddHostedService<Services.EscalationBackgroundService>();
+        services.AddHostedService<Services.RetentionDispositionBackgroundService>();
         services.AddHostedService<Services.FixityVerificationBackgroundService>();
         services.AddHostedService<Services.TextExtractionBackgroundService>();
 

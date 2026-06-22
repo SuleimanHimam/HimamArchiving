@@ -41,6 +41,8 @@ public sealed record DocumentCategoryDto(long Id, long? ParentId, string Name, s
 
 public sealed record CreateDocumentCategoryRequest(long? ParentId, string Name, string? Code);
 
+public sealed record UpdateDocumentCategoryRequest(long? ParentId, string Name, string? Code, bool IsActive);
+
 // ---- Documents ----
 
 public sealed record DocumentListItem(
@@ -57,7 +59,12 @@ public sealed record DocumentListItem(
     // Physical storage place (latest linked location)
     string? PhysicalLocationName = null,
     string? BoxNumber = null,
-    string? FileNumber = null);
+    string? FileNumber = null,
+    string? BoxCode = null)
+{
+    /// <summary>Admin-defined custom field values for this document, keyed by field id.</summary>
+    public Dictionary<long, string> CustomValues { get; init; } = new();
+}
 
 public sealed record DocumentAttachmentDto(
     long Id,
@@ -99,7 +106,11 @@ public sealed record DocumentDetail(
     string? BoxNumber = null,
     string? FileNumber = null,
     long? FolderId = null,
-    bool IsFavorite = false);
+    bool IsFavorite = false,
+    bool IsTombstone = false,
+    DateTime? DestroyedAtUtc = null,
+    long? BoxId = null,
+    string? BoxCode = null);
 
 public sealed record CreateDocumentRequest(
     string Title,
@@ -114,7 +125,8 @@ public sealed record CreateDocumentRequest(
     // Optional: link the physical storage location at entry time
     long? PhysicalLocationId = null,
     string? BoxNumber = null,
-    string? FileNumber = null);
+    string? FileNumber = null,
+    long? BoxId = null);   // exact box in the normalized location hierarchy
 
 public sealed record UpdateDocumentRequest(
     string Title,
@@ -123,7 +135,9 @@ public sealed record UpdateDocumentRequest(
     long? OwnerPositionId,
     ConfidentialityLevel Confidentiality,
     string? Keywords,
-    DateOnly? DocumentDate);
+    DateOnly? DocumentDate,
+    DateOnly? ExpiryDate = null,    // admin override; when null, recomputed from retention
+    long? BoxId = null);
 
 public sealed record DocumentQuery(
     string? Search,
@@ -135,5 +149,7 @@ public sealed record DocumentQuery(
     bool FavoritesOnly = false,
     bool SharedWithMe = false,
     long? FolderId = null,
+    long? CustomFieldId = null,
+    string? CustomFieldValue = null,
     int Page = 1,
     int PageSize = 20);

@@ -11,6 +11,7 @@ import { auth } from '../lib/auth'
 import { useCurrentUser } from '../lib/useCurrentUser'
 import { reports, type DashboardSummary, type OnlineUser, type AuditItem } from '../lib/reports'
 import { admin, type AutoBackupSettings } from '../lib/admin'
+import DashboardCalendar from '../components/DashboardCalendar'
 import './dashboard.css'
 
 // ── helpers ──────────────────────────────────────────────────────────
@@ -259,7 +260,7 @@ export default function DashboardPage() {
           <KpiCard label="مهام مفتوحة"   value={s.openWorkflowTasks}    icon={ListTodo}    to="/app/workflow" />
           <KpiCard label="مهام متأخرة"   value={s.overdueWorkflowTasks} icon={AlertTriangle} to="/app/workflow" tone={s.overdueWorkflowTasks > 0 ? 'alert' : undefined} />
           <KpiCard label="تنتهي قريبًا"  value={s.expiringSoon}         icon={Clock}       to="/app/reports"  tone={s.expiringSoon > 0 ? 'warn' : undefined} />
-          <KpiCard label="طلبات إتلاف"   value={s.pendingDisposals}     icon={Trash2}      to="/app/reports" />
+          <KpiCard label="طلبات تصرّف"   value={s.pendingDisposals}     icon={Trash2}      to="/app/disposition" />
         </div>
       )}
 
@@ -277,8 +278,8 @@ export default function DashboardPage() {
             </Link>
           )}
           {s.pendingDisposals > 0 && (
-            <Link to="/app/reports" className="dash-alert dash-alert--neutral">
-              <Trash2 size={15} /> {s.pendingDisposals} طلبات إتلاف في انتظار الاعتماد
+            <Link to="/app/disposition" className="dash-alert dash-alert--neutral">
+              <Trash2 size={15} /> {s.pendingDisposals} طلبات تصرّف في دورة الموافقة
             </Link>
           )}
         </motion.div>
@@ -320,6 +321,8 @@ export default function DashboardPage() {
           </div>
 
           {canViewBackup && backup && <BackupStatusPanel backup={backup} />}
+
+          <DashboardCalendar />
         </div>
       </div>
 

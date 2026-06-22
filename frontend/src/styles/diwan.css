@@ -11,14 +11,14 @@
   --ink-deep:   #0E1A30;   /* deeper ink — sidebar, headers */
   --ink-soft:   #2B3A5B;
 
-  --parchment:  #F4ECD8;   /* page background */
-  --parchment-2:#EBDFC4;   /* raised panels */
-  --parchment-3:#E2D3B2;   /* rules, dividers */
+  --parchment:  #e6e6e6;   /* page background — default */
+  --parchment-2:#d9d9d9;   /* raised panels */
+  --parchment-3:#cccccc;   /* rules, dividers */
 
   --seal:       #9B2226;   /* seal red — primary accent, alerts, stamps */
   --seal-deep:  #7A171B;
-  --brass:      #B0892D;   /* brass/gold — secondary accent, rules */
-  --brass-soft: #C8A24B;
+  --brass:      #ebe9e6;   /* accent / highlight (لون التمييز) — default */
+  --brass-soft: #f3f1ef;
 
   --paper:      #FBF7EC;   /* near-white card */
   --text:       #211D17;   /* main reading ink on parchment */

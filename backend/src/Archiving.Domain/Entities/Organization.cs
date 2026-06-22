@@ -12,6 +12,8 @@ public class Institution : BaseEntity
     public string? LogoBase64    { get; set; }        // data-URI, stored in-DB for simplicity
     public string? ColorPrimary  { get; set; }        // hex for --ink CSS variable
     public string? ColorAccent   { get; set; }        // hex for --brass CSS variable
+    public string? ColorSeal     { get; set; }        // hex for --seal CSS variable (alerts/stamps/seal buttons)
+    public string? ColorBg       { get; set; }        // hex for --parchment CSS variable (page background)
     public string? Address { get; set; }
     public string? Phone { get; set; }
     public string? Email { get; set; }

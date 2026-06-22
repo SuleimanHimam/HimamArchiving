@@ -8,6 +8,7 @@ import {
   CONFIDENTIALITY_LABELS, STATUS_LABELS, PRIORITY_LABELS,
 } from '../../lib/incomingMail'
 import { useToast } from '../../components/toast'
+import CustomFieldsPanel from '../../components/CustomFieldsPanel'
 import './incoming.css'
 
 export default function IncomingDetailPage() {
@@ -124,6 +125,7 @@ export default function IncomingDetailPage() {
           </ol>
         </motion.aside>
       </div>
+      <CustomFieldsPanel entityType="IncomingMail" entityId={mailId} canEdit={auth.hasPermission('IncomingMail.Edit')} />
     </div>
   )
 }

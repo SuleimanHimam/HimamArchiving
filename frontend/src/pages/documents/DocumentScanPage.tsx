@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
-import { documents, type DocumentTypeDto, type OrgUnitDto, type ScanFormat } from '../../lib/documents'
+import { documents, type DocumentTypeDto, type OrgUnitDto } from '../../lib/documents'
 import { scanAgent } from '../../lib/scanAgent'
 import { scannerSettings } from '../../lib/scannerSettings'
 import { type Confidentiality } from '../../lib/incomingMail'
@@ -20,7 +20,6 @@ export default function DocumentScanPage() {
     title: '', documentTypeId: '', owningOrgUnitId: '',
     confidentiality: 1 as Confidentiality, keywords: '',
   })
-  const [format, setFormat] = useState<ScanFormat>('pdf')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
@@ -97,7 +96,7 @@ export default function DocumentScanPage() {
       keywords: form.keywords || null,
       documentDate: new Date().toISOString().slice(0, 10),
     })
-    await documents.scan(created.id, blob, `${form.title.trim()}.${format}`, format)
+    await documents.scan(created.id, blob, `${form.title.trim()}.pdf`, 'pdf')
     toast.success('تم إنشاء الوثيقة وإرفاق المسح الضوئي')
     navigate(`/app/documents/${created.id}`, { replace: true })
   }
@@ -137,12 +136,6 @@ export default function DocumentScanPage() {
             <select value={form.confidentiality} onChange={set('confidentiality')}>
               <option value={0}>عام</option><option value={1}>داخلي</option>
               <option value={2}>سري</option><option value={3}>سري للغاية</option>
-            </select></label>
-          <label className="field"><span>صيغة المستند الممسوح *</span>
-            <select value={format} onChange={(e) => setFormat(e.target.value as ScanFormat)}>
-              <option value="pdf">PDF</option>
-              <option value="jpg">JPG (صورة)</option>
-              <option value="png">PNG (صورة)</option>
             </select></label>
           <label className="field field--wide"><span>الكلمات المفتاحية</span>
             <input value={form.keywords} onChange={set('keywords')} placeholder="مفصولة بمسافات" /></label>

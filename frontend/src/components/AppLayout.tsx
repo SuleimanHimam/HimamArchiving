@@ -6,13 +6,14 @@ import { auth } from '../lib/auth'
 import { useCurrentUser } from '../lib/useCurrentUser'
 import { getBranding, subscribeBranding } from '../lib/branding'
 import { navSettingsApi } from '../lib/navSettings'
+import { loadTablePrefs, loadCustomFieldCols } from '../lib/tableColumns'
 import NotificationBell from './NotificationBell'
 import LanguageToggle from './LanguageToggle'
 import GlobalDocumentSearch from './GlobalDocumentSearch'
 import './applayout.css'
 
 // Maps a path under /app to its navbar section key (or null for unknown paths).
-const SECTION_KEYS = ['incoming', 'outgoing', 'documents', 'notes', 'workflow', 'archive', 'reports', 'monitoring', 'settings']
+const SECTION_KEYS = ['incoming', 'outgoing', 'documents', 'archive', 'locations', 'disposition', 'monitoring', 'settings']
 function sectionKeyForPath(pathname: string): string | null {
   const m = pathname.match(/^\/app(?:\/([^/]+))?/)
   if (!m) return null
@@ -34,17 +35,21 @@ export default function AppLayout() {
   const [hiddenNav, setHiddenNav] = useState<string[]>([])
 
   // Org-wide navbar visibility (set by an admin in Settings → القائمة الجانبية).
-  useEffect(() => { navSettingsApi.get().then(setHiddenNav).catch(() => {}) }, [])
+  // Also load this user's personal table-column layout once the authed shell mounts.
+  useEffect(() => {
+    navSettingsApi.get().then(setHiddenNav).catch(() => {})
+    loadTablePrefs()
+    loadCustomFieldCols()
+  }, [])
 
   const NAV = [
     { key: 'home', to: '/app', label: t('nav.home'), icon: '◈', end: true, perm: null },
     { key: 'incoming', to: '/app/incoming', label: t('nav.incoming'), icon: '↙', end: false, perm: 'IncomingMail.View' },
     { key: 'outgoing', to: '/app/outgoing', label: t('nav.outgoing'), icon: '↗', end: false, perm: 'OutgoingMail.View' },
     { key: 'documents', to: '/app/documents', label: t('nav.documents'), icon: '▤', end: false, perm: 'Documents.View' },
-    { key: 'notes', to: '/app/notes', label: t('nav.notes'), icon: '✎', end: false, perm: null },
-    { key: 'workflow', to: '/app/workflow', label: t('nav.workflow'), icon: '⇄', end: false, perm: 'Workflow.View' },
     { key: 'archive', to: '/app/archive', label: t('nav.archive'), icon: '▦', end: false, perm: 'Archive.View' },
-    { key: 'reports', to: '/app/reports', label: t('nav.reports'), icon: '◷', end: false, perm: 'Reports.View' },
+    { key: 'locations', to: '/app/locations', label: 'المواقع الفعلية', icon: '⌂', end: false, perm: 'Archive.View' },
+    { key: 'disposition', to: '/app/disposition', label: 'الاحتفاظ والتصرّف', icon: '♻', end: false, perm: 'Disposition.View' },
     { key: 'monitoring', to: '/app/monitoring', label: t('nav.monitoring'), icon: '⊡', end: false, perm: 'Audit.View' },
     { key: 'settings', to: '/app/settings', label: t('nav.settings'), icon: '⚙', end: false, perm: 'Scanner.View' },
   ].filter((n) => (!n.perm || auth.hasPermission(n.perm)) && !hiddenNav.includes(n.key))

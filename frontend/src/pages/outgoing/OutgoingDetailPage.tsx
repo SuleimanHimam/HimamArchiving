@@ -9,6 +9,7 @@ import {
 } from '../../lib/outgoingMail'
 import { CONFIDENTIALITY_LABELS, PRIORITY_LABELS } from '../../lib/incomingMail'
 import { useToast } from '../../components/toast'
+import CustomFieldsPanel from '../../components/CustomFieldsPanel'
 import '../incoming/incoming.css'
 
 function availableActions(status: string, t: (k: string) => string): { code: OutgoingAction; label: string; perm: string; cls: string }[] {
@@ -122,6 +123,7 @@ export default function OutgoingDetailPage() {
           </ol>
         </motion.aside>
       </div>
+      <CustomFieldsPanel entityType="OutgoingMail" entityId={mailId} canEdit={auth.hasPermission('OutgoingMail.Edit')} />
     </div>
   )
 }

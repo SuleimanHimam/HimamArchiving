@@ -1,15 +1,7 @@
 import { api } from './api'
 
-export interface Note { id: number; title: string; content: string | null; createdAt: string; updatedAt: string | null }
 export interface Folder { id: number; name: string; parentId: number | null; documentCount: number }
 export interface Share { documentId: number; sharedWithUserId: number; userName: string; canEdit: boolean; createdAt: string }
-
-export const notesApi = {
-  list: () => api.get<Note[]>('/notes').then((r) => r.data),
-  create: (b: { title: string; content?: string | null }) => api.post<Note>('/notes', b).then((r) => r.data),
-  update: (id: number, b: { title: string; content?: string | null }) => api.put<Note>(`/notes/${id}`, b).then((r) => r.data),
-  remove: (id: number) => api.delete(`/notes/${id}`),
-}
 
 export const foldersApi = {
   list: () => api.get<Folder[]>('/folders').then((r) => r.data),
@@ -22,6 +14,13 @@ export const foldersApi = {
 export const favoritesApi = {
   add: (docId: number) => api.post(`/documents/${docId}/favorite`),
   remove: (docId: number) => api.delete(`/documents/${docId}/favorite`),
+}
+
+export interface DocNote { id: number; userId: number; authorName: string; content: string; createdAt: string }
+export const docNotesApi = {
+  list: (docId: number) => api.get<DocNote[]>(`/documents/${docId}/notes`).then((r) => r.data),
+  add: (docId: number, content: string) => api.post<DocNote>(`/documents/${docId}/notes`, { content }).then((r) => r.data),
+  remove: (docId: number, noteId: number) => api.delete(`/documents/${docId}/notes/${noteId}`),
 }
 
 export const sharingApi = {

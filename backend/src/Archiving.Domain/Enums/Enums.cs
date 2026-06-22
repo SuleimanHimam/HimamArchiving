@@ -177,7 +177,55 @@ public enum RetentionAlertStage
     Days30 = 0,
     Days15 = 1,
     Days7 = 2,
-    Expired = 3
+    Expired = 3,
+    Days90 = 4,
+    Days60 = 5
+}
+
+// ── Retention & Disposition (two-step) ───────────────────────────────────────
+
+/// <summary>Where a document's retention clock starts. Different categories trigger differently.</summary>
+public enum RetentionTriggerType
+{
+    CreationDate = 0,
+    LastModified = 1,
+    CustomEventDate = 2,
+    ContractEndDate = 3
+}
+
+/// <summary>What happens by default when a document reaches the end of its retention period.</summary>
+public enum RetentionDefaultAction
+{
+    RequireDecision = 0,
+    AutoRenew = 1
+}
+
+/// <summary>Per-document retention tracking status.</summary>
+public enum DocumentRetentionStatus
+{
+    Active = 0,
+    PendingReview = 1,
+    Renewed = 2,
+    ApprovedForDestruction = 3,
+    Destroyed = 4,
+    OnLegalHold = 5
+}
+
+/// <summary>The action a disposition request asks for.</summary>
+public enum DispositionAction
+{
+    Destroy = 0,
+    Renew = 1
+}
+
+/// <summary>Two-step disposition workflow state.</summary>
+public enum DispositionStatus
+{
+    PendingVerification = 0,
+    PendingFinalApproval = 1,
+    Approved = 2,
+    Rejected = 3,
+    Completed = 4
 }
 
 public enum MfaMethod

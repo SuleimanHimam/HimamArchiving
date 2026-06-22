@@ -10,6 +10,8 @@ export interface BrandingData {
   logoBase64:   string | null
   colorPrimary: string | null
   colorAccent:  string | null
+  colorSeal:    string | null
+  colorBg:      string | null
 }
 
 export const brandingApi = {
@@ -19,7 +21,7 @@ export const brandingApi = {
 
 let _branding: BrandingData = {
   nameAr: '', nameEn: null, code: null, address: null, phone: null, email: null,
-  logoBase64: null, colorPrimary: null, colorAccent: null,
+  logoBase64: null, colorPrimary: null, colorAccent: null, colorSeal: null, colorBg: null,
 }
 const _listeners = new Set<() => void>()
 
@@ -48,6 +50,22 @@ export function applyBranding(b: BrandingData) {
   } else {
     root.style.removeProperty('--brass')
     root.style.removeProperty('--brass-soft')
+  }
+  if (b.colorSeal) {
+    root.style.setProperty('--seal',      b.colorSeal)
+    root.style.setProperty('--seal-deep', adjustHex(b.colorSeal, -20))
+  } else {
+    root.style.removeProperty('--seal')
+    root.style.removeProperty('--seal-deep')
+  }
+  if (b.colorBg) {
+    root.style.setProperty('--parchment',   b.colorBg)
+    root.style.setProperty('--parchment-2', adjustHex(b.colorBg, -9))
+    root.style.setProperty('--parchment-3', adjustHex(b.colorBg, -18))
+  } else {
+    root.style.removeProperty('--parchment')
+    root.style.removeProperty('--parchment-2')
+    root.style.removeProperty('--parchment-3')
   }
   _listeners.forEach((fn) => fn())
 }

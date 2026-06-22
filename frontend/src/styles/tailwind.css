@@ -5,6 +5,8 @@
 
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
+/* enter/exit animation utilities (animate-in / fade-in / slide-in-from-*, data-[state] variants) */
+@import 'tw-animate-css';
 
 @theme {
   --color-ink: #14213d;
@@ -12,12 +14,12 @@
   --color-ink-soft: #2b3a5b;
   --color-seal: #9b2226;
   --color-seal-deep: #7a171b;
-  --color-brass: #b0892d;
-  --color-brass-soft: #c8a24b;
+  --color-brass: #ebe9e6;
+  --color-brass-soft: #f3f1ef;
   --color-paper: #fbf7ec;
-  --color-parchment: #f4ecd8;
-  --color-parchment-2: #ebdfc4;
-  --color-parchment-3: #e2d3b2;
+  --color-parchment: #e6e6e6;
+  --color-parchment-2: #d9d9d9;
+  --color-parchment-3: #cccccc;
   --color-ink-text: #211d17;
   --color-muted: #ebdfc4;   /* light surface (shadcn bg-muted); muted TEXT is --color-muted-foreground */
   --color-faint: #9a8f78;

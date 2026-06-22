@@ -125,3 +125,38 @@ no change to how files are stored. PRONOM ids are a best-effort static map (exte
 ## Tests
 `backend/tests/Archiving.Tests` — audit-hash determinism, chain verification (intact / tampered /
 broken-link / empty), and SHA-256 fixity digest (known vector). Run: `dotnet test`.
+
+## Secure Destruction / Disposition (ISO 15489 §9.9–9.10, ISO 16363 provenance)
+
+Controlled, auditable destruction of records that have met retention.
+
+**Eligibility (ISO 15489 retention-driven disposition).** A record is destroyable only when its
+retention has expired **AND** it is under no active **legal hold** **AND** no workflow is open on it
+(`IDestructionEligibilityService`). Re-checked at request, approval, and execution.
+
+**Legal hold.** `LegalHold` (document / folder / org-unit scope) makes in-scope records permanently
+ineligible until released. No path can destroy a held record.
+
+**Segregation of duties (two-person rule).** Requester ≠ approver ≠ executor — enforced in code.
+Execution additionally requires **MFA step-up** (re-authentication) before the irreversible action.
+
+**Secure digital destruction.** Each file is encrypted with its own data key (DEK) wrapped by the
+master key and stored in the file header. **Crypto-shredding** destroys that wrapped DEK, rendering the
+ciphertext permanently unrecoverable without touching any other file; the bytes are then removed. Legacy
+plaintext/global-key files fall back to **secure overwrite** (random passes + truncate + unlink). All
+representations (SIP original, AIP/PDF-A master, DIP/cache) are destroyed; a **fixity-void** provenance
+entry is appended (`FixityResult.Missing`), and the original SHA-256 is retained in the certificate as
+proof-of-prior-existence.
+
+**Tombstone (keep metadata, destroy content).** The document row is never deleted: `IsTombstone`,
+`DestroyedAtUtc`, `DestructionCertificateId`, status `Disposed`. Proves the record existed and was
+lawfully destroyed.
+
+**Certificate of Destruction.** Rendered to **PDF/A-2b** (QuestPDF) with request ref, item list +
+checksums-before, method, approver, executor, UTC timestamps, and organization name.
+
+**Audit.** Every action (place/release hold, create/submit/approve/reject/cancel/execute) is written to
+the hash-chained audit log; the execution event is individually verifiable via `/api/audit/verify`.
+
+**RBAC.** `Destruction.Create` (request), `Destruction.Approve`, `Destruction.Delete` (execute),
+`LegalHold.View/Edit`. Seeded: request → Archive Officer; approve + holds → Manager; execute → Admin.

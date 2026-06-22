@@ -12,6 +12,10 @@
 }
 .bell__btn:hover { background: rgba(0, 0, 0, 0.05); }
 
+/* Diwan brass/gold accent — reads clearly on the dark navbar and matches the theme. */
+.bell__icon { display: inline-flex; color: #c8a24b; }
+.bell__btn:hover .bell__icon { color: #d9bb74; }
+
 .bell__badge {
   position: absolute;
   top: -2px;

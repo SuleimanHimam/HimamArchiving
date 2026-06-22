@@ -15,14 +15,14 @@ import IncomingDetailPage from './pages/incoming/IncomingDetailPage'
 import DocumentsListPage from './pages/documents/DocumentsListPage'
 import DocumentCreatePage from './pages/documents/DocumentCreatePage'
 import DocumentEditPage from './pages/documents/DocumentEditPage'
-import NotepadPage from './pages/notes/NotepadPage'
 import DocumentDetailPage from './pages/documents/DocumentDetailPage'
 import OutgoingListPage from './pages/outgoing/OutgoingListPage'
 import OutgoingCreatePage from './pages/outgoing/OutgoingCreatePage'
 import OutgoingDetailPage from './pages/outgoing/OutgoingDetailPage'
-import WorklistPage from './pages/workflow/WorklistPage'
+import DispositionPage from './pages/disposition/DispositionPage'
+import EventManagerDemo from './pages/EventManagerDemo'
+import LocationsPage from './pages/locations/LocationsPage'
 import ArchivePage from './pages/archive/ArchivePage'
-import ReportsPage from './pages/reports/ReportsPage'
 import MonitoringPage from './pages/monitoring/MonitoringPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import AppLayout from './components/AppLayout'
@@ -57,13 +57,13 @@ createRoot(document.getElementById('root')!).render(
           <Route path="documents/scan" element={<Navigate to="/app/documents/new" replace />} />
           <Route path="documents/:id/edit" element={<DocumentEditPage />} />
           <Route path="documents/:id" element={<DocumentDetailPage />} />
-          <Route path="notes" element={<NotepadPage />} />
           <Route path="outgoing" element={<OutgoingListPage />} />
           <Route path="outgoing/new" element={<OutgoingCreatePage />} />
           <Route path="outgoing/:id" element={<OutgoingDetailPage />} />
-          <Route path="workflow" element={<WorklistPage />} />
+          <Route path="disposition" element={<DispositionPage />} />
+          <Route path="events" element={<EventManagerDemo />} />
           <Route path="archive" element={<ArchivePage />} />
-          <Route path="reports" element={<ReportsPage />} />
+          <Route path="locations" element={<LocationsPage />} />
           <Route path="monitoring" element={<MonitoringPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

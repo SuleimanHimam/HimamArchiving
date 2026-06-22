@@ -3,8 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
-import { documents, type DocumentTypeDto, type OrgUnitDto, type ScanFormat } from '../../lib/documents'
-import { archive, type PhysicalLocationDto } from '../../lib/archive'
+import { documents, type DocumentTypeDto, type OrgUnitDto } from '../../lib/documents'
+import LocationPicker from '../../components/LocationPicker'
 import { scanAgent } from '../../lib/scanAgent'
 import { scannerSettings } from '../../lib/scannerSettings'
 import { type Confidentiality } from '../../lib/incomingMail'
@@ -20,13 +20,11 @@ export default function DocumentCreatePage() {
   const fallbackInput = useRef<HTMLInputElement>(null)
   const [types, setTypes] = useState<DocumentTypeDto[]>([])
   const [units, setUnits] = useState<OrgUnitDto[]>([])
-  const [locations, setLocations] = useState<PhysicalLocationDto[]>([])
   const [form, setForm] = useState({
     title: '', description: '', documentTypeId: '', owningOrgUnitId: '',
     confidentiality: 1 as Confidentiality, keywords: '', documentDate: today,
-    physicalLocationId: '', boxNumber: '', fileNumber: '',
   })
-  const [format, setFormat] = useState<ScanFormat>('pdf')
+  const [boxId, setBoxId] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [scanMsg, setScanMsg] = useState('')
@@ -44,7 +42,6 @@ export default function DocumentCreatePage() {
         }))
       })
       .catch(() => setError(t('documents.loadError')))
-    archive.locations().then(setLocations).catch(() => {})
   }, [t])
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -64,9 +61,7 @@ export default function DocumentCreatePage() {
       confidentiality: Number(form.confidentiality) as Confidentiality,
       keywords: form.keywords || null,
       documentDate: form.documentDate || null,
-      physicalLocationId: form.physicalLocationId ? Number(form.physicalLocationId) : null,
-      boxNumber: form.boxNumber || null,
-      fileNumber: form.fileNumber || null,
+      boxId,
     }
   }
 
@@ -89,7 +84,7 @@ export default function DocumentCreatePage() {
   async function createAndAttach(blob: Blob) {
     setScanMsg('جارٍ إنشاء الوثيقة وإرفاق المسح…')
     const created = await documents.create(buildCreateBody())
-    await documents.scan(created.id, blob, `${form.title.trim()}.${format}`, format)
+    await documents.scan(created.id, blob, `${form.title.trim()}.pdf`, 'pdf')
     toast.success('تم إنشاء الوثيقة وإرفاق المسح الضوئي')
     navigate(`/app/documents/${created.id}`, { replace: true })
   }
@@ -126,7 +121,7 @@ export default function DocumentCreatePage() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 760, margin: '0 auto' }}>
       <header className="page__head">
         <div>
           <span className="kicker">{t('documents.create.kicker')}</span>
@@ -144,7 +139,7 @@ export default function DocumentCreatePage() {
               {types.length === 0 && <option value="">—</option>}
               {types.map((tp) => <option key={tp.id} value={tp.id}>{tp.name}</option>)}
             </select></label>
-          <label className="field"><span>{t('documents.columns.category')}</span>
+          <label className="field"><span>الوحدة المالكة *</span>
             <select value={form.owningOrgUnitId} onChange={set('owningOrgUnitId')}>
               {units.length === 0 && <option value="">—</option>}
               {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -158,30 +153,12 @@ export default function DocumentCreatePage() {
             </select></label>
           <label className="field"><span>{t('documents.columns.date')}</span>
             <input type="date" value={form.documentDate} onChange={set('documentDate')} dir="ltr" /></label>
-          <label className="field"><span>صيغة المستند الممسوح</span>
-            <select value={format} onChange={(e) => setFormat(e.target.value as ScanFormat)}>
-              <option value="pdf">PDF</option>
-              <option value="jpg">JPG (صورة)</option>
-              <option value="png">PNG (صورة)</option>
-            </select></label>
           <label className="field field--wide"><span>{t('incoming.create.keywords')}</span>
             <input value={form.keywords} onChange={set('keywords')} placeholder={t('incoming.create.keywordsPlaceholder')} /></label>
           <label className="field field--wide"><span>{t('documents.create.body')}</span>
             <textarea rows={4} value={form.description} onChange={set('description')} /></label>
 
-          {locations.length > 0 && (
-            <>
-              <label className="field"><span>{t('archive.title')}</span>
-                <select value={form.physicalLocationId} onChange={set('physicalLocationId')}>
-                  <option value="">—</option>
-                  {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select></label>
-              <label className="field"><span>{t('archive.fields.code')}</span>
-                <input value={form.boxNumber} onChange={set('boxNumber')} dir="ltr" /></label>
-              <label className="field"><span>{t('archive.fields.name')}</span>
-                <input value={form.fileNumber} onChange={set('fileNumber')} dir="ltr" /></label>
-            </>
-          )}
+          <LocationPicker value={boxId} onChange={setBoxId} />
         </div>
 
         {error && <p className="login__error">{error}</p>}

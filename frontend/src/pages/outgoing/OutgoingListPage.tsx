@@ -6,6 +6,7 @@ import { auth } from '../../lib/auth'
 import { outgoingMail, type OutgoingMailListItem, OUT_STATUS_LABELS } from '../../lib/outgoingMail'
 import { type PagedResult, CONFIDENTIALITY_LABELS, PRIORITY_LABELS } from '../../lib/incomingMail'
 import { useAutoRefresh } from '../../lib/useAutoRefresh'
+import { useTableColumns } from '../../hooks/useTableColumns'
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel,
   ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger,
@@ -16,6 +17,7 @@ import '../incoming/incoming.css'
 export default function OutgoingListPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { columns } = useTableColumns('outgoing')
   const [data, setData] = useState<PagedResult<OutgoingMailListItem> | null>(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
@@ -82,19 +84,13 @@ export default function OutgoingListPage() {
         <table className="reg-table">
           <thead>
             <tr>
-              <th>{t('outgoing.columns.number')}</th>
-              <th>{t('outgoing.columns.recipient')}</th>
-              <th>{t('outgoing.columns.subject')}</th>
-              <th>{t('outgoing.columns.confidentiality')}</th>
-              <th>{t('outgoing.columns.priority')}</th>
-              <th>{t('outgoing.columns.status')}</th>
-              <th>{t('outgoing.columns.date')}</th>
+              {columns.map((col) => <th key={col.key}>{col.label}</th>)}
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={7} className="reg-empty">{t('outgoing.loading')}</td></tr>}
+            {loading && <tr><td colSpan={columns.length} className="reg-empty">{t('outgoing.loading')}</td></tr>}
             {!loading && data?.items.length === 0 && (
-              <tr><td colSpan={7} className="reg-empty">{t('outgoing.empty')}</td></tr>
+              <tr><td colSpan={columns.length} className="reg-empty">{t('outgoing.empty')}</td></tr>
             )}
             {!loading && data?.items.map((m) => {
               const c = CONFIDENTIALITY_LABELS[m.confidentiality] ?? { ar: m.confidentiality, cls: 'internal' }
@@ -106,13 +102,19 @@ export default function OutgoingListPage() {
                       className="reg-row"
                       title="انقر للفتح · انقر بالزر الأيمن للإجراءات السريعة"
                     >
-                      <td className="mono num">{m.letterNumber}</td>
-                      <td>{m.recipientEntity}</td>
-                      <td className="reg-subject">{m.subject}</td>
-                      <td><span className={`badge ${c.cls}`}>{c.ar}</span></td>
-                      <td>{PRIORITY_LABELS[m.priority] ?? m.priority}</td>
-                      <td><span className={`status-pill s-${m.status.toLowerCase()}`}>{OUT_STATUS_LABELS[m.status] ?? m.status}</span></td>
-                      <td className="mono">{m.sentDate ? m.sentDate.slice(0, 10) : '—'}</td>
+                      {columns.map((col) => {
+                        switch (col.key) {
+                          case 'number': return <td key={col.key} className="mono num">{m.letterNumber}</td>
+                          case 'recipient': return <td key={col.key}>{m.recipientEntity}</td>
+                          case 'subject': return <td key={col.key} className="reg-subject">{m.subject}</td>
+                          case 'confidentiality': return <td key={col.key}><span className={`badge ${c.cls}`}>{c.ar}</span></td>
+                          case 'priority': return <td key={col.key}>{PRIORITY_LABELS[m.priority] ?? m.priority}</td>
+                          case 'status': return <td key={col.key}><span className={`status-pill s-${m.status.toLowerCase()}`}>{OUT_STATUS_LABELS[m.status] ?? m.status}</span></td>
+                          case 'date': return <td key={col.key} className="mono">{m.sentDate ? m.sentDate.slice(0, 10) : '—'}</td>
+                          case 'createdAt': return <td key={col.key} className="mono">{m.createdAt?.slice(0, 10) ?? '—'}</td>
+                          default: return null
+                        }
+                      })}
                     </tr>
                   </ContextMenuTrigger>
 

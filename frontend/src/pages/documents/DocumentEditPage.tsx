@@ -2,8 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
-import { documents, type DocumentCategoryDto } from '../../lib/documents'
+import { documents } from '../../lib/documents'
 import { type Confidentiality } from '../../lib/incomingMail'
+import LocationPicker from '../../components/LocationPicker'
 import '../incoming/incoming.css'
 
 const CONF_LEVEL: Record<string, number> = { Public: 0, Internal: 1, Confidential: 2, HighlyConfidential: 3 }
@@ -12,30 +13,30 @@ export default function DocumentEditPage() {
   const { id } = useParams()
   const docId = Number(id)
   const navigate = useNavigate()
-  const [categories, setCategories] = useState<DocumentCategoryDto[]>([])
   const [docNumber, setDocNumber] = useState('')
   const [ownerPositionId, setOwnerPositionId] = useState<number | null>(null)
   const [form, setForm] = useState({
     title: '', description: '', confidentiality: 1 as number,
-    keywords: '', documentDate: '', categoryId: '',
+    keywords: '', documentDate: '', expiryDate: '',
   })
+  const [boxId, setBoxId] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    Promise.all([documents.get(docId), documents.categories().catch(() => [])])
-      .then(([d, cats]) => {
-        setCategories(cats)
+    documents.get(docId)
+      .then((d) => {
         setDocNumber(d.documentNumber)
         setOwnerPositionId(d.ownerPositionId)
+        setBoxId(d.boxId ?? null)
         setForm({
           title: d.title,
           description: d.description ?? '',
           confidentiality: CONF_LEVEL[d.confidentiality] ?? 1,
           keywords: d.keywords ?? '',
           documentDate: d.documentDate ?? '',
-          categoryId: d.categoryId ? String(d.categoryId) : '',
+          expiryDate: d.expiryDate ?? '',
         })
       })
       .catch(() => setError('تعذّر تحميل الوثيقة (قد لا تملك صلاحية الوصول)'))
@@ -57,8 +58,9 @@ export default function DocumentEditPage() {
         confidentiality: Number(form.confidentiality) as Confidentiality,
         keywords: form.keywords || null,
         documentDate: form.documentDate || null,
-        categoryId: form.categoryId ? Number(form.categoryId) : null,
+        expiryDate: form.expiryDate || null,
         ownerPositionId,
+        boxId,
       })
       navigate(`/app/documents/${docId}`, { replace: true })
     } catch (err) {
@@ -89,17 +91,16 @@ export default function DocumentEditPage() {
               <option value={0}>عام</option><option value={1}>داخلي</option>
               <option value={2}>سري</option><option value={3}>سري للغاية</option>
             </select></label>
-          <label className="field"><span>التصنيف</span>
-            <select value={form.categoryId} onChange={set('categoryId')}>
-              <option value="">— بدون —</option>
-              {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-            </select></label>
           <label className="field"><span>تاريخ الوثيقة</span>
             <input type="date" value={form.documentDate} onChange={set('documentDate')} dir="ltr" /></label>
+          <label className="field"><span>تاريخ انتهاء الحفظ</span>
+            <input type="date" value={form.expiryDate} onChange={set('expiryDate')} dir="ltr" />
+            <span className="muted" style={{ fontSize: '.75rem' }}>اتركه فارغًا ليُحتسب تلقائيًا من مدة الحفظ</span></label>
           <label className="field field--wide"><span>الكلمات المفتاحية</span>
             <input value={form.keywords} onChange={set('keywords')} placeholder="مفصولة بمسافات" /></label>
           <label className="field field--wide"><span>الوصف</span>
             <textarea rows={4} value={form.description} onChange={set('description')} /></label>
+          <LocationPicker value={boxId} onChange={setBoxId} />
         </div>
 
         {error && <p className="login__error">{error}</p>}

@@ -25,7 +25,7 @@ export default function DesignatedCommunitySettings() {
   return (
     <motion.section className="doc-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <h3 className="detail-h3">المجتمع المستهدف (Designated Community)</h3>
-      <p className="muted">تعريف الجهة المستفيدة من الأرشيف ومتطلبات عرض الوثائق على المدى الطويل (ISO 14721).</p>
+      <p className="muted">تعريف الجهة المستفيدة من الأرشيف ومتطلبات عرض الوثائق على المدى الطويل.</p>
       <form className="form-grid" onSubmit={save}>
         <label className="field field--wide"><span>الاسم</span>
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: موظفو المؤسسة والجهات الحكومية" /></label>

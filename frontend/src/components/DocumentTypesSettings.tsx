@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, type FormEvent } from 'react'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
 import { auth } from '../lib/auth'
-import { documents, type DocumentTypeDto, type DocumentCategoryDto } from '../lib/documents'
+import { documents, type DocumentTypeDto } from '../lib/documents'
 import { useToast } from './toast'
 import '../pages/documents/documents.css'
 import '../pages/settings/settings.css'
@@ -14,12 +14,12 @@ const CONF_LEVEL: Record<string, number> = { Public: 0, Internal: 1, Confidentia
 const confAr = (s: string) => CONF[CONF_LEVEL[s] ?? 1].ar
 
 interface FormState {
-  name: string; nameEn: string; code: string; categoryId: string
+  name: string; nameEn: string; code: string
   confidentiality: number; retentionMonths: number; requiresApproval: boolean; scannerOnly: boolean
   isActive: boolean
 }
 const EMPTY: FormState = {
-  name: '', nameEn: '', code: '', categoryId: '',
+  name: '', nameEn: '', code: '',
   confidentiality: 1, retentionMonths: 120, requiresApproval: false, scannerOnly: false, isActive: true,
 }
 
@@ -29,7 +29,6 @@ const errOf = (err: unknown, fallback: string) =>
 export default function DocumentTypesSettings() {
   const toast = useToast()
   const [types, setTypes] = useState<DocumentTypeDto[]>([])
-  const [cats, setCats] = useState<DocumentCategoryDto[]>([])
   const [form, setForm] = useState<FormState>(EMPTY)
   const [editId, setEditId] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
@@ -38,8 +37,7 @@ export default function DocumentTypesSettings() {
 
   const load = useCallback(async () => {
     try {
-      const [t, c] = await Promise.all([documents.types(), documents.categories().catch(() => [])])
-      setTypes(t); setCats(c)
+      setTypes(await documents.types())
     } catch { toast.error('تعذّر تحميل أنواع الوثائق') }
   }, [toast])
 
@@ -53,7 +51,6 @@ export default function DocumentTypesSettings() {
     setEditId(t.id)
     setForm({
       name: t.name, nameEn: t.nameEn ?? '', code: t.code ?? '',
-      categoryId: t.categoryId ? String(t.categoryId) : '',
       confidentiality: CONF_LEVEL[t.defaultConfidentiality] ?? 1,
       retentionMonths: t.retentionMonths,
       requiresApproval: t.requiresApproval,
@@ -69,7 +66,6 @@ export default function DocumentTypesSettings() {
       name: form.name.trim(),
       nameEn: form.nameEn.trim() || null,
       code: form.code.trim() || null,
-      categoryId: form.categoryId ? Number(form.categoryId) : null,
       defaultConfidentiality: Number(form.confidentiality),
       retentionMonths: Number(form.retentionMonths) || 120,
       requiresApproval: form.requiresApproval,
@@ -96,13 +92,13 @@ export default function DocumentTypesSettings() {
   return (
     <motion.section className="doc-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <h3 className="detail-h3">أنواع الوثائق ({types.length})</h3>
-      <p className="muted">نوع الوثيقة يحدّد مدة الحفظ، السرية الافتراضية، التصنيف، ومصادر الرفع المسموحة.</p>
+      <p className="muted">نوع الوثيقة يحدّد مدة الحفظ، السرية الافتراضية، ومصادر الرفع المسموحة.</p>
 
       <div className="table-scroll">
         <table className="reg-table">
           <thead>
             <tr>
-              <th>الاسم</th><th>الرمز</th><th>مدة الحفظ (شهر)</th><th>السرية الافتراضية</th>
+              <th>الاسم</th><th>رمز التعريف</th><th>مدة الحفظ (شهر)</th><th>السرية الافتراضية</th>
               <th>يتطلب اعتماد</th><th>الرفع</th><th>الحالة</th>{canEdit && <th></th>}
             </tr>
           </thead>
@@ -136,13 +132,8 @@ export default function DocumentTypesSettings() {
             <input value={form.name} onChange={(e) => set('name', e.target.value)} /></label>
           <label className="field"><span>الاسم بالإنجليزية</span>
             <input value={form.nameEn} onChange={(e) => set('nameEn', e.target.value)} dir="ltr" /></label>
-          <label className="field"><span>الرمز</span>
-            <input value={form.code} onChange={(e) => set('code', e.target.value)} dir="ltr" /></label>
-          <label className="field"><span>التصنيف</span>
-            <select value={form.categoryId} onChange={(e) => set('categoryId', e.target.value)}>
-              <option value="">— بدون —</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select></label>
+          <label className="field"><span>رمز التعريف (اختياري)</span>
+            <input value={form.code} onChange={(e) => set('code', e.target.value)} dir="ltr" placeholder="اتركه فارغًا إن لم يلزم" /></label>
           <label className="field"><span>السرية الافتراضية</span>
             <select value={form.confidentiality} onChange={(e) => set('confidentiality', Number(e.target.value))}>
               {CONF.map((c) => <option key={c.v} value={c.v}>{c.ar}</option>)}

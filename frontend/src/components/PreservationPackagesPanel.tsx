@@ -28,7 +28,7 @@ export default function PreservationPackagesPanel({ docId, documentNumber }: { d
   return (
     <motion.section className="doc-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
       <div className="attach-header">
-        <span className="kicker">PRESERVATION · حزم الحفظ (OAIS — ISO 14721)</span>
+        <span className="kicker">PRESERVATION · حزم الحفظ</span>
         {!open
           ? <button className="btn btn-ghost btn-sm" onClick={load} disabled={busy}>{busy ? '…' : 'عرض'}</button>
           : <button className="btn btn-seal btn-sm" onClick={exportAip} disabled={busy}>⬇ تنزيل حزمة الأرشفة (AIP)</button>}

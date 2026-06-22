@@ -1,5 +1,6 @@
 using Archiving.Application.Common.Interfaces;
 using Archiving.Application.Features.Reports;
+using Archiving.Domain.Entities;
 using Archiving.Domain.Enums;
 using Archiving.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -33,8 +34,10 @@ public sealed class ReportService(AppDbContext db, ICurrentUser currentUser) : I
             .CountAsync(t => openTaskStatuses.Contains(t.Status) && t.DueAt < now, ct);
 
         var expiringSoon = await docs.CountAsync(d => d.ExpiryDate != null && d.ExpiryDate <= horizon, ct);
-        var pendingDisposals = await db.DisposalRequests
-            .CountAsync(r => r.Status == DisposalRequestStatus.Pending, ct);
+        // Disposition requests still in the two-step workflow (verification or final approval).
+        var pendingDisposals = await db.DispositionRequests
+            .CountAsync(r => r.Status == DispositionStatus.PendingVerification
+                || r.Status == DispositionStatus.PendingFinalApproval, ct);
         var unread = me is null ? 0 : await db.Notifications.CountAsync(n => n.RecipientUserId == me && !n.IsRead, ct);
 
         var recentActivity = await (

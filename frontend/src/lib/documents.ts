@@ -51,6 +51,8 @@ export interface DocumentListItem {
   physicalLocationName: string | null
   boxNumber: string | null
   fileNumber: string | null
+  boxCode: string | null
+  customValues?: Record<string, string>   // admin custom field values, keyed by field id
 }
 
 export interface DocumentAttachmentDto {
@@ -77,7 +79,10 @@ export interface DocumentDetail extends DocumentListItem {
   physicalLocationId: number | null
   folderId: number | null
   isFavorite: boolean
-  // physicalLocationName, boxNumber, fileNumber inherited from DocumentListItem
+  isTombstone?: boolean
+  destroyedAtUtc?: string | null
+  boxId?: number | null
+  // physicalLocationName, boxNumber, fileNumber, boxCode inherited from DocumentListItem
 }
 
 export interface CreateDocument {
@@ -93,6 +98,7 @@ export interface CreateDocument {
   physicalLocationId?: number | null
   boxNumber?: string | null
   fileNumber?: string | null
+  boxId?: number | null
 }
 
 export interface OrgUnitDto {
@@ -109,14 +115,15 @@ export interface OrgUnitDto {
 
 export const documents = {
   list: (params: { search?: string; status?: number; documentTypeId?: number; page?: number; pageSize?: number;
-    dateFrom?: string; dateTo?: string; favoritesOnly?: boolean; sharedWithMe?: boolean; folderId?: number }) =>
+    dateFrom?: string; dateTo?: string; favoritesOnly?: boolean; sharedWithMe?: boolean; folderId?: number;
+    customFieldId?: number; customFieldValue?: string }) =>
     api.get<PagedResult<DocumentListItem>>('/documents', { params }).then((r) => r.data),
 
   get: (id: number) => api.get<DocumentDetail>(`/documents/${id}`).then((r) => r.data),
 
   create: (body: CreateDocument) => api.post<DocumentDetail>('/documents', body).then((r) => r.data),
 
-  update: (id: number, body: Partial<CreateDocument>) =>
+  update: (id: number, body: Partial<CreateDocument> & { expiryDate?: string | null }) =>
     api.put<DocumentDetail>(`/documents/${id}`, body).then((r) => r.data),
 
   remove: (id: number) => api.delete(`/documents/${id}`),
@@ -126,6 +133,11 @@ export const documents = {
   updateType: (id: number, body: DocumentTypeInput) => api.put<DocumentTypeDto>(`/documents/types/${id}`, body).then((r) => r.data),
   deleteType: (id: number) => api.delete(`/documents/types/${id}`),
   categories: () => api.get<DocumentCategoryDto[]>('/documents/categories').then((r) => r.data),
+  createCategory: (b: { name: string; code?: string | null; parentId?: number | null }) =>
+    api.post<DocumentCategoryDto>('/documents/categories', b).then((r) => r.data),
+  updateCategory: (id: number, b: { name: string; code?: string | null; parentId?: number | null; isActive: boolean }) =>
+    api.put<DocumentCategoryDto>(`/documents/categories/${id}`, b).then((r) => r.data),
+  deleteCategory: (id: number) => api.delete(`/documents/categories/${id}`),
 
   orgUnits: () => api.get<OrgUnitDto[]>('/organization/org-units').then((r) => r.data),
   users: () => api.get<{ id: number; fullName: string; email: string }[]>('/organization/users').then((r) => r.data),
