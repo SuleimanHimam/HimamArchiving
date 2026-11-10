@@ -8,13 +8,20 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args)
     {
-        // Design-time only (dotnet ef). Set ARCHIVING_DB to your local connection string;
-        // the placeholder below has no real password committed.
+        // Design-time only (dotnet ef). Set ARCHIVING_DB to your local connection string, and
+        // ARCHIVING_DB_PROVIDER to MySql or SqlServer when adding migrations for a given engine.
+        // The placeholder below has no real password committed.
+        var provider = DatabaseProviders.Parse(
+            Environment.GetEnvironmentVariable("ARCHIVING_DB_PROVIDER"),
+            Environment.GetEnvironmentVariable("ARCHIVING_DB"));
+
         var conn = Environment.GetEnvironmentVariable("ARCHIVING_DB")
-            ?? "server=localhost;port=3306;database=archiving_db;uid=archiver;pwd=CHANGE_ME;SslMode=Preferred;";
+            ?? (provider == DbProvider.SqlServer
+                ? @"Server=.\SQLEXPRESS;Database=Archiving;Integrated Security=true;TrustServerCertificate=true;"
+                : "server=localhost;port=3306;database=archiving_db;uid=archiver;pwd=CHANGE_ME;SslMode=Preferred;");
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseMySQL(conn)
+            .UseArchivingDatabase(provider, conn)
             .Options;
 
         return new AppDbContext(options);

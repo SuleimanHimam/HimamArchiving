@@ -1,0 +1,109 @@
+{
+  "//": "Template. install-service.ps1 copies this to appsettings.Production.json, fills in the connection string, and generates the two secrets. Edit that file — not this one — afterwards.",
+
+  "//Urls": "HTTPS is mandatory: access tokens, session cookies and decrypted documents all cross this channel. Bind a real certificate here, or terminate TLS at IIS and bind this to loopback only (Setup-IIS does that for you). A 0.0.0.0 HTTP binding puts plaintext documents on the wire.",
+  "Urls": "https://0.0.0.0:7443",
+
+  "Kestrel": {
+    "Endpoints": {
+      "Https": {
+        "Url": "https://0.0.0.0:7443",
+        "Certificate": {
+          "//": "Either a store lookup (below) or Path + Password for a .pfx.",
+          "Subject": "CHANGE_ME.your-domain.local",
+          "Store": "My",
+          "Location": "LocalMachine",
+          "AllowInvalid": false
+        }
+      }
+    }
+  },
+
+  "Database": {
+    "//": "SqlServer or MySql. Omit and the connection string decides.",
+    "Provider": "SqlServer"
+  },
+
+  "ConnectionStrings": {
+    "Default": "Server=.;Database=Archiving;Integrated Security=true;TrustServerCertificate=true;MultipleActiveResultSets=true;"
+  },
+
+  "Jwt": {
+    "Issuer": "Archiving.Api",
+    "Audience": "Archiving.Client",
+    "//": "Generated per install. Changing it signs everyone out.",
+    "Key": "SET_BY_INSTALLER",
+    "//AccessTokenMinutes": "Set deliberately against the client's idle timeout (VITE_IDLE_TIMEOUT_MS, 15 min): long enough that an active user is never interrupted by an expiry, short enough to bound a token that survived in storage the client could not clear. Access tokens are not revocable — logout revokes refresh tokens, and this is what limits the rest.",
+    "AccessTokenMinutes": 60,
+    "RefreshTokenDays": 7
+  },
+
+  "Storage": {
+    "//": "The file-server tree holding encrypted objects. A UNC path or a mapped SAN/NAS volume is fine; the service account needs Modify and nothing more. Back up BOTH the database and this folder — neither is readable without the other, and the keyring is a third thing again.",
+    "RootPath": "C:\\ArchivingData\\storage",
+    "//ChunkSizeBytes": "Plaintext bytes per AEAD frame. 1 MiB default; raise for very large media, lower for archives of many small files.",
+    "ChunkSizeBytes": 1048576
+  },
+
+  "Kms": {
+    "//": "Key management. There is no unencrypted path: if this section cannot produce a working KEK the service refuses to start rather than archive anything in the clear. Storage:EncryptionKey is gone — a single master key in a config file was the finding this replaces.",
+    "//Provider": "DpapiKeyring (Windows, machine-bound keyring file) | ExternalKms (Vault/HSM — prefer this where the archive host itself is in the threat model) | Insecure (Development only; refused elsewhere).",
+    "Provider": "DpapiKeyring",
+    "//KeyringPath": "Keep this OFF the object-store volume and out of the web root. Whoever holds both this file and the storage folder holds the plaintext, so they must never share a backup tape.",
+    "KeyringPath": "C:\\ArchivingData\\keys\\keyring.dat",
+    "//Endpoint": "ExternalKms only, e.g. https://vault.internal:8200/v1/transit — must be HTTPS.",
+    "Endpoint": "",
+    "KeyName": "",
+    "//Token": "Prefer an injected environment variable or a managed identity over a value written here.",
+    "Token": "",
+    "//RotationIntervalDays": "Enforced, not merely documented: the daily sweep mints a new KEK and re-wraps every data key once the oldest wrap exceeds this. Archived bytes are never rewritten, so rotating a multi-terabyte archive costs a table scan. 0 disables the schedule and leaves rotation to the endpoint.",
+    "RotationIntervalDays": 90,
+    "RewrapBatchSize": 500
+  },
+
+  "License": {
+    "//": "Licensing is DORMANT while PublicKey is empty — nothing is enforced, which is what lets a build ship before licensing is switched on. Set PublicKey (from license-public.txt) to activate it. build-package.ps1 -PublicKey stamps it here so every package carries it.",
+    "//WARNING": "Setting PublicKey WITHOUT placing a valid license.lic beside the executable puts the server into ReadOnly immediately: reads keep working, every write is refused. Install the licence in the same visit.",
+    "Path": "license.lic",
+    "PublicKey": "",
+    "//Enforcement": "WarnOnly (report only) · ReadOnly (reads work, writes refused) · Block (everything but sign-in and licence install). ReadOnly is the default so nobody ever loses access to their own archive because a licence lapsed.",
+    "Enforcement": "ReadOnly",
+    "RecheckInterval": "00:05:00"
+  },
+
+  // Optional. Set it only when the SPA is not served from this same origin (a split deployment,
+  // or a proxy this server cannot see through): it is the address the QR printed on a document
+  // points at. Left empty, the address of the incoming request is used, which is correct for the
+  // packaged single-origin install.
+  "App": {
+    "PublicBaseUrl": ""
+  },
+  "Downloads": {
+    "//": "The scan agent staff install on their own PCs, served by the API at /api/downloads/scan-agent. Set by the installer to the copy inside this folder.",
+    "ScanAgentPath": ""
+  },
+
+  "Backup": {
+    "//": "Where SQL Server writes .bak files. Must be writable by the SQL Server service account. Empty = the instance's own default backup folder.",
+    "SqlServerDirectory": ""
+  },
+
+  "Cors": {
+    "//": "Only needed when the SPA is served from somewhere other than this service. The packaged layout serves both from one origin, so this stays empty.",
+    "AllowedOrigins": []
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Archiving": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
+    },
+    "EventLog": {
+      "LogLevel": { "Default": "Warning" }
+    }
+  },
+
+  "AllowedHosts": "*"
+}

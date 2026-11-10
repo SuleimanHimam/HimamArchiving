@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Globe } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
@@ -46,7 +47,7 @@ export default function LanguageToggle() {
                 transition={{ duration: 0.2 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="langdlg__icon">🌐</div>
+                <div className="langdlg__icon"><Globe size={22} aria-hidden /></div>
                 <h2 id="langdlg-title" className="langdlg__title">
                   {t('lang.switchTitle')}
                 </h2>

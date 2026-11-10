@@ -1,0 +1,468 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   RichTextEditor — Word-like editing surface.
+   Component-scoped token layer: every colour/spacing name below resolves to a
+   repo token (--m-*), so themes and dark mode flow through untouched.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.rte {
+  /* surfaces */
+  --rte-chrome: var(--m-surface-2);
+  --rte-paper: var(--m-surface);
+  --rte-backdrop: var(--m-bg);
+  --rte-border: var(--m-border);
+  --rte-border-2: var(--m-border-2);
+
+  /* ink */
+  --rte-ink: var(--m-text);
+  --rte-ink-2: var(--m-text-2);
+  --rte-ink-3: var(--m-text-3);
+
+  /* interaction */
+  --rte-accent: var(--m-primary);
+  --rte-accent-fg: var(--m-primary-fg);
+  --rte-accent-soft: var(--m-accent-soft);
+
+  /* document swatches — content colours, deliberately absolute (they are part
+     of the saved HTML and must not shift with the app theme) */
+  --rte-sw-1: #000000;
+  --rte-sw-2: #444444;
+  --rte-sw-3: #8a8a8a;
+  --rte-sw-4: #c00000;
+  --rte-sw-5: #ff0000;
+  --rte-sw-6: #ffc000;
+  --rte-sw-7: #ffff00;
+  --rte-sw-8: #00b050;
+  --rte-sw-9: #0070c0;
+  --rte-sw-10: #7030a0;
+
+  /* geometry — full-bleed writing surface, comfortable reading margins */
+  --rte-page-pad-block: 28px;
+  --rte-page-pad-inline: 36px;
+  --rte-radius: 6px;
+  --rte-btn: 34px;
+
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  border: 1px solid var(--rte-border);
+  border-radius: var(--rte-radius);
+  background: var(--rte-backdrop);
+  color: var(--rte-ink);
+  overflow: hidden;
+}
+
+/* ── Ribbon ────────────────────────────────────────────────────────────────── */
+
+.rte__ribbon {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--rte-chrome);
+  border-block-end: 1px solid var(--rte-border);
+}
+
+.rte__ribbon[aria-disabled='true'] { opacity: 0.55; pointer-events: none; }
+
+.rte__group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-inline: 6px;
+  border-inline-end: 1px solid var(--rte-border);
+}
+.rte__group:last-child { border-inline-end: 0; }
+
+.rte__btn {
+  inline-size: var(--rte-btn);
+  block-size: var(--rte-btn);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--rte-ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--t-fast, 140ms) var(--ease, ease),
+              border-color var(--t-fast, 140ms) var(--ease, ease);
+}
+.rte__btn:hover:not(:disabled) { background: var(--rte-accent-soft); border-color: var(--rte-border-2); }
+.rte__btn:focus-visible { outline: 2px solid var(--rte-accent); outline-offset: 1px; }
+.rte__btn.is-active { background: var(--rte-accent-soft); border-color: var(--rte-accent); }
+.rte__btn:disabled { opacity: 0.38; cursor: default; }
+
+.rte__select {
+  block-size: var(--rte-btn);
+  min-inline-size: 8.5rem;
+  padding-inline: 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--rte-ink);
+  background: var(--rte-paper);
+  border: 1px solid var(--rte-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.rte__select--sm { min-inline-size: 4.5rem; }
+.rte__select--md { min-inline-size: 7rem; }
+.rte__select:focus-visible { outline: 2px solid var(--rte-accent); outline-offset: 1px; }
+
+.rte__file { display: none; }
+
+.rte__icon {
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  flex: none;
+}
+
+/* Side-encoding glyphs (align start/end, indent, list markers) are authored
+   left-to-right; mirror them so "start" points right when the UI is RTL. */
+[dir="rtl"] .rte__icon--dir { transform: scaleX(-1); }
+
+/* ── Right-click selection menu ────────────────────────────────────────────── */
+
+/* Radix portals the menu to <body>, outside .rte — so the token layer the menu
+   and its colour swatches depend on must be re-declared here, or swatches paint
+   nothing. Applied to .rte__cm (both the menu and its sub-menus carry it). */
+.rte__cm {
+  --rte-chrome: var(--m-surface-2);
+  --rte-paper: var(--m-surface);
+  --rte-border: var(--m-border);
+  --rte-border-2: var(--m-border-2);
+  --rte-ink: var(--m-text);
+  --rte-ink-2: var(--m-text-2);
+  --rte-ink-3: var(--m-text-3);
+  --rte-accent: var(--m-primary);
+  --rte-accent-soft: var(--m-accent-soft);
+  --rte-radius: 6px;
+  --rte-sw-1: #000000;
+  --rte-sw-2: #444444;
+  --rte-sw-3: #8a8a8a;
+  --rte-sw-4: #c00000;
+  --rte-sw-5: #ff0000;
+  --rte-sw-6: #ffc000;
+  --rte-sw-7: #ffff00;
+  --rte-sw-8: #00b050;
+  --rte-sw-9: #0070c0;
+  --rte-sw-10: #7030a0;
+}
+
+.rte__cm-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rte__cm-item.is-active { background: var(--rte-accent-soft); }
+.rte__cm-item .rte__icon { inline-size: 1.05rem; block-size: 1.05rem; }
+
+.rte__swatches--cm { padding: 4px; }
+.rte__cm-label { padding: 4px 8px 2px; font-size: 0.72rem; color: var(--rte-ink-3); }
+
+/* ── Word-style mini formatting toolbar (top of the right-click menu) ───────── */
+
+.rte__cm--word { padding-block-start: 0; }
+
+.rte__mini {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  margin: -4px -4px 2px;               /* bleed to the menu edges */
+  background: var(--rte-chrome);
+  border-radius: var(--rte-radius) var(--rte-radius) 0 0;
+  border-block-end: 1px solid var(--rte-border);
+}
+
+.rte__mini-row { display: flex; align-items: center; gap: 2px; }
+
+.rte__mini-btn {
+  inline-size: 26px;
+  block-size: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rte-ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.rte__mini-btn:hover { background: var(--rte-accent-soft); border-color: var(--rte-border-2); }
+.rte__mini-btn.is-active { background: var(--rte-accent-soft); border-color: var(--rte-accent); }
+.rte__mini-btn .rte__icon { inline-size: 0.95rem; block-size: 0.95rem; }
+
+.rte__mini-sel {
+  block-size: 26px;
+  min-inline-size: 6.5rem;
+  padding-inline: 4px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--rte-ink);
+  background: var(--rte-paper);
+  border: 1px solid var(--rte-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.rte__mini-sel--sm { min-inline-size: 3.4rem; }
+
+.rte__mini-sep {
+  inline-size: 1px;
+  block-size: 18px;
+  margin-inline: 3px;
+  background: var(--rte-border);
+}
+
+/* ── Pop-overs (swatches, table grid) ──────────────────────────────────────── */
+
+.rte__menu { position: relative; display: inline-flex; }
+
+.rte__pop {
+  position: absolute;
+  inset-block-start: calc(100% + 4px);
+  inset-inline-start: 0;
+  z-index: 20;
+  padding: 8px;
+  background: var(--rte-paper);
+  border: 1px solid var(--rte-border);
+  border-radius: var(--rte-radius);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.14);
+}
+
+.rte__swatches { display: grid; grid-template-columns: repeat(5, 22px); gap: 4px; }
+
+.rte__swatch {
+  inline-size: 22px;
+  block-size: 22px;
+  border: 1px solid var(--rte-border-2);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: transform var(--t-fast, 140ms) var(--ease, ease);
+}
+.rte__swatch:hover { transform: scale(1.12); }
+.rte__swatch--1 { background: var(--rte-sw-1); }
+.rte__swatch--2 { background: var(--rte-sw-2); }
+.rte__swatch--3 { background: var(--rte-sw-3); }
+.rte__swatch--4 { background: var(--rte-sw-4); }
+.rte__swatch--5 { background: var(--rte-sw-5); }
+.rte__swatch--6 { background: var(--rte-sw-6); }
+.rte__swatch--7 { background: var(--rte-sw-7); }
+.rte__swatch--8 { background: var(--rte-sw-8); }
+.rte__swatch--9 { background: var(--rte-sw-9); }
+.rte__swatch--10 { background: var(--rte-sw-10); }
+
+/* Colour buttons carry a bar of the colour they apply, like Word. */
+.rte__btn--swatch { flex-direction: column; gap: 1px; }
+.rte__btn--swatch .rte__icon { block-size: 1.05em; inline-size: 1.05em; }
+.rte__swatch-bar {
+  inline-size: 16px;
+  block-size: 3px;
+  border-radius: 1px;
+}
+.rte__btn--text .rte__swatch-bar { background: var(--rte-sw-5); }
+.rte__btn--highlight .rte__swatch-bar { background: var(--rte-sw-7); }
+
+.rte__pop-action {
+  inline-size: 100%;
+  margin-block-start: 8px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--rte-ink-2);
+  background: transparent;
+  border: 1px solid var(--rte-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.rte__pop-action:hover { background: var(--rte-accent-soft); }
+
+.rte__grid { display: grid; grid-template-columns: repeat(8, 18px); gap: 2px; }
+.rte__grid-cell {
+  inline-size: 18px;
+  block-size: 18px;
+  background: var(--rte-chrome);
+  border: 1px solid var(--rte-border-2);
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 0;
+}
+.rte__grid-cell.is-on { background: var(--rte-accent-soft); border-color: var(--rte-accent); }
+.rte__grid-label {
+  margin-block-start: 6px;
+  font-size: 0.78rem;
+  color: var(--rte-ink-2);
+  text-align: center;
+}
+
+/* ── Page canvas ───────────────────────────────────────────────────────────── */
+
+.rte__canvas {
+  flex: 1;
+  min-block-size: 0;
+  /* Embedded in a form the paper must scroll inside itself, not push the page. */
+  max-block-size: var(--rte-canvas-max, 62vh);
+  overflow: auto;
+  padding: 10px;
+  background: var(--rte-backdrop);
+}
+
+.rte__page {
+  position: relative;
+  inline-size: 100%;
+  min-block-size: 100%;
+  background: var(--rte-paper);
+  border: 1px solid var(--rte-border);
+  border-radius: 4px;
+}
+
+/* ── Editable content ──────────────────────────────────────────────────────── */
+
+.rte__content {
+  padding-block: var(--rte-page-pad-block);
+  padding-inline: var(--rte-page-pad-inline);
+  min-block-size: var(--rte-canvas-max, 62vh);
+  font-size: 12pt;
+  line-height: 1.8;
+  color: var(--rte-ink);
+  outline: none;
+}
+
+.rte__content > * + * { margin-block-start: 0.65em; }
+
+.rte__content p:empty::after { content: '\200b'; }
+
+.rte__content h1 { font-size: 20pt; font-weight: 700; }
+.rte__content h2 { font-size: 17pt; font-weight: 700; }
+.rte__content h3 { font-size: 14pt; font-weight: 700; }
+.rte__content h4 { font-size: 12.5pt; font-weight: 700; }
+
+.rte__content ul,
+.rte__content ol { padding-inline-start: 1.6em; }
+.rte__content ul { list-style: disc; }
+
+/* Western digits system-wide — including list numbering. */
+.rte__content ol { list-style: decimal; }
+
+.rte__content blockquote {
+  padding-inline-start: 1em;
+  border-inline-start: 3px solid var(--rte-border-2);
+  color: var(--rte-ink-2);
+}
+
+.rte__content hr {
+  border: 0;
+  border-block-start: 1px solid var(--rte-border-2);
+  margin-block: 1.2em;
+}
+
+.rte__content a { color: var(--rte-accent); text-decoration: underline; }
+
+.rte__content img { max-inline-size: 100%; block-size: auto; }
+.rte__content img.ProseMirror-selectednode { outline: 2px solid var(--rte-accent); }
+
+.rte__content table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-block: 0.8em;
+}
+.rte__content th,
+.rte__content td {
+  padding: 6px 8px;
+  border: 1px solid var(--rte-border-2);
+  vertical-align: top;
+}
+.rte__content th { background: var(--rte-chrome); font-weight: 700; }
+
+/* Per-block indent (0–8 steps of 1.25rem) */
+.rte__content [data-indent='1'] { padding-inline-start: 1.25rem; }
+.rte__content [data-indent='2'] { padding-inline-start: 2.5rem; }
+.rte__content [data-indent='3'] { padding-inline-start: 3.75rem; }
+.rte__content [data-indent='4'] { padding-inline-start: 5rem; }
+.rte__content [data-indent='5'] { padding-inline-start: 6.25rem; }
+.rte__content [data-indent='6'] { padding-inline-start: 7.5rem; }
+.rte__content [data-indent='7'] { padding-inline-start: 8.75rem; }
+.rte__content [data-indent='8'] { padding-inline-start: 10rem; }
+
+/* Placeholder */
+.rte__content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: inline-start;
+  block-size: 0;
+  color: var(--rte-ink-3);
+  pointer-events: none;
+}
+
+/* ── Status bar ────────────────────────────────────────────────────────────── */
+
+.rte__status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  color: var(--rte-ink-2);
+  background: var(--rte-chrome);
+  border-block-start: 1px solid var(--rte-border);
+}
+.rte__status-sep { color: var(--rte-ink-3); }
+.rte__status-lang { margin-inline-start: auto; }
+
+/* ── Find & replace dialog ─────────────────────────────────────────────────── */
+
+.rte__find { display: flex; flex-direction: column; gap: 10px; }
+
+.rte__find-row { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--rte-ink-2); }
+
+.rte__find-input {
+  block-size: 34px;
+  padding-inline: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--rte-ink);
+  background: var(--rte-paper);
+  border: 1px solid var(--rte-border);
+  border-radius: 4px;
+}
+.rte__find-input:focus { outline: 2px solid var(--rte-accent); outline-offset: 1px; }
+
+.rte__find-check { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--rte-ink-2); }
+.rte__find-count { margin: 0; font-size: 0.8rem; color: var(--rte-ink-3); min-block-size: 1.1em; }
+
+.rte__dialog-btn {
+  block-size: 34px;
+  padding-inline: 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--rte-ink);
+  background: var(--rte-paper);
+  border: 1px solid var(--rte-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.rte__dialog-btn:hover:not(:disabled) { background: var(--rte-accent-soft); }
+.rte__dialog-btn:disabled { opacity: 0.4; cursor: default; }
+.rte__dialog-btn--primary {
+  color: var(--rte-accent-fg);
+  background: var(--rte-accent);
+  border-color: var(--rte-accent);
+}
+
+/* ── Motion & print ────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .rte * { transition: none !important; }
+}
+
+@media print {
+  .rte__ribbon, .rte__status { display: none; }
+  .rte, .rte__canvas { border: 0; padding: 0; background: none; max-block-size: none; }
+  .rte__page { border: 0; }
+  .rte__content { min-block-size: 0; padding: 0; }
+}

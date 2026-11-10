@@ -6,9 +6,12 @@ import {
   type ClassificationType,
   type UpsertClassification,
   COLOR_SWATCHES,
+  syncClassificationLabels,
 } from '../lib/classification'
-import { usersApi, type AdminRole } from '../lib/users'
+import { usersApi, roleLabel, type AdminRole } from '../lib/users'
+import { LabeledInput } from './ui/labeled-input'
 import { useToast } from './toast'
+import { useConfirmDialog } from './ui/confirm-dialog'
 import '../pages/settings/settings.css'
 import './classificationsettings.css'
 
@@ -80,42 +83,14 @@ function EditForm({ initial, roles, onSave, onCancel, busy, isNew }: EditFormPro
 
         {/* Name / meta fields */}
         <div className="clf-form__fields">
-          <label className="clf-field">
-            <span>الاسم بالعربية *</span>
-            <input
-              value={nameAr}
-              onChange={(e) => setNameAr(e.target.value)}
-              placeholder="مثال: للاستخدام الرسمي فقط"
-              required
-            />
-          </label>
-          <label className="clf-field">
-            <span>الاسم بالإنجليزية</span>
-            <input
-              dir="ltr"
-              value={nameEn}
-              onChange={(e) => setNameEn(e.target.value)}
-              placeholder="e.g. Official Use Only"
-            />
-          </label>
-          <label className="clf-field">
-            <span>الوصف</span>
-            <input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="نبذة مختصرة عن هذا التصنيف"
-            />
-          </label>
+          <LabeledInput label="الاسم بالعربية" required value={nameAr} onChange={(e) => setNameAr(e.target.value)} />
+          <LabeledInput label="الاسم بالإنجليزية" dir="ltr" value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+          <LabeledInput label="الوصف" value={description} onChange={(e) => setDescription(e.target.value)} />
           <div className="clf-form__meta">
-            <label className="clf-field clf-field--sm">
-              <span>الترتيب</span>
-              <input
-                type="number" min={0} max={999}
-                value={sortOrder}
-                onChange={(e) => setSortOrder(Number(e.target.value))}
-                style={{ width: 70 }}
-              />
-            </label>
+            <LabeledInput
+              label="الترتيب" type="number" min={0} max={999} containerClassName="w-28"
+              value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))}
+            />
             <label className="clf-active-toggle">
               <input
                 type="checkbox"
@@ -145,7 +120,7 @@ function EditForm({ initial, roles, onSave, onCancel, busy, isNew }: EditFormPro
                     checked={checked}
                     onChange={() => toggleRole(r.id)}
                   />
-                  <span>{r.name}</span>
+                  <span>{roleLabel(r.name)}</span>
                 </label>
               )
             })}
@@ -173,6 +148,7 @@ function EditForm({ initial, roles, onSave, onCancel, busy, isNew }: EditFormPro
 // ── Main component ──────────────────────────────────────────────────────────
 export default function ClassificationSettings() {
   const toast = useToast()
+  const { confirm } = useConfirmDialog()
   const [items, setItems]           = useState<ClassificationType[]>([])
   const [roles, setRoles]           = useState<AdminRole[]>([])
   const [editingId, setEditingId]   = useState<number | null>(null)
@@ -196,7 +172,9 @@ export default function ClassificationSettings() {
 
   // Helper: role name lookup
   function roleName(id: number) {
-    return roles.find((r) => r.id === id)?.name ?? `#${id}`
+    const found = roles.find((r) => r.id === id)
+    // Role names are stored in English (they are also permission keys); the screen is Arabic.
+    return found ? roleLabel(found.name) : `#${id}`
   }
 
   async function handleSave(id: number, data: UpsertClassification, roleIds: number[]) {
@@ -208,6 +186,9 @@ export default function ClassificationSettings() {
       ])
       setEditingId(null)
       await load()
+      // Push the new name into the shared label table so badges elsewhere in the app
+      // stop showing the old one without a reload.
+      await syncClassificationLabels()
       toast.success('تم حفظ التصنيف')
     } catch (err) {
       const ax = err as { response?: { data?: { error?: string } } }
@@ -230,7 +211,7 @@ export default function ClassificationSettings() {
   }
 
   async function handleDelete(item: ClassificationType) {
-    if (!confirm(`حذف التصنيف «${item.nameAr}»؟`)) return
+    if (!(await confirm({ message: `حذف التصنيف «${item.nameAr}»؟`, destructive: true }))) return
     setBusy(true)
     try {
       await classificationApi.delete(item.id)
@@ -314,7 +295,6 @@ export default function ClassificationSettings() {
                 <div className="clf-item__info">
                   <span className="clf-item__name">
                     {item.nameAr}
-                    {item.nameEn && <span className="clf-item__name-en">{item.nameEn}</span>}
                     {item.isSystem && (
                       <span className="clf-system-badge" title="مدمج في النظام">
                         <Lock size={10} /> مدمج
@@ -345,16 +325,16 @@ export default function ClassificationSettings() {
                   >
                     <Pencil size={14} />
                   </button>
-                  {!item.isSystem && (
-                    <button
-                      className="clf-action-btn clf-action-btn--del"
-                      title="حذف"
-                      onClick={() => handleDelete(item)}
-                      disabled={busy}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
+                  {/* Always shown: hiding it on built-in types left the row looking like deletion
+                      was missing, when it is refused for a reason worth stating. */}
+                  <button
+                    className="clf-action-btn clf-action-btn--del"
+                    title={item.isSystem ? 'تصنيف مدمج في النظام — لا يمكن حذفه' : 'حذف'}
+                    onClick={() => handleDelete(item)}
+                    disabled={busy || item.isSystem}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             )}

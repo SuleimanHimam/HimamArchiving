@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { CornerLeftUp, Folder } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
@@ -71,7 +72,7 @@ export default function FolderPickerModal({ open, initialPath, onClose, onSelect
                 <>
                   {currentPath && (
                     <button className="fpm__item fpm__item--up" onClick={goUp}>
-                      <span className="fpm__icon">⬑</span> ..
+                      <span className="fpm__icon"><CornerLeftUp size={15} aria-hidden /></span> ..
                     </button>
                   )}
                   {dirs.length === 0 && !error && (
@@ -79,7 +80,7 @@ export default function FolderPickerModal({ open, initialPath, onClose, onSelect
                   )}
                   {dirs.map((d) => (
                     <button key={d.fullPath} className="fpm__item" onClick={() => enter(d.fullPath)}>
-                      <span className="fpm__icon">📁</span> {d.name}
+                      <span className="fpm__icon"><Folder size={15} aria-hidden /></span> {d.name}
                     </button>
                   ))}
                 </>

@@ -52,4 +52,8 @@ public class AuditLog
     // Tamper-evidence (hash chain)
     public string? PreviousHash { get; set; }
     public string Hash { get; set; } = string.Empty;
+
+    // Soft-hide from the monitoring view. NOT part of the hash, so toggling it never breaks the chain;
+    // the row is retained physically for forensics/integrity while hidden from the default log view.
+    public bool IsHidden { get; set; }
 }

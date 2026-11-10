@@ -1,0 +1,64 @@
+/* Disposition / destruction queues — card grid (replaces the cramped tables). */
+.dispo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+}
+.dispo-empty { padding: 18px 4px; color: var(--text-muted); }
+
+/* ── Filter bar ── shared by every queue tab. */
+.dispo-filters {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .55rem;
+  margin: 0 0 1rem;
+}
+.dispo-search { position: relative; display: flex; flex: 1 1 260px; min-width: 0; }
+.dispo-search input {
+  width: 100%; font: inherit; font-size: .9rem; color: var(--text);
+  background: var(--paper); border: 1px solid var(--parchment-3);
+  border-radius: var(--radius); padding: .5rem .8rem; padding-inline-start: 2.2rem;
+  outline: none; transition: border-color .12s;
+}
+.dispo-search input:focus { border-color: var(--brass); }
+.dispo-search__icon {
+  position: absolute; inset-inline-start: .7rem; top: 50%; transform: translateY(-50%);
+  color: var(--text-faint); pointer-events: none;
+}
+.dispo-requester { flex: 0 1 15rem; min-width: 0; }
+.dispo-requester .ss { width: 100%; }
+.dispo-filters select {
+  font: inherit; font-size: .85rem; color: var(--text);
+  background: var(--paper); border: 1px solid var(--parchment-3);
+  border-radius: var(--radius); padding: .5rem .7rem; cursor: pointer;
+}
+.dispo-filters select:focus { border-color: var(--brass); outline: none; }
+@media (max-width: 700px) {
+  .dispo-search { flex: 0 0 auto; width: 100%; }
+  .dispo-filters select { flex: 1 1 8rem; }
+}
+
+/* The requester's own view has to say *why* it was refused, not just that it was. */
+.dispo-card__rejected {
+  font-size: .82rem; line-height: 1.5;
+  color: var(--seal); background: color-mix(in srgb, var(--seal) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--seal) 22%, transparent);
+  border-radius: var(--radius); padding: .4rem .6rem;
+}
+
+.dispo-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+}
+.dispo-card:hover { border-color: var(--brass); box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+.dispo-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dispo-card__no { font-family: var(--font-mono); font-weight: 700; color: var(--text); }
+.dispo-card__title { font-weight: 600; color: var(--text); font-size: .92rem; line-height: 1.35; }
+.dispo-card__reason { color: var(--text-muted); font-size: .85rem; }
+.dispo-card__meta {
+  display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
+  font-size: .8rem; color: var(--text-muted); margin-top: 2px;
+}
+.dispo-card__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }

@@ -25,8 +25,11 @@ public sealed class OrganizationController(IOrganizationService org) : Controlle
     }
 
     // ---- Org units ----
+    /// <summary>The department list. Readable by any signed-in user: addressing internal mail to a
+    /// department, or picking a document's owning unit, needs it, and neither of those is an
+    /// administrative act. Creating/editing/deleting units below stays behind Organization.*.
+    /// It carries names and codes only — no membership, no contact details.</summary>
     [HttpGet("org-units")]
-    [HasPermission("Organization.View")]
     public async Task<IActionResult> OrgUnits([FromQuery] long? institutionId, CancellationToken ct)
         => Ok(await org.ListOrgUnitsAsync(institutionId, ct));
 
@@ -36,6 +39,22 @@ public sealed class OrganizationController(IOrganizationService org) : Controlle
     {
         var r = await org.CreateOrgUnitAsync(req, ct);
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
+    }
+
+    [HttpPut("org-units/{id:long}")]
+    [HasPermission("Organization.Edit")]
+    public async Task<IActionResult> UpdateOrgUnit(long id, [FromBody] UpdateOrgUnitRequest req, CancellationToken ct)
+    {
+        var r = await org.UpdateOrgUnitAsync(id, req, ct);
+        return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
+    }
+
+    [HttpDelete("org-units/{id:long}")]
+    [HasPermission("Organization.Delete")]
+    public async Task<IActionResult> DeleteOrgUnit(long id, CancellationToken ct)
+    {
+        var r = await org.DeleteOrgUnitAsync(id, ct);
+        return r.Succeeded ? NoContent() : BadRequest(new { error = r.Error });
     }
 
     // ---- Positions ----
@@ -52,6 +71,22 @@ public sealed class OrganizationController(IOrganizationService org) : Controlle
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
     }
 
+    [HttpPut("positions/{id:long}")]
+    [HasPermission("Organization.Edit")]
+    public async Task<IActionResult> UpdatePosition(long id, [FromBody] UpdatePositionRequest req, CancellationToken ct)
+    {
+        var r = await org.UpdatePositionAsync(id, req, ct);
+        return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
+    }
+
+    [HttpDelete("positions/{id:long}")]
+    [HasPermission("Organization.Delete")]
+    public async Task<IActionResult> DeletePosition(long id, CancellationToken ct)
+    {
+        var r = await org.DeletePositionAsync(id, ct);
+        return r.Succeeded ? NoContent() : BadRequest(new { error = r.Error });
+    }
+
     [HttpPost("positions/{id:long}/occupant")]
     [HasPermission("Organization.Edit")]
     public async Task<IActionResult> AssignOccupant(long id, [FromBody] AssignOccupantRequest req, CancellationToken ct)
@@ -60,8 +95,11 @@ public sealed class OrganizationController(IOrganizationService org) : Controlle
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
     }
 
-    // ---- Users (lookup for occupant assignment) ----
+    /// <summary>Staff directory used to address correspondence and assign occupants: id, name and
+    /// work e-mail of active users, nothing more. Gating it on Organization.View — the permission
+    /// for *administering* the org chart — left ordinary staff with an empty recipient picker, so
+    /// they could not send internal mail to a colleague at all. Account administration lives in
+    /// UsersController, which is permission-gated.</summary>
     [HttpGet("users")]
-    [HasPermission("Organization.View")]
     public async Task<IActionResult> Users(CancellationToken ct) => Ok(await org.ListUsersAsync(ct));
 }

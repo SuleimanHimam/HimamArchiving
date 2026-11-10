@@ -11,4 +11,10 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  // Expose the dev server on the LAN so other machines on the same network can
+  // reach it at http://192.168.1.49:5173 (host: true binds 0.0.0.0 / all interfaces).
+  server: {
+    host: true,
+    port: 5173,
+  },
 })

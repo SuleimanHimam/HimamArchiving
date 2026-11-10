@@ -1,0 +1,847 @@
+/* ── Word-style report/letterhead designer ──────────────────────────────────────
+   A ribbon toolbar over an A4 contentEditable "page", with a merge-field panel on the
+   side. Surfaces use the app theme tokens so dark mode adapts; the page itself stays a
+   white sheet (documents print on white). */
+
+.rd-meta { margin-bottom: 12px; }
+
+/* Design-settings dialog: fields stacked vertically. */
+.rd-metadlg { inline-size: min(560px, 100%); }
+.rd-modeseg {
+  display: flex; gap: 6px; padding: 4px;
+  background: var(--color-secondary); border-radius: 10px; margin-block-end: 14px;
+}
+.rd-modeseg__b {
+  flex: 1; padding: 8px 10px; border: none; border-radius: 8px;
+  background: transparent; color: var(--color-muted-foreground);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+.rd-modeseg__b:hover { color: var(--color-foreground); }
+.rd-modeseg__b.is-active { background: var(--color-background); color: var(--color-primary); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+.rd-metadlg .wm-dialog__body { display: block; }
+.rd-metadlg .form-grid { display: flex; flex-direction: column; gap: 14px; }
+.rd-metadlg .form-grid > * { inline-size: 100%; min-inline-size: 0; }
+
+/* ── Watermark controls ── */
+.rd-wm { margin-bottom: 12px; }
+.rd-wm__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 16px;
+  align-items: end;
+}
+.rd-wm__ctl { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--color-foreground); }
+.rd-wm__ctl > span { color: var(--color-muted-foreground); font-size: 12px; }
+.rd-wm__ctl input[type="range"] { inline-size: 100%; accent-color: var(--color-primary); }
+.rd-wm__ctl--color input[type="color"] { inline-size: 44px; block-size: 30px; padding: 0; border: 1px solid var(--color-input); border-radius: 6px; background: none; cursor: pointer; }
+
+.rd-shell {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-background);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+/* ── Toolbar (ribbon) ── */
+.rd-tb {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 10px;
+  background: var(--color-accent);
+  border-bottom: 1px solid var(--color-border);
+}
+.rd-tb__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 32px;
+  block-size: 32px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-foreground);
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+.rd-tb__btn:hover { background: var(--color-background); border-color: var(--color-border); }
+.rd-tb__btn:active { background: var(--color-secondary); }
+
+.rd-tb__sel {
+  block-size: 32px;
+  border: 1px solid var(--color-input);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 8px;
+  cursor: pointer;
+  max-inline-size: 150px;
+}
+.rd-tb__sel--sm { max-inline-size: 92px; }
+
+.rd-tb__txt { font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+
+.rd-tb__sep {
+  inline-size: 1px;
+  block-size: 22px;
+  background: var(--color-border);
+  margin: 0 4px;
+}
+
+/* Colour pickers — the swatch button hides the native <input type=color>. */
+.rd-tb__color { overflow: hidden; }
+.rd-tb__color input[type="color"] {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-start: 0;
+  inline-size: 100%;
+  block-size: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.rd-tb__hiswatch {
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 3px;
+  background: linear-gradient(#fde047, #facc15);
+  border: 1px solid rgb(0 0 0 / 0.15);
+}
+
+/* ── Word-style tabbed ribbon ── */
+.rb-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px 0;
+  background: var(--color-accent);
+  border-bottom: 1px solid var(--color-border);
+}
+/* Leaving the designer: a tab-row control, not a page header — the canvas gets that height. */
+.rb-back {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-inline-end: 8px; padding: 5px 10px; border-radius: 8px 8px 0 0;
+  font-size: 12.5px; font-weight: 600; text-decoration: none;
+  color: var(--color-muted-foreground);
+}
+.rb-back:hover { background: var(--color-background); color: var(--color-foreground); }
+[dir='ltr'] .rb-back svg { transform: scaleX(-1); }
+/* The design's name, so removing the page title did not remove knowing what is being edited. */
+.rb-tabs__name {
+  margin-inline-start: auto; padding-inline: 10px;
+  font-size: 12px; font-weight: 600; color: var(--color-muted-foreground);
+  max-inline-size: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Document actions on the tab row (Word's quick-access toolbar), so حفظ is always in view
+   however far down the sheet stack the designer has scrolled. */
+.rb-acts { display: flex; align-items: center; gap: 5px; padding-block-end: 5px; }
+.rb-act {
+  display: inline-flex; align-items: center; gap: 5px;
+  block-size: 28px; padding: 0 10px;
+  border: 1px solid var(--color-border); border-radius: 7px;
+  background: var(--color-background); color: var(--color-foreground);
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+.rb-act:hover { background: var(--color-accent); }
+.rb-act:disabled { opacity: .55; cursor: default; }
+.rb-act svg { flex: none; opacity: .75; }
+.rb-act--primary {
+  background: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-foreground, #fff);
+}
+.rb-act--primary:hover { background: color-mix(in srgb, var(--color-primary) 88%, #000); }
+.rb-act--primary svg { opacity: 1; }
+.rb-act--danger { color: var(--color-destructive); border-color: color-mix(in srgb, var(--color-destructive) 35%, transparent); }
+.rb-act--danger:hover { background: color-mix(in srgb, var(--color-destructive) 10%, transparent); }
+/* The design's name yields first when the row runs out of room — the actions must not wrap. */
+.rb-tabs { flex-wrap: wrap; }
+.rb-tabs__name { min-inline-size: 0; }
+
+.rb-tab {
+  border: none;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+}
+.rb-tab:hover { color: var(--color-foreground); background: color-mix(in srgb, var(--color-background) 60%, transparent); }
+.rb-tab.is-active { color: var(--color-primary); background: var(--color-background); box-shadow: inset 0 -2px 0 var(--color-primary); }
+
+.rb-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  padding: 8px 10px;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  min-block-size: 78px;
+}
+.rb-spacer { flex: 1 1 auto; }
+
+.rb-group { display: flex; flex-direction: column; padding: 0 10px; border-inline-end: 1px solid var(--color-border); }
+.rb-group:last-child { border-inline-end: none; }
+.rb-group__body { display: flex; flex: 1; align-items: center; flex-wrap: wrap; gap: 3px; }
+.rb-group__cap { text-align: center; font-size: 10.5px; color: var(--color-muted-foreground); padding-top: 4px; }
+
+.rb-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  position: relative;
+  min-inline-size: 30px; block-size: 30px; padding: 0 6px;
+  border: 1px solid transparent; border-radius: 7px;
+  background: transparent; color: var(--color-foreground);
+  font: inherit; font-size: 14px; cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+.rb-btn:hover { background: var(--color-accent); border-color: var(--color-border); }
+.rb-btn.is-active { background: color-mix(in srgb, var(--color-primary) 14%, transparent); border-color: color-mix(in srgb, var(--color-primary) 40%, transparent); }
+.rb-color { overflow: hidden; }
+.rb-color input[type="color"] { position: absolute; inset-block-end: -2px; inset-inline-start: 0; inline-size: 100%; block-size: 7px; padding: 0; border: none; background: none; cursor: pointer; }
+.rb-a { font-weight: 700; font-size: 14px; letter-spacing: -.5px; }
+.rb-a--sm { font-size: 11px; }
+.rb-glyph { display: inline-flex; align-items: center; color: var(--color-muted-foreground); padding: 0 4px; }
+
+.rb-big {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-inline-size: 58px; padding: 4px 8px;
+  border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--color-foreground);
+  font: inherit; cursor: pointer; transition: background-color .15s, border-color .15s;
+}
+.rb-big:hover { background: var(--color-accent); border-color: var(--color-border); }
+.rb-big.is-active { background: color-mix(in srgb, var(--color-primary) 14%, transparent); border-color: color-mix(in srgb, var(--color-primary) 40%, transparent); }
+.rb-big__ic { color: var(--color-primary); }
+.rb-big__lb { font-size: 11px; line-height: 1.2; text-align: center; }
+
+.rb-sep { inline-size: 1px; block-size: 22px; background: var(--color-border); margin: 0 3px; }
+
+.rb-wm { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rb-slider { display: flex; flex-direction: column; font-size: 10px; color: var(--color-muted-foreground); }
+.rb-slider input[type="range"] { inline-size: 78px; accent-color: var(--color-primary); }
+.rb-colorbox { inline-size: 30px; block-size: 28px; padding: 0; border: 1px solid var(--color-input); border-radius: 6px; background: none; cursor: pointer; }
+.rb-field { display: flex; flex-direction: column; gap: 2px; font-size: 10px; color: var(--color-muted-foreground); }
+
+/* ── Body: page + field panel ── */
+.rd-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  align-items: start;
+}
+.rd-body--nofields { grid-template-columns: 1fr; }
+@media (max-width: 1000px) {
+  .rd-body { grid-template-columns: 1fr; }
+}
+
+.rd-page-wrap {
+  padding: 24px;
+  background: var(--color-secondary);
+  min-block-size: 60vh;
+  max-block-size: calc(100vh - 210px);
+  overflow: auto;
+}
+.rd-page-wrap:focus-within { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-ring) 25%, transparent); }
+
+/* ── The sheet stack ──────────────────────────────────────────────────────────
+   Word's print layout: separate sheets with a grey channel between them. The white
+   pages are drawn behind the text, and the editable on top is transparent, so the
+   whole document stays ONE editing surface — selection and typing cross a page
+   boundary exactly as they do inside Word. */
+.rd-paper { position: relative; margin: 0 auto; }
+.rd-sheets { position: absolute; inset-block-start: 0; inset-inline: 0; }
+.rd-sheet {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.12);
+}
+/* The page frame (حدود الصفحة), inset from the paper edge. Its own layer so the sheet keeps
+   the hairline outline that separates one sheet from the next. */
+.rd-sheet__frame { position: absolute; pointer-events: none; }
+/* Page number in the margin, like Word's status line — it belongs to the screen, never
+   to the design, so it lives on the sheet and not in the editable. */
+.rd-sheet__no {
+  position: absolute; inset-block-end: 10px; inset-inline-start: 12px;
+  font-size: 10px; color: #9ca3af; user-select: none;
+}
+
+/* The editing surface, sized to the whole stack. Its padding is the page margin.
+   It stretches to the full height of the sheet stack even when the text is short: the
+   blank part of a page has to be clickable, or "click and type" (see the canvas
+   mousedown handler) would only work in the few lines that already hold content. */
+.rd-page {
+  position: relative;
+  /* A stacking context of its own. A picture set to "behind the text" sits at z-index -1, and
+     without this it would slip behind the white sheets drawn under the canvas and vanish. */
+  z-index: 1;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 100%;
+  padding: 48px 44px;
+  background: transparent;
+  color: #1f2937;
+  outline: none;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.rd-page img { max-width: 100%; }
+
+/* Editor default block styles (the app ships no preflight, so define them here to
+   mirror the print stylesheet). */
+.rd-page p { margin: 0 0 .55em; }
+.rd-page h1 { font-size: 20pt; margin: .4em 0 .3em; font-weight: 700; }
+.rd-page h2 { font-size: 17pt; margin: .4em 0 .3em; font-weight: 700; }
+.rd-page h3 { font-size: 14pt; margin: .4em 0 .3em; font-weight: 700; }
+.rd-page ul, .rd-page ol { padding-inline-start: 1.6em; margin: .4em 0; }
+.rd-page ul { list-style: disc; }
+.rd-page ol { list-style: decimal; }
+.rd-page hr { border: none; border-top: 1px solid #cbb68a; margin: 10px 0; }
+.rd-page table { border-collapse: collapse; width: 100%; margin: .6em 0; }
+.rd-page th, .rd-page td { border: 1px solid #d1d5db; padding: 6px 8px; }
+.rd-page th { background: #f3f4f6; font-weight: 700; }
+
+/* ── Watermark dialog (Word-style "Printed Watermark") ── */
+.wm-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background: rgb(0 0 0 / 0.4); padding: 16px;
+}
+.wm-dialog {
+  inline-size: min(480px, 100%);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.28);
+  overflow: hidden;
+}
+.wm-dialog__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+}
+.wm-dialog__head h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.wm-x { border: none; background: transparent; color: var(--color-muted-foreground); cursor: pointer; padding: 4px; border-radius: 6px; }
+.wm-x:hover { background: var(--color-accent); color: var(--color-foreground); }
+
+.wm-dialog__body { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+.wm-radio { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.wm-radio input { accent-color: var(--color-primary); inline-size: 16px; block-size: 16px; }
+.wm-radio--sm { font-size: 13px; }
+.wm-inset { padding-inline-start: 24px; display: flex; align-items: center; gap: 10px; }
+.wm-imgbtn {
+  padding: 6px 12px; border: 1px solid var(--color-input); border-radius: 8px;
+  background: var(--color-background); color: var(--color-foreground); font: inherit; font-size: 13px; cursor: pointer;
+}
+.wm-imgbtn:disabled { opacity: .5; cursor: not-allowed; }
+.wm-imgbtn:not(:disabled):hover { background: var(--color-accent); }
+.wm-thumb { block-size: 34px; max-inline-size: 90px; object-fit: contain; border: 1px solid var(--color-border); border-radius: 6px; padding: 2px; }
+
+.wm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 4px; }
+.wm-f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.wm-f > span { color: var(--color-foreground); font-weight: 600; }
+.wm-f input[type="text"], .wm-f select {
+  block-size: 34px; border: 1px solid var(--color-input); border-radius: 8px;
+  background: var(--color-background); color: var(--color-foreground); font: inherit; font-size: 13px; padding: 0 10px;
+}
+.wm-f input[type="color"] { block-size: 34px; inline-size: 100%; padding: 0; border: 1px solid var(--color-input); border-radius: 8px; background: none; cursor: pointer; }
+.wm-f.is-off { opacity: .45; }
+.wm-layout { display: flex; gap: 16px; align-items: center; block-size: 34px; }
+.wm-check { display: inline-flex; align-items: center; gap: 8px; block-size: 34px; font-size: 13px; font-weight: 400; cursor: pointer; }
+.wm-check input { accent-color: var(--color-primary); inline-size: 16px; block-size: 16px; }
+.wm-f--check > span { font-weight: 600; }
+
+.wm-dialog__foot {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px; border-top: 1px solid var(--color-border);
+  background: var(--color-accent);
+}
+.wm-foot-spacer { flex: 1 1 auto; }
+
+/* ── Merge-field chips ── */
+.rd-tok {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, #14213d 10%, transparent);
+  color: #14213d;
+  border: 1px solid color-mix(in srgb, #14213d 22%, transparent);
+  font-size: .82em;
+  font-weight: 600;
+  line-height: 1.7;
+  white-space: nowrap;
+  user-select: none;
+  cursor: default;
+}
+.rd-tok--block {
+  display: block;
+  padding: 14px 10px;
+  text-align: center;
+  background: color-mix(in srgb, #14213d 6%, transparent);
+  border-style: dashed;
+}
+/* An unfilled picture slot (logo before upload, and always the signature/stamp — those come
+   from the sender at print time). The floor is only there so an empty slot stays visible; it
+   is deliberately small, because it would otherwise stop the resize handles from shrinking one. */
+.rd-logo--empty {
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  border: 1px dashed #9ca3af;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+.rd-page img { cursor: pointer; }
+
+/* ── Picture selection + resize handles ───────────────────────────────────────
+   A floating overlay in viewport coordinates rather than a box inside the canvas: anything
+   added to the editable would become part of the design and be saved with it. */
+.rd-imgsel {
+  position: fixed;
+  z-index: 55;
+  pointer-events: none;
+  outline: 1px solid var(--color-ring, #2563eb);
+  outline-offset: 1px;
+}
+/* A pinned picture (behind / in front of the text) is dragged by its body; a floated or inline
+   one belongs to the text flow, so its box stays click-through. */
+.rd-imgsel--movable { pointer-events: auto; cursor: move; touch-action: none; }
+
+/* ── Selected element (chip, placeholder, table, rule, page break) ──────────────
+   The same viewport-coordinate overlay as the picture selection, minus the handles: these
+   elements are not resized, they are identified and removed. */
+.rd-elsel {
+  position: fixed;
+  z-index: 54;
+  pointer-events: none;
+  outline: 1.5px solid var(--color-ring, #2563eb);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.rd-elsel__tag {
+  position: absolute; inset-block-end: 100%; inset-inline-start: 0;
+  transform: translateY(-5px);
+  display: inline-flex; align-items: center; gap: 6px;
+  pointer-events: auto;
+  background: var(--color-ring, #2563eb); color: #fff;
+  font-size: 11px; font-weight: 600; padding: 2px 4px 2px 8px; border-radius: 5px; white-space: nowrap;
+}
+/* Drag handle. Dragging the element itself works too; this is the way in for a table, where the
+   pointer inside a cell belongs to the text. */
+.rd-elsel__grip {
+  display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 16px; block-size: 18px; padding: 0; margin-inline-end: -2px;
+  background: none; border: none; color: inherit; cursor: grab; touch-action: none;
+}
+.rd-elsel__grip:active { cursor: grabbing; }
+/* Being dragged: the outline dims so the drop marker is what the eye follows. */
+.rd-elsel.is-dragging { outline-style: dashed; opacity: .55; }
+
+/* Where the element would land. */
+.rd-dropmark {
+  position: fixed; z-index: 56; pointer-events: none;
+  background: var(--color-primary, #14213d);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.6);
+}
+
+.rd-elsel__x {
+  display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 18px; block-size: 18px; padding: 0; cursor: pointer;
+  background: rgb(255 255 255 / 0.16); color: inherit;
+  border: none; border-radius: 4px;
+}
+.rd-elsel__x:hover { background: var(--color-destructive, #dc2626); }
+.rd-imgsel__size {
+  position: absolute; inset-block-end: 100%; inset-inline-start: 0;
+  transform: translateY(-4px);
+  background: #14213d; color: #fff;
+  font-size: 11px; padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+}
+/* The shortcut legend, under the picture so it never covers the size badge. */
+.rd-imgsel__hint {
+  position: absolute; inset-block-start: 100%; inset-inline-start: 0;
+  transform: translateY(6px);
+  background: rgb(20 33 61 / 0.86); color: #fff;
+  font-size: 10.5px; padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+}
+.rd-imgsel__h {
+  position: absolute;
+  inline-size: 10px; block-size: 10px;
+  margin: -5px 0 0 -5px;              /* centre the handle on its corner/edge */
+  background: #fff;
+  border: 1.5px solid var(--color-ring, #2563eb);
+  border-radius: 2px;
+  pointer-events: auto;
+  touch-action: none;
+}
+/* Physical left/top, never logical: the overlay is positioned in screen coordinates and
+   must not mirror itself inside the RTL page. */
+.rd-imgsel__h--nw { left: 0;    top: 0;    cursor: nwse-resize; }
+.rd-imgsel__h--n  { left: 50%;  top: 0;    cursor: ns-resize; }
+.rd-imgsel__h--ne { left: 100%; top: 0;    cursor: nesw-resize; }
+.rd-imgsel__h--e  { left: 100%; top: 50%;  cursor: ew-resize; }
+.rd-imgsel__h--se { left: 100%; top: 100%; cursor: nwse-resize; }
+.rd-imgsel__h--s  { left: 50%;  top: 100%; cursor: ns-resize; }
+.rd-imgsel__h--sw { left: 0;    top: 100%; cursor: nesw-resize; }
+.rd-imgsel__h--w  { left: 0;    top: 50%;  cursor: ew-resize; }
+
+/* Page-break marker (editor only; prints as a real break via inline style). */
+.rd-pagebreak {
+  block-size: 0;
+  border-top: 2px dashed #c0345e;
+  margin: 10px 0;
+  position: relative;
+}
+.rd-pagebreak::after {
+  content: 'فاصل صفحات';
+  position: absolute; inset-block-start: -9px; inset-inline-end: 6px;
+  font-size: 10px; color: #c0345e; background: #fff; padding: 0 6px;
+}
+/* "Highlight fields" (View tab) outlines every merge chip. */
+.rd-page--hl .rd-tok { outline: 2px solid color-mix(in srgb, #14213d 45%, transparent); outline-offset: 1px; }
+/* Format-painter armed → paint cursor. */
+.rd-page--painter { cursor: cell; }
+
+/* ── Field panel ── */
+.rd-fields {
+  border-inline-start: 1px solid var(--color-border);
+  background: var(--color-background);
+  padding: 14px;
+  align-self: stretch;
+  max-block-size: calc(100vh - 210px);
+  overflow: auto;
+}
+@media (max-width: 1000px) {
+  .rd-fields { border-inline-start: none; border-block-start: 1px solid var(--color-border); }
+}
+.rd-fields__head { font-weight: 700; font-size: 15px; color: var(--color-foreground); }
+.rd-fields__hint { font-size: 12px; color: var(--color-muted-foreground); margin: 2px 0 10px; }
+.rd-fields__group { margin-bottom: 12px; }
+.rd-fields__title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--color-muted-foreground);
+  margin-bottom: 6px;
+}
+.rd-fields__list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ── Inserted-items list (remove elements from the report) ── */
+.rd-items__head { display: flex; align-items: center; justify-content: space-between; }
+.rd-linkbtn {
+  border: none; background: transparent; color: var(--color-destructive);
+  font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; padding: 0;
+}
+.rd-linkbtn:hover { text-decoration: underline; }
+.rd-items__empty { font-size: 12px; color: var(--color-muted-foreground); margin: 2px 0 0; }
+.rd-items { display: flex; flex-direction: column; gap: 6px; }
+.rd-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 5px 6px 5px 10px;
+  border: 1px solid var(--color-input); border-radius: 8px;
+  background: var(--color-background); font-size: 12.5px;
+}
+.rd-item:hover { border-color: var(--color-ring); }
+.rd-item__lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-item__del {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; background: transparent; color: var(--color-destructive);
+  cursor: pointer; border-radius: 6px; padding: 3px; flex: none;
+}
+.rd-item__del:hover { background: color-mix(in srgb, var(--color-destructive) 12%, transparent); }
+/* Row hover → highlight the element on the page. */
+.rd-itemhi { outline: 2px solid var(--color-destructive); outline-offset: 2px; border-radius: 3px; }
+
+/* ── Right-click context menu (mini toolbar + menu) ── */
+.rd-ctx-scrim { position: fixed; inset: 0; z-index: 70; }
+.rd-ctxwrap { position: fixed; z-index: 71; }
+
+.rd-mini {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 2px;
+  inline-size: max-content; max-inline-size: 320px; margin-block-end: 6px;
+  padding: 5px 6px;
+  background: var(--color-background); color: var(--color-foreground);
+  border: 1px solid var(--color-border); border-radius: 10px;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.18);
+}
+.rd-mini__b {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  min-inline-size: 28px; block-size: 28px; padding: 0 5px;
+  border: 1px solid transparent; border-radius: 6px; background: transparent;
+  color: var(--color-foreground); cursor: pointer;
+}
+.rd-mini__b:hover { background: var(--color-accent); }
+.rd-mini__b.rb-color { overflow: hidden; }
+.rd-mini__sel {
+  block-size: 28px; border: 1px solid var(--color-input); border-radius: 6px;
+  background: var(--color-background); color: var(--color-foreground); font: inherit; font-size: 12px;
+  padding: 0 6px; max-inline-size: 116px; cursor: pointer;
+}
+.rd-mini__sel--sm { max-inline-size: 58px; }
+.rd-mini__sep { inline-size: 1px; block-size: 18px; background: var(--color-border); margin: 0 3px; }
+
+.rd-ctx {
+  min-inline-size: 214px;
+  margin: 0; padding: 6px; list-style: none;
+  background: var(--color-background); color: var(--color-foreground);
+  border: 1px solid var(--color-border); border-radius: 10px;
+  box-shadow: 0 14px 38px rgb(0 0 0 / 0.24);
+}
+.rd-ctx__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 7px; font-size: 13px; cursor: pointer;
+  white-space: nowrap;
+}
+.rd-ctx__item:hover { background: var(--color-accent); }
+.rd-ctx__item--danger { color: var(--color-destructive); font-weight: 600; }
+.rd-ctx__item--danger:hover { background: color-mix(in srgb, var(--color-destructive) 12%, transparent); }
+.rd-ctx__item svg { flex: none; color: var(--color-muted-foreground); }
+.rd-ctx__item--danger svg { color: var(--color-destructive); }
+.rd-ctx__sep { block-size: 1px; background: var(--color-border); margin: 5px 4px; }
+/* Text-wrap submenu: opened in place under its parent item. */
+.rd-ctx__caret { margin-inline-start: auto; transition: transform .12s ease; }
+.rd-ctx__caret.is-open { transform: rotate(-90deg); }
+.rd-ctx__item--sub { padding-inline-start: 22px; font-size: 12.5px; }
+.rd-ctx__item--sub .rd-ctx__tick { visibility: hidden; }
+.rd-ctx__item--sub.is-on { font-weight: 600; }
+.rd-ctx__item--sub.is-on .rd-ctx__tick { visibility: visible; color: var(--color-primary, #14213d); }
+
+/* ── Table size picker (grid) ── */
+.rd-tpick {
+  position: fixed; z-index: 71;
+  background: var(--color-background); border: 1px solid var(--color-border);
+  border-radius: 10px; box-shadow: 0 14px 38px rgb(0 0 0 / 0.24); padding: 10px;
+}
+.rd-tpick__grid { display: grid; grid-template-columns: repeat(8, 20px); gap: 3px; }
+.rd-tpick__cell {
+  inline-size: 20px; block-size: 20px; padding: 0;
+  border: 1px solid var(--color-input); border-radius: 3px;
+  background: var(--color-background); cursor: pointer;
+}
+.rd-tpick__cell.is-on { background: color-mix(in srgb, var(--color-primary) 40%, transparent); border-color: var(--color-primary); }
+.rd-tpick__lbl { text-align: center; font-size: 12px; color: var(--color-muted-foreground); margin-top: 8px; }
+.rd-fieldbtn {
+  padding: 5px 10px;
+  border: 1px solid var(--color-input);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+.rd-fieldbtn:hover { background: var(--color-accent); border-color: var(--color-ring); }
+.rd-fieldbtn--accent {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.rd-fieldbtn--accent:hover { background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+/* The letter's own content: a whole block, not an inline value, so it reads as a slab rather
+   than one of the pill-shaped merge fields beside it. */
+.rd-fieldbtn--block {
+  display: flex; align-items: center; gap: 7px;
+  inline-size: 100%; border-radius: 10px;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.rd-fieldbtn--block:hover { background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+.rd-fieldbtn--block svg { flex: none; opacity: .8; }
+
+/* ── Borders and shading dialog (Word's "Borders and Shading") ───────────────── */
+.bd-dialog { inline-size: min(700px, 100%); }
+.bd-tabs {
+  display: flex; gap: 4px; padding: 0 16px;
+  border-block-end: 1px solid var(--color-border);
+}
+.bd-tab {
+  padding: 9px 14px; font-size: 13px; cursor: pointer;
+  background: none; border: none; color: var(--color-muted-foreground);
+  border-block-end: 2px solid transparent; margin-block-end: -1px;
+}
+.bd-tab.is-active { color: var(--color-foreground); font-weight: 600; border-block-end-color: var(--color-primary, #14213d); }
+.bd-body { padding-block: 14px; }
+
+.bd-grid { display: grid; grid-template-columns: 108px 168px 1fr; gap: 18px; }
+.bd-col { display: flex; flex-direction: column; gap: 6px; }
+.bd-col__cap { font-size: 12px; color: var(--color-muted-foreground); margin-block-end: 2px; }
+
+.bd-set {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 6px 8px; border-radius: 8px; font-size: 13px;
+  background: none; border: 1px solid transparent; color: inherit; text-align: start;
+}
+.bd-set:hover { background: var(--color-accent); }
+.bd-set.is-active { border-color: var(--color-ring, #2563eb); background: color-mix(in srgb, var(--color-ring, #2563eb) 10%, transparent); }
+/* Small glyphs standing in for Word's setting thumbnails. */
+.bd-set__ic { inline-size: 22px; block-size: 22px; border-radius: 3px; background: #fff; flex: none; }
+.bd-set__ic--none { border: 1px dashed #cbd5e1; }
+.bd-set__ic--box { border: 2px solid #475569; }
+.bd-set__ic--shadow { border: 2px solid #475569; box-shadow: 2px 2px 0 0 #94a3b8; }
+.bd-set__ic--custom { border: 2px solid #475569; border-inline-start-style: dashed; border-block-end-style: dashed; }
+
+.bd-styles {
+  display: flex; flex-direction: column; gap: 2px;
+  max-block-size: 132px; overflow: auto;
+  border: 1px solid var(--color-border); border-radius: 8px; padding: 4px;
+}
+.bd-style {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 5px 8px; border-radius: 6px; background: none; border: none; color: inherit; text-align: start;
+}
+.bd-style:hover { background: var(--color-accent); }
+.bd-style.is-active { background: color-mix(in srgb, var(--color-ring, #2563eb) 14%, transparent); }
+.bd-style__line { flex: 1; border-top: 2px solid currentColor; }
+.bd-style__lb { font-size: 12px; color: var(--color-muted-foreground); }
+
+.bd-preview { display: flex; flex-direction: column; gap: 8px; }
+.bd-preview__cap { font-size: 11.5px; color: var(--color-muted-foreground); text-align: center; }
+/* The diagram: a mock page with one toggle button on each side, as in Word. */
+.bd-diagram {
+  position: relative; padding: 26px;
+  display: flex; align-items: center; justify-content: center;
+}
+.bd-page {
+  inline-size: 100%; min-block-size: 128px; background: #fff;
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; justify-content: center;
+}
+.bd-line { display: block; block-size: 3px; background: #cbd5e1; border-radius: 2px; }
+.bd-line:nth-child(odd) { inline-size: 92%; }
+.bd-line:nth-child(3n) { inline-size: 78%; }
+.bd-edge {
+  position: absolute; inline-size: 20px; block-size: 20px; cursor: pointer;
+  background: var(--color-background); border: 1px solid var(--color-border); border-radius: 4px;
+}
+.bd-edge::after {
+  content: ''; position: absolute; inset: 4px; border: 0 solid #94a3b8;
+}
+.bd-edge.is-on { border-color: var(--color-ring, #2563eb); }
+.bd-edge.is-on::after { border-color: var(--color-ring, #2563eb); }
+.bd-edge--top { inset-block-start: 0; inset-inline-start: 50%; translate: 50% 0; }
+.bd-edge--top::after, .bd-edge--bottom::after { border-block-start-width: 2px; }
+.bd-edge--bottom { inset-block-end: 0; inset-inline-start: 50%; translate: 50% 0; }
+.bd-edge--right { inset-inline-end: 0; inset-block-start: 50%; translate: 0 -50%; }
+.bd-edge--right::after, .bd-edge--left::after { border-inline-start-width: 2px; }
+.bd-edge--left { inset-inline-start: 0; inset-block-start: 50%; translate: 0 -50%; }
+.bd-applyto { font-size: 12px; color: var(--color-muted-foreground); text-align: center; }
+
+.bd-shading { display: grid; grid-template-columns: 240px 1fr; gap: 18px; align-items: start; }
+.bd-fillrow { display: flex; align-items: center; gap: 10px; }
+.bd-fillrow input[type="color"] { inline-size: 54px; block-size: 32px; padding: 0; border: 1px solid var(--color-border); border-radius: 6px; background: none; }
+.bd-nofill {
+  padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer;
+  background: none; border: 1px solid var(--color-border); color: inherit;
+}
+.bd-nofill.is-active { border-color: var(--color-ring, #2563eb); font-weight: 600; }
+.bd-shading .bd-page { border: 1px solid var(--color-border); }
+
+@media (max-width: 720px) {
+  .bd-grid, .bd-shading { grid-template-columns: 1fr; }
+}
+
+/* ── Element appearance panel («تنسيق العنصر») ──────────────────────────────────
+   Anchored to the selection rather than centred like a dialog: the canvas behind it is the
+   preview, so changes have to be visible while they are made. */
+.rd-fmt {
+  position: fixed; z-index: 60;
+  inline-size: 300px; max-block-size: min(70vh, 520px);
+  display: flex; flex-direction: column;
+  background: var(--color-background); color: var(--color-foreground);
+  border: 1px solid var(--color-border); border-radius: 12px;
+  box-shadow: 0 18px 46px rgb(0 0 0 / 0.26);
+}
+.rd-fmt__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 12px; border-block-end: 1px solid var(--color-border);
+  font-size: 12.5px; font-weight: 700;
+}
+.rd-fmt__x {
+  display: inline-flex; padding: 3px; border: none; border-radius: 6px;
+  background: none; color: var(--color-muted-foreground); cursor: pointer;
+}
+.rd-fmt__x:hover { background: var(--color-accent); color: var(--color-foreground); }
+.rd-fmt__body { overflow: auto; padding: 6px 12px 12px; }
+.rd-fmt__sec {
+  margin-block: 10px 6px; font-size: 11px; font-weight: 700;
+  color: var(--color-muted-foreground); letter-spacing: .02em;
+}
+.rd-fmt__row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-block-size: 30px; font-size: 12.5px;
+}
+.rd-fmt__row > span:first-child { color: var(--color-muted-foreground); }
+.rd-fmt__row select,
+.rd-fmt__row input[type="text"] {
+  inline-size: 160px; block-size: 27px; padding: 0 8px; font: inherit; font-size: 12.5px;
+  border: 1px solid var(--color-input); border-radius: 7px;
+  background: var(--color-background); color: inherit;
+}
+.rd-fmt__row input[type="color"] {
+  inline-size: 44px; block-size: 26px; padding: 0; cursor: pointer;
+  border: 1px solid var(--color-input); border-radius: 6px; background: none;
+}
+.rd-fmt__num { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--color-muted-foreground); }
+.rd-fmt__num input[type="number"] {
+  inline-size: 66px; block-size: 27px; padding: 0 6px; font: inherit; font-size: 12.5px;
+  border: 1px solid var(--color-input); border-radius: 7px;
+  background: var(--color-background); color: var(--color-foreground);
+}
+.rd-fmt__num input[type="range"] { inline-size: 96px; accent-color: var(--color-primary); }
+.rd-fmt__seg, .rd-fmt__fill { display: inline-flex; gap: 3px; align-items: center; }
+.rd-fmt__seg button, .rd-fmt__fill button {
+  min-inline-size: 30px; block-size: 27px; padding: 0 8px; cursor: pointer;
+  border: 1px solid var(--color-input); border-radius: 7px;
+  background: var(--color-background); color: inherit; font: inherit; font-size: 12px;
+}
+.rd-fmt__seg button:hover, .rd-fmt__fill button:hover { background: var(--color-accent); }
+.rd-fmt__seg button.is-on, .rd-fmt__fill button.is-on {
+  border-color: var(--color-ring, #2563eb);
+  background: color-mix(in srgb, var(--color-ring, #2563eb) 14%, transparent);
+  font-weight: 700;
+}
+.rd-fmt__foot { padding: 8px 12px; border-block-start: 1px solid var(--color-border); }
+.rd-fmt__reset {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; cursor: pointer; font: inherit; font-size: 12px;
+  border: 1px solid var(--color-border); border-radius: 7px;
+  background: none; color: var(--color-muted-foreground);
+}
+.rd-fmt__reset:hover { background: var(--color-accent); color: var(--color-foreground); }
+
+/* The badge's and the picture overlay's way into the panel. */
+.rd-elsel__fmt {
+  display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 18px; block-size: 18px; padding: 0; cursor: pointer;
+  background: rgb(255 255 255 / 0.16); color: inherit; border: none; border-radius: 4px;
+}
+.rd-elsel__fmt:hover { background: rgb(255 255 255 / 0.34); }
+.rd-imgsel__fmt {
+  position: absolute; inset-block-end: 100%; inset-inline-end: 0;
+  transform: translateY(-4px);
+  display: inline-flex; align-items: center; gap: 5px;
+  pointer-events: auto; cursor: pointer;
+  background: #14213d; color: #fff; border: none; border-radius: 4px;
+  font: inherit; font-size: 11px; padding: 2px 7px;
+}
+.rd-imgsel__fmt:hover { background: #24365f; }

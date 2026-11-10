@@ -1,0 +1,23 @@
+{
+  "name": "الديوان الإلكتروني — نظام إدارة الوثائق والأرشفة",
+  "short_name": "الديوان",
+  "description": "تسجيل المراسلات الواردة والصادرة، وأرشفة الوثائق وإدارة دورتها.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#14213D",
+  "theme_color": "#14213D",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "الديوان", "short_name": "الديوان", "url": "/app/diwan" },
+    { "name": "المراسلات الداخلية", "short_name": "المراسلات", "url": "/app/internal" },
+    { "name": "الوثائق", "short_name": "الوثائق", "url": "/app/documents" }
+  ]
+}

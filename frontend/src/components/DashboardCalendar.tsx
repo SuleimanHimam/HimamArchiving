@@ -46,7 +46,6 @@ export default function DashboardCalendar() {
   return (
     <div className="dash-panel dash-cal">
       <div className="dash-panel__head">
-        <span className="kicker">التقويم</span>
         <div className="dash-cal__nav">
           <button className="dash-cal__btn" onClick={() => shift(-1)} aria-label="الشهر السابق">‹</button>
           <span className="dash-cal__title">{MONTHS[view.getMonth()]} {view.getFullYear()}</span>

@@ -57,6 +57,17 @@ public sealed class AutoBackupHostedService(
 
     private async Task<string> DumpToFileAsync(string targetPath, CancellationToken ct)
     {
+        var conn = config.GetConnectionString("Default") ?? "";
+        if (DatabaseProviders.Parse(config["Database:Provider"], conn) == DbProvider.SqlServer)
+        {
+            // SQL Server writes the file itself, so the scheduled job hands it the target folder
+            // instead of piping a dump into one. The folder must be writable by the SQL Server
+            // service account — the settings screen's "test path" check tests the API's access,
+            // which is the same account on a single-box install and not on a split one.
+            Directory.CreateDirectory(targetPath);
+            return await SqlServerBackupTools.BackupAsync(conn, targetPath, ct);
+        }
+
         var dump = MySqlBackupTools.FindTool("mysqldump")
             ?? throw new InvalidOperationException("mysqldump not found on server");
 

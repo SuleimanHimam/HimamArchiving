@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Archiving.Infrastructure.Services;
 
-public sealed class OrganizationService(AppDbContext db, IAuditWriter audit) : IOrganizationService
+public sealed class OrganizationService(AppDbContext db, IAuditWriter audit, ICurrentUser currentUser) : IOrganizationService
 {
     public async Task<IReadOnlyList<InstitutionDto>> ListInstitutionsAsync(CancellationToken ct = default) =>
         await db.Institutions.OrderBy(i => i.Name)
@@ -52,6 +52,54 @@ public sealed class OrganizationService(AppDbContext db, IAuditWriter audit) : I
             e.Type.ToString(), e.SortOrder, e.IsActive));
     }
 
+    public async Task<Result<OrgUnitDto>> UpdateOrgUnitAsync(long id, UpdateOrgUnitRequest r, CancellationToken ct = default)
+    {
+        var e = await db.OrgUnits.FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (e is null) return Result<OrgUnitDto>.Fail("الوحدة التنظيمية غير موجودة");
+        if (r.ParentId is { } pid)
+        {
+            if (pid == id) return Result<OrgUnitDto>.Fail("لا يمكن أن تكون الوحدة أباً لنفسها");
+            if (!await db.OrgUnits.AnyAsync(u => u.Id == pid, ct))
+                return Result<OrgUnitDto>.Fail("الوحدة الأم غير موجودة");
+        }
+
+        e.ParentId = r.ParentId;
+        e.Name = r.Name;
+        e.NameEn = r.NameEn;
+        e.Code = r.Code;
+        e.Type = r.Type;
+        e.SortOrder = r.SortOrder;
+        e.IsActive = r.IsActive;
+        await db.SaveChangesAsync(ct);
+        await audit.WriteAsync("Updated", "OrgUnit", e.Id, e.Name, ct: ct);
+        return Result<OrgUnitDto>.Ok(new OrgUnitDto(e.Id, e.InstitutionId, e.ParentId, e.Name, e.NameEn, e.Code,
+            e.Type.ToString(), e.SortOrder, e.IsActive));
+    }
+
+    public async Task<Result<bool>> DeleteOrgUnitAsync(long id, CancellationToken ct = default)
+    {
+        var e = await db.OrgUnits.FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (e is null) return Result<bool>.Fail("الوحدة التنظيمية غير موجودة");
+        if (await db.OrgUnits.AnyAsync(u => u.ParentId == id, ct))
+            return Result<bool>.Fail("لا يمكن حذف وحدة تحتوي على وحدات فرعية");
+        if (await db.Positions.AnyAsync(p => p.OrgUnitId == id, ct))
+            return Result<bool>.Fail("لا يمكن حذف وحدة تحتوي على مناصب/موظفين");
+        if (await db.DocumentTypes.AnyAsync(t => t.OrgUnitId == id, ct))
+            return Result<bool>.Fail("لا يمكن حذف دائرة تحتوي على أنواع وثائق");
+
+        db.OrgUnits.Remove(e);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Result<bool>.Fail("لا يمكن حذف الوحدة لارتباطها بسجلات أخرى");
+        }
+        await audit.WriteAsync("Deleted", "OrgUnit", id, e.Name, ct: ct);
+        return Result<bool>.Ok(true);
+    }
+
     public async Task<IReadOnlyList<PositionDto>> ListPositionsAsync(long? orgUnitId, CancellationToken ct = default)
     {
         var q = db.Positions.Include(p => p.OrgUnit).Include(p => p.CurrentOccupant).AsQueryable();
@@ -74,6 +122,45 @@ public sealed class OrganizationService(AppDbContext db, IAuditWriter audit) : I
         return Result<PositionDto>.Ok(new PositionDto(e.Id, e.Title, e.Code, e.OrgUnitId, unit.Name, e.Rank, null, null, e.IsActive));
     }
 
+    public async Task<Result<PositionDto>> UpdatePositionAsync(long id, UpdatePositionRequest r, CancellationToken ct = default)
+    {
+        var e = await db.Positions.Include(p => p.CurrentOccupant).FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (e is null) return Result<PositionDto>.Fail("المنصب غير موجود");
+        var unit = await db.OrgUnits.FirstOrDefaultAsync(u => u.Id == r.OrgUnitId, ct);
+        if (unit is null) return Result<PositionDto>.Fail("الوحدة التنظيمية غير موجودة");
+
+        e.Title = r.Title;
+        e.Code = r.Code;
+        e.OrgUnitId = r.OrgUnitId;
+        e.Rank = r.Rank;
+        e.IsActive = r.IsActive;
+        await db.SaveChangesAsync(ct);
+        await audit.WriteAsync("Updated", "Position", e.Id, e.Title, ct: ct);
+        return Result<PositionDto>.Ok(new PositionDto(e.Id, e.Title, e.Code, e.OrgUnitId, unit.Name, e.Rank,
+            e.CurrentOccupantUserId, e.CurrentOccupant != null ? e.CurrentOccupant.FullName : null, e.IsActive));
+    }
+
+    public async Task<Result<bool>> DeletePositionAsync(long id, CancellationToken ct = default)
+    {
+        var e = await db.Positions.FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (e is null) return Result<bool>.Fail("المنصب غير موجود");
+
+        // Remove the seat's assignment history first (owned by the position), then the seat.
+        var history = await db.PositionAssignments.Where(a => a.PositionId == id).ToListAsync(ct);
+        db.PositionAssignments.RemoveRange(history);
+        db.Positions.Remove(e);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Result<bool>.Fail("لا يمكن حذف المنصب لارتباطه بمعاملات (بريد/تفويض)");
+        }
+        await audit.WriteAsync("Deleted", "Position", id, e.Title, ct: ct);
+        return Result<bool>.Ok(true);
+    }
+
     public async Task<Result<PositionDto>> AssignOccupantAsync(long positionId, AssignOccupantRequest r, CancellationToken ct = default)
     {
         var pos = await db.Positions.Include(p => p.OrgUnit).FirstOrDefaultAsync(p => p.Id == positionId, ct);
@@ -85,8 +172,13 @@ public sealed class OrganizationService(AppDbContext db, IAuditWriter audit) : I
         var open = await db.PositionAssignments.Where(a => a.PositionId == positionId && a.IsCurrent).ToListAsync(ct);
         foreach (var a in open) { a.IsCurrent = false; a.EndDate = DateTime.UtcNow; }
 
+        var previousOccupant = pos.CurrentOccupantUserId;
         db.PositionAssignments.Add(new PositionAssignment { PositionId = positionId, UserId = r.UserId, IsCurrent = true });
         pos.CurrentOccupantUserId = r.UserId;
+        pos.AddDomainEvent(new Archiving.Domain.Events.PositionOccupantChangedEvent(pos.Id, previousOccupant, r.UserId)
+        {
+            TriggeredByUserId = currentUser.UserId?.ToString(),
+        });
         await db.SaveChangesAsync(ct);
         await audit.WriteAsync("OccupantAssigned", "Position", pos.Id, pos.Title, newValues: user.FullName, ct: ct);
 

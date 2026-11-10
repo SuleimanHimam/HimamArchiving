@@ -1,12 +1,16 @@
 import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'motion/react'
 import { docNotesApi, type DocNote } from '../lib/userFeatures'
+import { useDateFormat } from '../lib/useCalendar'
 import { auth } from '../lib/auth'
 import { useToast } from './toast'
+import { useConfirmDialog } from './ui/confirm-dialog'
 
 /// Notes/comments attached to a single document — visible to everyone who can see the document.
 export default function DocumentNotesPanel({ docId }: { docId: number }) {
+  const { dateTime } = useDateFormat()
   const toast = useToast()
+  const { confirm } = useConfirmDialog()
   const [notes, setNotes] = useState<DocNote[]>([])
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -24,7 +28,7 @@ export default function DocumentNotesPanel({ docId }: { docId: number }) {
     catch { toast.error('تعذّر إضافة الملاحظة') } finally { setBusy(false) }
   }
   async function remove(id: number) {
-    if (!window.confirm('حذف الملاحظة؟')) return
+    if (!(await confirm({ message: 'حذف الملاحظة؟', destructive: true }))) return
     try { await docNotesApi.remove(docId, id); await load() } catch { toast.error('تعذّر الحذف') }
   }
 
@@ -45,7 +49,7 @@ export default function DocumentNotesPanel({ docId }: { docId: number }) {
           <li key={n.id} style={{ border: '1px solid var(--color-border, #e2d3b2)', borderRadius: 6, padding: '.6rem .8rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '.5rem' }}>
               <strong>{n.authorName}</strong>
-              <span className="muted mono" style={{ fontSize: '.75rem' }}>{new Date(n.createdAt).toLocaleString('ar')}</span>
+              <span className="muted mono" style={{ fontSize: '.75rem' }}>{dateTime(n.createdAt)}</span>
             </div>
             <p style={{ margin: '.35rem 0 0', whiteSpace: 'pre-wrap' }}>{n.content}</p>
             {myId === n.userId && (

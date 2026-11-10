@@ -16,7 +16,21 @@ public sealed record WorkflowStageDto(
     int? EscalateAfterHours,
     long? EscalateToPositionId,
     string AllowedActions,
-    bool IsFinal);
+    bool IsFinal,
+    // Phase 7 routing
+    string Type = "Sequential",
+    string? ConditionExpression = null,
+    int? ParallelGroupId = null,
+    bool RequiresAllParallelComplete = true,
+    string AssignmentType = "Static",
+    string? AssignmentExpression = null,
+    bool RequiresCorrespondence = false,
+    // Outcome rules
+    string RejectBehavior = "StopAndReturnToRequester",
+    string ReturnResume = "ResumeAtSameStage",
+    int? MinimumApprovals = null,
+    /// <summary>Palette key for the stage's tile on the canvas; null = the default tile.</summary>
+    string? Color = null);
 
 public sealed record WorkflowDefinitionDto(
     long Id,
@@ -24,12 +38,14 @@ public sealed record WorkflowDefinitionDto(
     string? Description,
     string TriggerModule,
     long? DocumentTypeId,
+    long? MailCategoryId,
     int Version,
     bool IsActive,
     IReadOnlyList<WorkflowStageDto> Stages);
 
 public sealed record WorkflowDefinitionListItem(
-    long Id, string Name, string TriggerModule, int Version, bool IsActive, int StageCount);
+    long Id, string Name, string TriggerModule, int Version, bool IsActive, int StageCount,
+    long? MailCategoryId = null, string? MailCategoryName = null);
 
 public sealed record CreateWorkflowStageRequest(
     string Name,
@@ -42,14 +58,31 @@ public sealed record CreateWorkflowStageRequest(
     int? EscalateAfterHours,
     long? EscalateToPositionId,
     WorkflowActionType AllowedActions,
-    bool IsFinal);
+    bool IsFinal,
+    // Phase 7 routing (optional; defaults preserve classic sequential behavior)
+    StageType Type = StageType.Sequential,
+    string? ConditionExpression = null,
+    int? ParallelGroupId = null,
+    bool RequiresAllParallelComplete = true,
+    DynamicAssignmentType AssignmentType = DynamicAssignmentType.Static,
+    string? AssignmentExpression = null,
+    bool RequiresCorrespondence = false,
+    // Outcome rules (defaults match the behaviour described in the admin designer)
+    RejectBehavior RejectBehavior = Domain.Enums.RejectBehavior.StopAndReturnToRequester,
+    ReturnResumeMode ReturnResume = ReturnResumeMode.ResumeAtSameStage,
+    int? MinimumApprovals = null,
+    string? Color = null);
 
 public sealed record CreateWorkflowDefinitionRequest(
     string Name,
     string? Description,
     string TriggerModule,
     long? DocumentTypeId,
-    IReadOnlyList<CreateWorkflowStageRequest> Stages);
+    IReadOnlyList<CreateWorkflowStageRequest> Stages,
+    /// <summary>Trigger key when TriggerModule is "InternalMail": composing mail under this
+    /// تصنيف البريد starts the run, with no action from the sender.</summary>
+    long? MailCategoryId = null,
+    bool IsActive = true);
 
 // ---- Instances & tasks ----
 
@@ -101,3 +134,46 @@ public sealed record WorkflowActionRequest(
     WorkflowActionType Action,
     string? Note,
     long? ForwardToPositionId);
+
+// ---- Internal-mail integration ----
+
+/// <summary>One entry in the run's timeline, as the participants would narrate it.</summary>
+public sealed record WorkflowTimelineEntry(
+    DateTime At,
+    string Kind,               // Submitted | Sent | Approved | Rejected | ChangesRequested | Returned | Completed
+    string StageName,
+    string? ActorName,
+    string? Note,
+    long? InternalMailId);
+
+/// <summary>Everything a piece of internal correspondence needs to show its workflow: the run, the
+/// caller's own open task on it (if any), and the timeline. Null task means «للاطّلاع فقط».</summary>
+public sealed record WorkflowMailContextDto(
+    long InstanceId,
+    long WorkflowDefinitionId,
+    string DefinitionName,
+    string Status,
+    long RootInternalMailId,
+    string? CurrentStageName,
+    int StepNumber,
+    int TotalSteps,
+    string? MailRole,          // Origin | Step | Result
+    bool ActionRequired,
+    long? MyTaskId,
+    string? MyTaskAllowedActions,
+    DateTime? MyTaskDueAt,
+    bool CanResubmit,
+    IReadOnlyList<WorkflowTimelineEntry> Timeline);
+
+/// <summary>The workflow columns an internal-mail row shows: which route it is on, where it has got
+/// to, and whether this particular reader is the one holding it up. Returned keyed by mail id.</summary>
+public sealed record WorkflowMailBadge(
+    long InstanceId,
+    string DefinitionName,
+    string Status,
+    string? CurrentStageName,
+    int StepNumber,
+    int TotalSteps,
+    bool ActionRequired,
+    long? MyTaskId,
+    string? MailRole);

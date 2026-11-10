@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Check, AlertTriangle, Download, Upload, FolderOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { admin, type BackupStatus, type AutoBackupSettings } from '../lib/admin'
 import { useToast } from './toast'
@@ -104,7 +105,6 @@ export default function BackupSettings() {
   return (
     <div className="doc-card bk">
       <div className="bk__head">
-        <span className="kicker">{t('backup.kicker')}</span>
         <h2 className="bk__title">{t('backup.title')}</h2>
         <p className="bk__desc">{t('backup.description')}</p>
       </div>
@@ -112,7 +112,7 @@ export default function BackupSettings() {
       {/* Tool status */}
       {status && (
         <div className={`bk__status ${toolsOk ? 'is-ok' : 'is-warn'}`}>
-          <span className="bk__statusicon">{toolsOk ? '✓' : '⚠'}</span>
+          <span className="bk__statusicon">{toolsOk ? <Check size={15} aria-hidden /> : <AlertTriangle size={15} aria-hidden />}</span>
           <span>{toolsOk ? t('backup.toolsReady') : t('backup.toolsMissing')}</span>
           {!status.mysqldumpFound && (
             <span className="bk__missing">mysqldump — {t('backup.notFound')}</span>
@@ -126,7 +126,7 @@ export default function BackupSettings() {
       <div className="bk__grid">
         {/* Backup card */}
         <div className="bk__card">
-          <div className="bk__cardicon">⬇</div>
+          <div className="bk__cardicon"><Download size={20} aria-hidden /></div>
           <h3 className="bk__cardtitle">{t('backup.backupTitle')}</h3>
           <p className="bk__carddesc">{t('backup.backupDesc')}</p>
           <button
@@ -134,13 +134,13 @@ export default function BackupSettings() {
             onClick={onBackup}
             disabled={backing || !status?.mysqldumpFound}
           >
-            {backing ? t('backup.downloading') : t('backup.downloadBtn')}
+            {backing ? t('backup.downloading') : <><Download size={16} aria-hidden /> {t('backup.downloadBtn')}</>}
           </button>
         </div>
 
         {/* Restore card */}
         <div className="bk__card">
-          <div className="bk__cardicon">⬆</div>
+          <div className="bk__cardicon"><Upload size={20} aria-hidden /></div>
           <h3 className="bk__cardtitle">{t('backup.restoreTitle')}</h3>
           <p className="bk__carddesc">{t('backup.restoreDesc')}</p>
           <input
@@ -155,7 +155,7 @@ export default function BackupSettings() {
             onClick={() => fileRef.current?.click()}
             disabled={restoring || !status?.mysqlFound}
           >
-            {restoring ? t('backup.restoring') : t('backup.restoreBtn')}
+            {restoring ? t('backup.restoring') : <><Upload size={16} aria-hidden /> {t('backup.restoreBtn')}</>}
           </button>
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function BackupSettings() {
                 className="btn btn-ghost btn-sm"
                 onClick={() => setPickerOpen(true)}
               >
-                📁 {t('backup.browseBtn')}
+                <FolderOpen size={15} aria-hidden /> {t('backup.browseBtn')}
               </button>
               <button
                 type="button"
@@ -207,7 +207,7 @@ export default function BackupSettings() {
             </div>
             {pathTestResult && (
               <span className={`bk__pathresult ${pathTestResult.ok ? 'is-ok' : 'is-err'}`}>
-                {pathTestResult.ok ? t('backup.pathOk') : `${t('backup.pathError')}${pathTestResult.error ? ` — ${pathTestResult.error}` : ''}`}
+                {pathTestResult.ok ? <><Check size={14} aria-hidden /> {t('backup.pathOk')}</> : `${t('backup.pathError')}${pathTestResult.error ? ` — ${pathTestResult.error}` : ''}`}
               </span>
             )}
           </label>
@@ -233,7 +233,7 @@ export default function BackupSettings() {
             <span>{t('backup.lastRunLabel')}:</span>
             {auto.lastRunAt ? (
               <>
-                <span className="mono">{new Date(auto.lastRunAt).toLocaleString()}</span>
+                <span className="mono">{new Date(auto.lastRunAt).toLocaleString('en-GB')}</span>
                 <span className={`status-pill ${auto.lastRunStatus === 'Success' ? 's-active' : 's-onhold'}`}>
                   {auto.lastRunStatus === 'Success' ? t('backup.lastRunSuccess') : t('backup.lastRunFailed')}
                 </span>
@@ -256,7 +256,7 @@ export default function BackupSettings() {
       {confirmFile && (
         <div className="bk__overlay" onClick={() => setConfirmFile(null)}>
           <div className="bk__confirm" onClick={(e) => e.stopPropagation()}>
-            <div className="bk__confirmicon">⚠</div>
+            <div className="bk__confirmicon"><AlertTriangle size={22} aria-hidden /></div>
             <h3 className="bk__confirmtitle">{t('backup.confirmTitle')}</h3>
             <p className="bk__confirmbody">
               {t('backup.confirmBody', { file: confirmFile.name })}

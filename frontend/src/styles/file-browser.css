@@ -1,0 +1,888 @@
+/* ── File browser (Finder-style) ──────────────────────────────────────────
+   Panel chrome for components/ui/file-browser.tsx: a bordered surface with a
+   toolbar, a grid/list body and a footer count. Built on this repo's
+   --color-* tokens so it follows the light/dark toggle like everything else.
+   Logical properties throughout (inline-start/end, not left/right) so the
+   whole panel mirrors under the app's RTL direction. */
+
+.fb {
+  display: flex;
+  flex-direction: column;
+  min-height: 26rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card);
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
+.fb__bar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .5rem .625rem;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-foreground) 3%, var(--color-card));
+}
+
+.fb__nav { display: flex; gap: .125rem; }
+
+.fb__iconbtn,
+.fb__toolbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  height: 1.75rem;
+  padding-inline: .5rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  font: inherit;
+  font-size: .75rem;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.fb__iconbtn { padding-inline: .375rem; }
+.fb__iconbtn:hover:not(:disabled),
+.fb__toolbtn:hover { background: var(--color-accent); color: var(--color-foreground); }
+.fb__iconbtn:disabled { opacity: .35; cursor: default; }
+.fb__toolbtn--on { background: var(--color-accent); color: var(--color-accent-foreground); }
+
+/* The glyphs are physical arrows; flip them so each points the way the
+   reader travels. Under LTR the pair swaps back. */
+.fb__chev--back { transform: scaleX(1); }
+[dir='ltr'] .fb__chev--back { transform: scaleX(-1); }
+[dir='ltr'] .fb__chev--fwd { transform: scaleX(-1); }
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────── */
+.fb__crumbs {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  min-width: 0;
+  overflow: hidden;
+}
+.fb__crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  max-width: 12rem;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  padding: .125rem .25rem;
+  border-radius: 4px;
+  color: var(--color-muted-foreground);
+  font: inherit;
+  font-size: .8125rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.fb__crumb:hover:not(:disabled) { background: var(--color-accent); color: var(--color-foreground); }
+.fb__crumb:disabled { color: var(--color-foreground); font-weight: 600; cursor: default; }
+.fb__crumbsep { color: var(--color-muted-foreground); font-size: .75rem; opacity: .5; }
+
+.fb__tools {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  margin-inline-start: auto;
+}
+
+.fb__tick { color: var(--color-foreground); }
+.fb__tick--off { visibility: hidden; }
+
+/* ── Search ──────────────────────────────────────────────────────────── */
+.fb__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.fb__searchicon {
+  position: absolute;
+  inset-inline-start: .5rem;
+  color: var(--color-muted-foreground);
+  pointer-events: none;
+}
+.fb__search input {
+  width: 11rem;
+  height: 1.75rem;
+  padding-inline: 1.75rem .5rem;
+  border: 1px solid var(--color-input);
+  border-radius: 6px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: .75rem;
+  outline: none;
+}
+.fb__search input:focus { border-color: var(--color-ring); }
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+.fb__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+.fb__body--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: .75rem .5rem;
+  align-content: start;
+}
+.fb__body--list { display: flex; flex-direction: column; gap: .125rem; }
+
+.fb__empty {
+  grid-column: 1 / -1;
+  margin: auto;
+  padding: 3rem 0;
+  color: var(--color-muted-foreground);
+  font-size: .8125rem;
+  text-align: center;
+}
+
+/* ── Grid tile ───────────────────────────────────────────────────────── */
+.fb__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .375rem;
+  padding: .5rem .25rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-foreground);
+  font: inherit;
+  cursor: default;
+  transition: background .12s;
+}
+.fb__tile:hover { background: color-mix(in srgb, var(--color-foreground) 5%, transparent); }
+.fb__tile--on { background: var(--color-primary); color: var(--color-primary-foreground); }
+
+/* Fixed art box so names line up across folders (48×38) and cards (49×63). */
+.fb__tileart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 4rem;
+}
+.fb__folder { width: 3rem; height: auto; }
+
+.fb__tilename {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-foreground);
+  /* The app's root is 14px, so .75rem landed at 10.5px — small enough that a
+     filename had to be squinted at. This is the smallest step that reads. */
+  font-size: .84rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Each name picks its own direction from its own characters. Without this a
+     Latin filename inside this RTL panel is truncated from its head — «…esk-1.4.9»
+     hides the part that identifies the file and keeps the part that does not. */
+  unicode-bidi: plaintext;
+}
+
+/* Attachment count, mirroring the register cell's pill. */
+.fb__count {
+  position: absolute;
+  inset-block-start: .125rem;
+  inset-inline-start: 1.25rem;
+  z-index: 3;
+  min-width: 1rem;
+  padding: 0 .25rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: .625rem;
+  line-height: 1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.fb__tile--on .fb__count {
+  background: var(--color-primary-foreground);
+  color: var(--color-primary);
+}
+
+/* ── List row ────────────────────────────────────────────────────────── */
+.fb__row {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  width: 100%;
+  padding: .25rem .5rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: .8125rem;
+  text-align: start;
+  cursor: default;
+}
+.fb__row:hover { background: color-mix(in srgb, var(--color-foreground) 5%, transparent); }
+.fb__row--on { background: var(--color-primary); color: var(--color-primary-foreground); }
+
+.fb__rowart { width: 1.5rem; height: auto; flex: none; }
+/* The card draws at 49×63; scale it into the row's line box. */
+.fb__rowart--card {
+  position: relative;
+  display: block;
+  width: 1.25rem;
+  height: 1.625rem;
+}
+.fb__rowart--card > [aria-hidden] {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform: scale(.26);
+  transform-origin: top right;
+}
+[dir='ltr'] .fb__rowart--card > [aria-hidden] { transform-origin: top left; }
+
+.fb__rowname { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fb__rowmeta { flex: none; color: var(--color-muted-foreground); font-size: .75rem; }
+.fb__row--on .fb__rowmeta { color: var(--color-primary-foreground); opacity: .8; }
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+.fb__foot {
+  padding: .375rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted-foreground);
+  font-size: .75rem;
+  text-align: center;
+}
+
+/* ── View switch (browser ⇄ register table) ──────────────────────────── */
+.docs-viewswitch {
+  display: inline-flex;
+  gap: .125rem;
+  margin-block-start: .5rem;
+  padding: .1875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
+}
+.docs-viewswitch button {
+  border: 0;
+  border-radius: 6px;
+  padding: .3125rem .75rem;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  font: inherit;
+  font-size: .75rem;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.docs-viewswitch button:hover { color: var(--color-foreground); }
+.docs-viewswitch button.is-on {
+  background: var(--color-card);
+  color: var(--color-foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .06);
+}
+
+/* ── Toolbar extras ──────────────────────────────────────────────────── */
+.fb__caretdown { font-size: .625rem; opacity: .6; }
+.fb__filtcount {
+  min-width: .875rem; padding: 0 .1875rem; border-radius: 999px;
+  background: var(--color-primary); color: var(--color-primary-foreground);
+  font-size: .5625rem; line-height: .875rem; text-align: center;
+}
+
+/* ── Active filter chips ─────────────────────────────────────────────── */
+.fb__chips {
+  display: flex; flex-wrap: wrap; gap: .375rem;
+  padding: .5rem .75rem; border-bottom: 1px solid var(--color-border);
+}
+.fb__chip {
+  display: inline-flex; align-items: center; gap: .375rem;
+  padding: .1875rem .5rem; border-radius: 999px;
+  background: var(--color-accent); color: var(--color-accent-foreground);
+  font-size: .6875rem;
+}
+.fb__chip button {
+  display: grid; place-items: center; border: 0; padding: 0;
+  background: none; color: inherit; cursor: pointer; opacity: .7;
+}
+.fb__chip button:hover { opacity: 1; }
+
+/* ── File-type submenu ───────────────────────────────────────────────── */
+.fb__typesearch {
+  display: flex; align-items: center; gap: .375rem;
+  padding: .5rem .625rem; border-bottom: 1px solid var(--color-border);
+  color: var(--color-muted-foreground);
+}
+.fb__typesearch input {
+  flex: 1; min-width: 0; border: 0; background: none;
+  color: var(--color-foreground); font: inherit; font-size: .75rem; outline: none;
+}
+.fb__typelist { max-height: 15rem; overflow: auto; padding: .25rem; }
+.fb__typegroup {
+  padding: .375rem .5rem .1875rem;
+  color: var(--color-muted-foreground); font-size: .6875rem; font-weight: 600;
+}
+.fb__typeitem {
+  display: flex; align-items: center; gap: .5rem; width: 100%;
+  padding: .3125rem .5rem; border: 0; border-radius: 4px;
+  background: none; color: var(--color-foreground);
+  font: inherit; font-size: .75rem; text-align: start; cursor: default;
+}
+.fb__typeitem:hover { background: var(--color-accent); }
+.fb__typeempty { padding: 1rem; color: var(--color-muted-foreground); font-size: .75rem; text-align: center; }
+
+/* ── Custom date range dialog ────────────────────────────────────────── */
+.fb__rangedlg { max-width: 34rem; }
+.fb__rangefields { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.fb__rangefields label { display: flex; flex-direction: column; gap: .25rem; font-size: .75rem; }
+.fb__rangefields input {
+  height: 2rem; padding-inline: .5rem;
+  border: 1px solid var(--color-input); border-radius: 6px;
+  background: var(--color-background); color: var(--color-foreground);
+  font: inherit; font-size: .8125rem; outline: none;
+}
+.fb__rangefields input:focus { border-color: var(--color-ring); }
+
+.fb__calendar { display: flex; align-items: flex-start; gap: .75rem; margin-block: 1rem; }
+.fb__calnav {
+  display: grid; place-items: center; width: 1.75rem; height: 1.75rem;
+  border: 0; border-radius: 6px; background: none;
+  color: var(--color-muted-foreground); cursor: pointer;
+}
+.fb__calnav:hover { background: var(--color-accent); color: var(--color-foreground); }
+.fb__month { flex: 1; }
+.fb__monthname { margin-block-end: .5rem; font-size: .8125rem; font-weight: 600; text-align: center; }
+.fb__daynames, .fb__days { display: grid; grid-template-columns: repeat(7, 1fr); gap: .125rem; }
+.fb__daynames span {
+  padding-block: .25rem; color: var(--color-muted-foreground);
+  font-size: .625rem; text-align: center;
+}
+.fb__day {
+  aspect-ratio: 1; border: 0; border-radius: 6px; background: none;
+  color: var(--color-foreground); font: inherit; font-size: .75rem;
+  cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.fb__day:hover { background: var(--color-accent); }
+.fb__day--in { background: color-mix(in srgb, var(--color-primary) 18%, transparent); }
+.fb__day--on { background: var(--color-primary); color: var(--color-primary-foreground); }
+
+.fb__rangepresets { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.fb__rangepresets button {
+  padding: .4375rem .5rem; border: 1px solid var(--color-border); border-radius: 6px;
+  background: var(--color-background); color: var(--color-foreground);
+  font: inherit; font-size: .75rem; cursor: pointer;
+}
+.fb__rangepresets button:hover { background: var(--color-accent); }
+
+/* ── List view ───────────────────────────────────────────────────────── */
+.fb__body--list { display: block; padding: 0; }
+.fb__lhead, .fb__lrow {
+  display: grid; grid-template-columns: 1fr 10rem 6rem; align-items: center;
+  gap: .5rem; width: 100%; padding: .375rem .75rem;
+  border: 0; background: none; color: inherit;
+  font: inherit; font-size: .8125rem; text-align: start;
+}
+.fb__lhead {
+  position: sticky; inset-block-start: 0; z-index: 1;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-muted-foreground); font-size: .75rem;
+}
+.fb__lhead button {
+  border: 0; background: none; padding: 0;
+  color: inherit; font: inherit; text-align: start; cursor: pointer;
+}
+.fb__lhead button:hover { color: var(--color-foreground); }
+.fb__caret { font-size: .5rem; opacity: .7; }
+.fb__lrow { cursor: default; }
+.fb__lrow:hover { background: color-mix(in srgb, var(--color-foreground) 5%, transparent); }
+.fb__lrow--on { background: var(--color-primary); color: var(--color-primary-foreground); }
+.fb__lname { display: flex; align-items: center; gap: .5rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; unicode-bidi: plaintext; }
+.fb__lart { width: 1.125rem; height: auto; flex: none; }
+.fb__lart--card { position: relative; display: block; width: 1rem; height: 1.3125rem; flex: none; }
+.fb__lart--card > [aria-hidden] {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  transform: scale(.21); transform-origin: top right;
+}
+[dir="ltr"] .fb__lart--card > [aria-hidden] { transform-origin: top left; }
+
+/* ── Columns view ────────────────────────────────────────────────────── */
+.fb__body--columns { display: grid; grid-template-columns: minmax(12rem, 18rem) 1fr; padding: 0; }
+.fb__col { overflow: auto; border-inline-end: 1px solid var(--color-border); padding: .375rem; }
+.fb__colrow {
+  display: flex; align-items: center; gap: .5rem; width: 100%;
+  padding: .3125rem .5rem; border: 0; border-radius: 6px;
+  background: none; color: var(--color-foreground);
+  font: inherit; font-size: .8125rem; text-align: start; cursor: default;
+}
+.fb__colrow:hover { background: color-mix(in srgb, var(--color-foreground) 5%, transparent); }
+.fb__colrow--on { background: var(--color-primary); color: var(--color-primary-foreground); }
+.fb__colrow > span:nth-of-type(1) { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fb__colchev { margin-inline-start: auto; opacity: .5; }
+
+/* ── Info pane (columns + gallery) ───────────────────────────────────── */
+.fb__info { overflow: auto; padding: 1rem; }
+.fb__info--empty { display: grid; place-items: center; color: var(--color-muted-foreground); font-size: .8125rem; }
+.fb__infohead { display: flex; align-items: center; gap: .75rem; }
+.fb__infoart { position: relative; display: block; width: 2.5rem; height: 3.25rem; flex: none; }
+.fb__infoart > [aria-hidden] { position: absolute; inset-block-start: 0; inset-inline-start: 0; transform: scale(.72); transform-origin: top right; }
+[dir="ltr"] .fb__infoart > [aria-hidden] { transform-origin: top left; }
+.fb__infoname { font-size: .875rem; font-weight: 600; }
+.fb__infokind { color: var(--color-muted-foreground); font-size: .75rem; }
+.fb__infosec {
+  margin-block: 1rem .5rem; padding-block-start: .75rem;
+  border-block-start: 1px solid var(--color-border);
+  font-size: .8125rem; font-weight: 600;
+}
+.fb__infolist { display: grid; gap: .375rem; margin: 0; font-size: .75rem; }
+.fb__infolist > div { display: flex; justify-content: space-between; gap: 1rem; }
+.fb__infolist dt { color: var(--color-muted-foreground); }
+.fb__infolist dd { margin: 0; text-align: end; }
+
+/* ── Gallery view ────────────────────────────────────────────────────── */
+.fb__body--gallery {
+  display: grid; padding: 0;
+  grid-template-columns: 1fr minmax(12rem, 17rem);
+  grid-template-rows: 1fr auto;
+  grid-template-areas: "stage info" "strip strip";
+}
+.fb__stage {
+  grid-area: stage; display: grid; place-items: center;
+  padding: 1.5rem; border-inline-end: 1px solid var(--color-border);
+}
+.fb__body--gallery .fb__info { grid-area: info; }
+.fb__stagecard { position: relative; width: 8.75rem; height: 11.375rem; }
+.fb__stagecard > [aria-hidden] {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  transform: scale(2.5); transform-origin: top right;
+}
+[dir="ltr"] .fb__stagecard > [aria-hidden] { transform-origin: top left; }
+.fb__strip {
+  grid-area: strip; display: flex; gap: .5rem; overflow-x: auto;
+  padding: .625rem .75rem; border-block-start: 1px solid var(--color-border);
+}
+.fb__stripitem {
+  display: grid; place-items: center; flex: none;
+  width: 3rem; height: 3rem; padding: .25rem;
+  border: 1px solid transparent; border-radius: 8px;
+  background: none; cursor: default;
+}
+.fb__stripitem:hover { background: color-mix(in srgb, var(--color-foreground) 6%, transparent); }
+.fb__stripitem--on { border-color: var(--color-ring); background: var(--color-accent); }
+.fb__stripfolder { width: 2rem; height: auto; }
+.fb__stripcard { position: relative; display: block; width: 1.5rem; height: 1.9375rem; }
+.fb__stripcard > [aria-hidden] {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  transform: scale(.4); transform-origin: top right;
+}
+[dir="ltr"] .fb__stripcard > [aria-hidden] { transform-origin: top left; }
+
+/* ── Drag & drop ─────────────────────────────────────────────────────────
+   Documents are dragged onto folders (or a breadcrumb entry) to move them.
+   The drop target is outlined rather than filled, so the item underneath
+   stays readable while the pointer is over it. */
+.fb [draggable="true"] { cursor: grab; }
+.fb [draggable="true"]:active { cursor: grabbing; }
+
+.fb__tile--drop,
+.fb__lrow--drop,
+.fb__colrow--drop,
+.fb__stripitem--drop {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+.fb__crumb--drop {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 1px;
+  color: var(--color-foreground);
+}
+
+/* ── Canvas ──────────────────────────────────────────────────────────────
+   Wrapper that owns the empty-space right-click menu. It has to fill the
+   panel, not just hug the items, or right-clicking below the last row would
+   miss the trigger entirely. */
+.fb__canvas {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fb__canvas > .fb__body { flex: 1; }
+
+/* ── Toolbar slot ────────────────────────────────────────────────────────
+   The page folds its view switcher into this bar rather than stacking a
+   second one above the panel. Hairline divider keeps the two groups apart. */
+.fb__bardiv {
+  width: 1px;
+  height: 1.125rem;
+  margin-inline: .125rem;
+  background: var(--color-border);
+}
+
+/* Compact form of the switcher when it rides inside the toolbar: the
+   standalone version above the table keeps its roomier sizing. */
+.fb__bar .docs-viewswitch {
+  margin-block-start: 0;
+  padding: .125rem;
+  border-radius: 6px;
+}
+.fb__bar .docs-viewswitch button {
+  padding: .1875rem .5rem;
+  font-size: .6875rem;
+}
+
+/* ── Address bar ─────────────────────────────────────────────────────────
+   The path is the middle of the toolbar, boxed like Explorer's address bar:
+   it stretches into the space between the nav arrows and the tools instead
+   of leaving a gap there. Segments stay individually clickable, and each is
+   also a drop target. */
+.fb__crumbs {
+  flex: 1;
+  min-width: 0;
+  height: 1.75rem;
+  gap: .125rem;
+  padding-inline: .375rem;
+  border: 1px solid var(--color-input);
+  border-radius: 6px;
+  background: var(--color-background);
+}
+.fb__crumbicon { width: .875rem; height: auto; flex: none; }
+/* The name truncates, the glyph never does — the ellipsis needs a block of its
+   own now that the crumb is a flex row. */
+.fb__crumbtext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Chevrons point along the reading direction — mirrored for LTR, like the
+   nav arrows above. */
+.fb__crumbsep {
+  flex: none;
+  color: var(--color-muted-foreground);
+  opacity: .55;
+}
+[dir="ltr"] .fb__crumbsep { transform: scaleX(-1); }
+
+.fb__crumb { flex: none; }
+/* The trailing segment is the folder you are in; it wins the leftover room
+   and truncates rather than squeezing the ones before it. */
+.fb__crumbs > .fb__crumb:last-child { flex: 0 1 auto; min-width: 0; }
+
+/* ── Coloured folder glyph ───────────────────────────────────────────────
+   The wrapper carries the size class that used to sit on the <img>, so the
+   optional symbol can be positioned over the folder's front panel. */
+.fb__folderwrap { position: relative; display: inline-block; line-height: 0; }
+.fb__folderimg { display: block; width: 100%; height: auto; }
+.fb__foldericon {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 62%;
+  width: 38%;
+  height: auto;
+  transform: translate(50%, -50%);
+  color: #fff;
+  opacity: .9;
+}
+[dir="ltr"] .fb__foldericon { transform: translate(-50%, -50%); }
+
+/* ── New-folder dialog ───────────────────────────────────────────────── */
+.fb__newfolder { display: flex; align-items: center; gap: .875rem; }
+.fb__newpreview { width: 3.25rem; flex: none; }
+/* The field itself is a LabeledInput, like every other form in the app — this
+   only gives it the remaining width beside the folder preview. */
+.fb__newname { flex: 1; min-width: 0; }
+
+.fb__pickgroup { display: flex; flex-direction: column; gap: .375rem; margin-block-start: .875rem; }
+.fb__picklabel { color: var(--color-muted-foreground); font-size: .75rem; }
+.fb__swatches, .fb__symbols { display: flex; flex-wrap: wrap; gap: .375rem; }
+
+.fb__swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0;
+}
+.fb__swatch--on {
+  border-color: var(--color-foreground);
+  outline: 2px solid var(--color-background);
+  outline-offset: -4px;
+}
+
+.fb__symbol {
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  padding: 0;
+}
+.fb__symbol:hover { color: var(--color-foreground); }
+.fb__symbol--on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* ── Folder names ────────────────────────────────────────────────────────
+   A folder is a place, a file is a thing in it, and the two are told apart
+   by weight rather than by squinting at the icon. Folder names also get to
+   run onto a second line instead of being cut: «قيد المتابعة» truncated to
+   «قيد المتا…» is not a name you can navigate by. */
+.fb__tilename--folder {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.fb__lname--folder,
+.fb__colname--folder { font-weight: 600; }
+
+/* Gallery strip: the folder tile grows a caption, so it can no longer be the
+   square the file thumbnails are. */
+.fb__stripitem--folder {
+  grid-template-rows: auto auto;
+  gap: .125rem;
+  width: auto;
+  min-width: 4rem;
+  max-width: 7rem;
+  height: auto;
+  padding: .3125rem .375rem;
+}
+.fb__stripname {
+  max-width: 100%;
+  overflow: hidden;
+  unicode-bidi: plaintext;
+  font-size: .6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Document properties dialog ──────────────────────────────────────────
+   Reached from the context menu in every view, and from the register table.
+   A reading surface, not a form: two-column rows so the labels line up and
+   the eye runs down the values. */
+.docprops.docprops {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-inline-size: min(560px, 94vw);
+  padding: 0;
+}
+.docprops__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: .875rem 1rem;
+  /* The dialog's close button is pinned to the physical right in both
+     directions, so the clearance has to be physical too. */
+  padding-right: 3.5rem;
+  border-block-end: 1px solid var(--color-border);
+}
+.docprops__title { margin: 0; font-size: 1rem; font-weight: 700; }
+.docprops__ref {
+  overflow: hidden;
+  color: var(--color-muted-foreground);
+  font-size: .78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Capped so a document with twenty attachments scrolls inside the dialog
+   instead of pushing its own footer off the screen. */
+.docprops__body {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  max-block-size: 62vh;
+  overflow-y: auto;
+  padding: 1rem;
+}
+.docprops__loading, .docprops__empty {
+  margin: 0;
+  padding: .75rem 0;
+  color: var(--color-muted-foreground);
+  font-size: .8125rem;
+  text-align: center;
+}
+
+.docprops__sec { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1rem; }
+.docprops__row { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.docprops__key { color: var(--color-muted-foreground); font-size: .72rem; }
+.docprops__val {
+  overflow: hidden;
+  font-size: .8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Same folder, same colour — see the breadcrumb. */
+.docprops__folderart { width: .9rem; margin-inline-end: .3rem; vertical-align: -.15em; }
+
+/* A folder or file that belongs to someone else. Small, and on the art rather than the
+   name, so it reads as a property of the thing and not as part of what it is called. */
+.fb__tileart { position: relative; }
+.fb__lent {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-start: -2px;
+  display: grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--color-background);
+  background: var(--color-muted-foreground);
+  color: var(--color-background);
+}
+
+.docprops__sectitle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-block-start: .375rem;
+  padding-block-end: .25rem;
+  border-block-end: 1px solid var(--color-border);
+  font-size: .78rem;
+  font-weight: 600;
+}
+.docprops__total { color: var(--color-muted-foreground); font-size: .72rem; font-weight: 400; }
+
+.docprops__files { display: flex; flex-direction: column; gap: .25rem; margin: 0; padding: 0; list-style: none; }
+.docprops__file { display: flex; align-items: center; gap: .625rem; padding: .25rem 0; }
+/* The card art is drawn at its natural size, so it is scaled into a fixed box
+   the same way the gallery strip does it. */
+.docprops__fileart { position: relative; display: block; flex: none; width: 1.5rem; height: 1.9375rem; }
+.docprops__fileart > [aria-hidden] {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform: scale(.4);
+  transform-origin: top right;
+}
+[dir="ltr"] .docprops__fileart > [aria-hidden] { transform-origin: top left; }
+.docprops__filemain { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.docprops__filename {
+  overflow: hidden;
+  font-size: .8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.docprops__filemeta { color: var(--color-muted-foreground); font-size: .72rem; }
+
+.docprops__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-block-start: 1px solid var(--color-border);
+}
+@media (max-width: 560px) { .docprops__sec { grid-template-columns: 1fr; } }
+
+/* ── Folder tree sidebar ─────────────────────────────────────────────────
+   Sits on the leading side of the contents, the way a file manager puts it,
+   and scrolls on its own so a deep hierarchy never pushes the grid down. */
+.fb__main { display: flex; flex: 1; min-height: 0; }
+.fb__main > .fb__canvas { min-width: 0; }
+.fb__side {
+  flex: none;
+  overflow: auto;
+  padding: .75rem .5rem;
+  font-size: .8125rem;
+}
+
+/* The divider is also the drag handle: 5px of hit area painted as a 1px line,
+   so it reads as the pane's edge but is wide enough to grab. */
+.fb__resizer {
+  flex: none;
+  width: 5px;
+  margin-inline: -2px;
+  cursor: col-resize;
+  background: linear-gradient(var(--color-border), var(--color-border)) center / 1px 100% no-repeat;
+  touch-action: none;
+}
+.fb__resizer:hover,
+.fb__resizer:active {
+  background: linear-gradient(var(--color-primary), var(--color-primary)) center / 3px 100% no-repeat;
+}
+.fb__side ul { margin: 0; padding: 0; }
+/* The tree's own glyphs are 24px; at sidebar scale that crowds the rows. */
+.fb__side svg { width: 1.125rem; height: 1.125rem; }
+.fb__side .size-4 { width: .875rem; height: .875rem; }
+/* The shared folder glyph is an <img> plus an overlaid symbol, so it is sized
+   on the wrapper — and the symbol has to escape the blanket svg rule above. */
+.fb__treefolder { width: 1.25rem; flex: none; }
+.fb__treefolder .fb__foldericon { width: 38%; height: auto; }
+
+@media (max-width: 860px) { .fb__side { display: none; } }
+
+/* ── Real image thumbnails ───────────────────────────────────────────────
+   An image document shows itself rather than a format card. Sized to the same
+   box the card occupies in each view, so rows keep their rhythm whether or not
+   a given document happens to be a picture. Cropped, not letterboxed: a strip
+   of background around every thumbnail reads as a rendering fault. */
+.fb__thumb {
+  display: block;
+  border-radius: 4px;
+  background: var(--color-muted);
+  object-fit: cover;
+}
+.fb__tileart .fb__thumb { width: 3.0625rem; height: 3.9375rem; }   /* the card's own 49×63 */
+.fb__lart--card .fb__thumb,
+.fb__stripcard .fb__thumb,
+.fb__infoart .fb__thumb { width: 100%; height: 100%; }
+
+/* The folder you are inside is filled, the same way the grid fills its selected
+   tile — one selection colour across the panel, so the tree and the contents
+   agree about where you are at a glance. */
+.fb__side [data-selected="true"] {
+  margin-inline: -.25rem;
+  padding-inline: .25rem;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+/* The label is its own button; its hover tint would otherwise sit on top of
+   the fill and grey it out. */
+.fb__side [data-selected="true"] button:hover { background: transparent; }
+.fb__side [data-selected="true"] svg { color: currentColor; }
+
+/* The trash row sits apart from the folder hierarchy — a destination, not a place
+   documents live — so it gets its own rule above it. */
+.fb__side li:last-child:not(:first-child) > span:has(.fb__treetrash) {
+  margin-block-start: .375rem;
+  padding-block-start: .5rem;
+  border-block-start: 1px solid var(--color-border);
+}
+.fb__treetrash { flex: none; color: var(--color-muted-foreground); }
+.fb__side [data-selected="true"] .fb__treetrash { color: currentColor; }
+
+/* ── Full-height browser ─────────────────────────────────────────────────
+   The shell is already a flex column down to .page-enter, so the panel only
+   needs the last three links in that chain to claim the leftover height. Each
+   one needs min-block-size:0 as well: a flex item's default minimum is its
+   content, which would let the grid push the panel past the viewport instead
+   of scrolling inside it. */
+.docs-fill { display: flex; flex-direction: column; flex: 1 1 auto; min-block-size: 0; }
+.docs-fill > .filters { flex: none; }
+.docs-fill__card { display: flex; flex-direction: column; flex: 1 1 auto; min-block-size: 0; }
+.docs-fill__body { display: flex; flex-direction: column; flex: 1 1 auto; min-block-size: 0; }
+.docs-fill .fb { flex: 1 1 auto; min-block-size: 0; }
+
+/* A file's properties card leads with the file itself, then its facts. */
+.docprops__file { display: flex; align-items: center; gap: .625rem; padding-block-end: .25rem; }

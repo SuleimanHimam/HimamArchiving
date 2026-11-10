@@ -1,74 +1,75 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { auth } from '../../lib/auth'
-import ScannerSettings from '../../components/ScannerSettings'
-import UsersAdmin from '../../components/UsersAdmin'
 import AboutSettings from '../../components/AboutSettings'
-import BackupSettings from '../../components/BackupSettings'
-import RolesAdmin from '../../components/RolesAdmin'
 import ClassificationSettings from '../../components/ClassificationSettings'
-import DocumentTypesSettings from '../../components/DocumentTypesSettings'
 import TableColumnsSettings from '../../components/TableColumnsSettings'
 import CustomFieldsSettings from '../../components/CustomFieldsSettings'
+import MailTypesSettings from '../../components/MailTypesSettings'
 import DestructionMethodsSettings from '../../components/DestructionMethodsSettings'
 import NavigationSettings from '../../components/NavigationSettings'
 import BrandingSettings from '../../components/BrandingSettings'
-import '../incoming/incoming.css'
+import GroupsSettings from '../../components/GroupsSettings'
+import LicenseSettings from '../../components/LicenseSettings'
+import SettingsNav from '../../components/SettingsNav'
+import { useSettingsSections } from './sections'
+import '../../styles/forms.css'
 import './settings.css'
 
-interface Section { key: string; label: string; icon: string; show: boolean; render: () => React.ReactNode }
+/** The panel each section opens, keyed as in `sections.ts`. */
+const PANELS: Record<string, () => React.ReactNode> = {
+  branding: () => <BrandingSettings />,
+  groups: () => <GroupsSettings />,
+  navbar: () => <NavigationSettings />,
+  classification: () => <ClassificationSettings />,
+  tableColumns: () => <TableColumnsSettings />,
+  customFields: () => <CustomFieldsSettings />,
+  mailTypes: () => <MailTypesSettings />,
+  destructionMethods: () => <DestructionMethodsSettings />,
+  license: () => <LicenseSettings />,
+  about: () => <AboutSettings />,
+}
 
 export default function SettingsPage() {
   const { t } = useTranslation()
+  const sections = useSettingsSections()
 
-  const sections: Section[] = [
-    { key: 'branding', label: 'هوية المؤسسة', icon: '◉', show: auth.hasPermission('Organization.View'), render: () => <BrandingSettings /> },
-    { key: 'navbar', label: 'القائمة الجانبية', icon: '☰', show: auth.hasPermission('Organization.Edit'), render: () => <NavigationSettings /> },
-    { key: 'scanner', label: t('settings.sections.scanner'), icon: '⎙', show: auth.hasPermission('Scanner.View'), render: () => <ScannerSettings /> },
-    { key: 'users', label: t('settings.sections.users'), icon: '◔', show: auth.hasPermission('Users.View'), render: () => <UsersAdmin /> },
-    { key: 'roles', label: t('settings.sections.roles'), icon: '⊙', show: auth.hasPermission('Users.View'), render: () => <RolesAdmin /> },
-    { key: 'classification', label: t('settings.sections.classification'), icon: '◈', show: auth.hasPermission('Classification.View'), render: () => <ClassificationSettings /> },
-    { key: 'docTypes', label: 'أنواع الوثائق', icon: '▤', show: auth.hasPermission('Documents.View'), render: () => <DocumentTypesSettings /> },
-    { key: 'tableColumns', label: 'أعمدة الجداول', icon: '▦', show: auth.hasPermission('TableColumns.Edit'), render: () => <TableColumnsSettings /> },
-    { key: 'customFields', label: 'الحقول المخصصة', icon: '◇', show: auth.hasPermission('CustomFields.Edit'), render: () => <CustomFieldsSettings /> },
-    { key: 'destructionMethods', label: 'طرق الإتلاف', icon: '⊗', show: auth.hasPermission('Destruction.Approve'), render: () => <DestructionMethodsSettings /> },
-    { key: 'backup', label: t('settings.sections.backup'), icon: '⛃', show: auth.hasPermission('Backup.Edit'), render: () => <BackupSettings /> },
-    { key: 'about', label: t('settings.sections.about'), icon: 'ℹ', show: true, render: () => <AboutSettings /> },
-  ].filter((s) => s.show)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const panels = sections.filter((s) => PANELS[s.key])
 
-  const [searchParams] = useSearchParams()
+  /* The URL is the only source of truth for which section is open — not component state beside
+     it. Held in state, the browser's Back button changed the address while the panel stayed put:
+     you were on ?tab=printDesign looking at أعمدة الجداول. */
   const tabFromUrl = searchParams.get('tab')
-  const [active, setActive] = useState(
-    sections.some((s) => s.key === tabFromUrl) ? tabFromUrl! : (sections[0]?.key ?? 'scanner'),
-  )
-  const current = sections.find((s) => s.key === active) ?? sections[0]
+  // الماسحات والطابعات is its own section now. An old ?tab=scanner link would otherwise fall
+  // through to the first panel and silently show هوية المؤسسة instead.
+  if (tabFromUrl === 'scanner') return <Navigate to="/app/scanner" replace />
+  // Same for تصاميم الطباعة, carrying any design id so a bookmarked design still opens on it.
+  if (tabFromUrl === 'printDesign') {
+    const rest = new URLSearchParams(searchParams); rest.delete('tab')
+    return <Navigate to={`/app/print-design${rest.size ? `?${rest}` : ''}`} replace />
+  }
+  const active = panels.some((s) => s.key === tabFromUrl) ? tabFromUrl! : (panels[0]?.key ?? 'branding')
+  const current = panels.find((s) => s.key === active) ?? panels[0]
+
+  /* Switching drops every other parameter: those belong to the section being left (a design id,
+     say), and carrying them into the next one would reopen a designer inside the wrong panel.
+     `replace` keeps Back as "leave Settings" rather than a walk back through every tab visited. */
+  function select(key: string) {
+    setSearchParams({ tab: key }, { replace: true })
+  }
 
   return (
     <div>
       <header className="page__head">
         <div>
-          <span className="kicker">{t('settings.kicker')}</span>
           <h1>{t('settings.title')}</h1>
         </div>
       </header>
 
       <div className="settings-layout">
-        <nav className="settings-tabs">
-          {sections.map((s) => (
-            <button
-              key={s.key}
-              className={`settings-tab ${active === s.key ? 'is-active' : ''}`}
-              onClick={() => setActive(s.key)}
-            >
-              <span className="settings-tab__icon" aria-hidden>{s.icon}</span>
-              <span>{s.label}</span>
-            </button>
-          ))}
-        </nav>
-
+        <SettingsNav active={active} onSelect={select} />
         <div className="settings-panel">
-          {current?.render()}
+          {current ? PANELS[current.key]?.() : null}
         </div>
       </div>
     </div>

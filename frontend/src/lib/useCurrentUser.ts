@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
-import { auth, type AuthUser } from './auth'
+import { auth, SYSTEM_ADMIN_ROLE, type AuthUser } from './auth'
 
 export const CURRENT_USER_KEY = ['currentUser'] as const
 
@@ -23,7 +23,16 @@ export function useCurrentUser() {
   })
 }
 
+export function useIsSystemAdmin(): boolean {
+  const { data: user } = useCurrentUser()
+  return user?.roles.includes(SYSTEM_ADMIN_ROLE) ?? false
+}
+
+// System Admin short-circuits before the matrix is consulted. UX only: the button
+// this hides is re-gated server-side, so hiding it is a courtesy, not a control.
 export function useHasPermission(code: string): boolean {
   const { data: user } = useCurrentUser()
-  return user?.permissions.includes(code) ?? false
+  if (!user) return false
+  if (user.roles.includes(SYSTEM_ADMIN_ROLE)) return true
+  return user.permissions.includes(code)
 }

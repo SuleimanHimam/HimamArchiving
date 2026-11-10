@@ -121,7 +121,7 @@ public sealed class RetentionDispositionBackgroundService(
         if (warned > 0) await db.SaveChangesAsync(ct);
 
         if (generated > 0 || warned > 0)
-            logger.LogInformation("Retention sweep: {Gen} request(s) generated, {Warn} warning(s) sent", generated, warned);
+            logger.LogInformation("Retention sweep: {Gen} request(s), {Warn} warning(s)", generated, warned);
     }
 
     private static Notification Note(long uid, string title, string? body, long docId, NotificationType type = NotificationType.Task) =>

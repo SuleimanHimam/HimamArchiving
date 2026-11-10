@@ -1,0 +1,512 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Workflow inside المراسلات.
+
+   The strip has to read as part of the message it sits on, not as a widget bolted
+   to it — so it borrows the correspondence card's surface and radius, and spends
+   its one strong colour on the single thing that matters: whether this reader is
+   the person holding the request up.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.wf {
+  --wf-accent: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-inline-start: 3px solid var(--wf-accent);
+  border-radius: 10px;
+  background: var(--color-card);
+  padding: 1rem 1.1rem;
+  margin-block-end: 1.4rem;
+}
+
+.wf--ok   { --wf-accent: #1f8b4c; }
+.wf--bad  { --wf-accent: #c0392b; }
+.wf--warn { --wf-accent: #c69214; }
+.wf--plain { --wf-accent: var(--color-muted-foreground); }
+
+.wf__head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+
+.wf__tag {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--wf-accent);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: .1rem .35rem;
+}
+
+.wf__title { margin: 0; font-size: .98rem; font-weight: 650; color: var(--color-foreground); }
+
+.wf__state {
+  margin-inline-start: auto;
+  font-size: .75rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: .15rem .6rem;
+  background: color-mix(in oklab, var(--wf-accent) 14%, transparent);
+  color: var(--wf-accent);
+}
+
+.wf__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+  margin-block-start: .55rem;
+  font-size: .82rem;
+  color: var(--color-muted-foreground);
+}
+.wf__meta strong { color: var(--color-foreground); font-variant-numeric: tabular-nums; }
+
+/* The one thing worth shouting about: this desk is the bottleneck. */
+.wf__await {
+  font-weight: 650;
+  color: #b45309;
+  background: color-mix(in oklab, #f59e0b 18%, transparent);
+  border-radius: 999px;
+  padding: .12rem .55rem;
+}
+.wf__due { display: inline-flex; align-items: center; gap: .25rem; }
+
+.wf__steps {
+  display: flex;
+  gap: .3rem;
+  list-style: none;
+  margin: .7rem 0 0;
+  padding: 0;
+}
+.wf__step {
+  height: 4px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+.wf__step.is-done { background: var(--wf-accent); }
+.wf__step.is-now  { background: color-mix(in oklab, var(--wf-accent) 55%, transparent); }
+
+.wf__act {
+  margin-block-start: .9rem;
+  padding-block-start: .9rem;
+  border-block-start: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+.wf__buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+.wf__h4 {
+  margin: 1.1rem 0 .5rem;
+  font-size: .82rem;
+  font-weight: 650;
+  color: var(--color-muted-foreground);
+}
+
+.wf__timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+
+.wf__tl {
+  display: grid;
+  grid-template-columns: 1.1rem auto 1fr;
+  align-items: baseline;
+  gap: .5rem;
+  font-size: .82rem;
+  color: var(--color-foreground);
+}
+.wf__tlicon { color: var(--color-muted-foreground); line-height: 1; }
+.wf__tl--ok   .wf__tlicon { color: #1f8b4c; }
+.wf__tl--bad  .wf__tlicon { color: #c0392b; }
+.wf__tl--warn .wf__tlicon { color: #c69214; }
+
+.wf__tltime { color: var(--color-muted-foreground); font-size: .75rem; white-space: nowrap; }
+.wf__tltext { min-width: 0; }
+.wf__tlnote {
+  display: block;
+  color: var(--color-muted-foreground);
+  font-style: normal;
+  font-size: .78rem;
+}
+
+/* ── Inbox columns ───────────────────────────────────────────────────────────
+   A workflow row is still an ordinary row: the badge is a chip in the subject
+   cell rather than a new column, so the table keeps its shape whether or not
+   the institution uses workflows at all. */
+
+.wf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .68rem;
+  font-weight: 650;
+  border-radius: 999px;
+  padding: .08rem .45rem;
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+.wf-chip--await {
+  background: color-mix(in oklab, #f59e0b 20%, transparent);
+  color: #b45309;
+}
+.wf-chip--ok  { background: color-mix(in oklab, #1f8b4c 16%, transparent); color: #16794a; }
+.wf-chip--bad { background: color-mix(in oklab, #c0392b 16%, transparent); color: #a8322a; }
+
+.wf-step { font-variant-numeric: tabular-nums; }
+
+/* ── Admin designer ──────────────────────────────────────────────────────────
+   A route is a vertical list of stages with an arrow between them: the page's
+   shape is the diagram, so an administrator reads the order without a legend. */
+
+.wfd__h2 { margin: 0; font-size: .95rem; font-weight: 650; }
+.wfd__h3 {
+  display: flex; align-items: center; gap: .4rem;
+  margin: 1.4rem 0 .7rem; font-size: .88rem; font-weight: 650;
+}
+.wfd__list { margin-block-end: 1.2rem; }
+
+.wfd__table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.wfd__table th, .wfd__table td {
+  text-align: start; padding: .45rem .6rem; border-block-end: 1px solid var(--color-border);
+}
+.wfd__table th { color: var(--color-muted-foreground); font-weight: 600; }
+
+.wfd__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: .8rem;
+  align-items: start;
+}
+
+.wfd__stages { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+
+.wfd__stage {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: .9rem 1rem;
+  background: var(--color-background);
+  margin-block-end: 1.6rem;
+}
+
+.wfd__stagehead { display: flex; align-items: flex-start; gap: .5rem; margin-block-end: .8rem; }
+.wfd__grow { flex: 1; min-width: 0; }
+
+.wfd__num {
+  flex: none;
+  width: 1.7rem; height: 1.7rem;
+  margin-block-start: .55rem;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  font-size: .78rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The connector between stages — the route read as a diagram. */
+.wfd__arrow {
+  position: absolute;
+  inset-block-end: -1.35rem;
+  inset-inline-start: 50%;
+  transform: translateX(50%);
+  color: var(--color-muted-foreground);
+}
+
+.wfd__actions {
+  display: flex; flex-wrap: wrap; gap: .4rem 1rem;
+  margin-block-start: .9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: .6rem .8rem;
+}
+.wfd__actions legend {
+  padding-inline: .35rem;
+  font-size: .74rem;
+  color: var(--color-muted-foreground);
+}
+.wfd__check { display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; }
+.wfd__check--final { font-weight: 600; }
+
+.wfd__foot {
+  display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+  margin-block-start: 1rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--color-border);
+}
+.wfd__hint {
+  display: inline-flex; align-items: center; gap: .35rem;
+  margin-inline-end: auto;
+  font-size: .78rem; color: var(--color-muted-foreground);
+}
+
+/* ── Canvas ──────────────────────────────────────────────────────────────────
+   The route as a diagram. It reads left-to-right like every process chart,
+   including in this RTL app — the arrows carry the direction, and Arabic labels
+   stay right-to-left inside their own boxes via unicode-bidi. */
+
+.wfc {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--color-muted-foreground) 30%, transparent) 1px, transparent 0)
+    0 0 / 18px 18px,
+    var(--color-muted);
+  overflow: hidden;
+}
+
+/* The graph is wider than the page on any real route, so it scrolls in its own
+   box — the page body must never scroll sideways. */
+.wfc__scroll { overflow-x: auto; overflow-y: hidden; padding: .5rem; }
+.wfc__stage { position: relative; direction: ltr; }
+/* The route runs right to left. Positions are mirrored in the component's own maths (one place
+   decides the direction); this box stays physical so the two never fight. */
+
+.wfc__wires { position: absolute; inset: 0; pointer-events: none; }
+.wfc__wire {
+  fill: none;
+  stroke: color-mix(in oklab, var(--color-muted-foreground) 55%, transparent);
+  stroke-width: 1.5;
+}
+.wfc__arrow { fill: color-mix(in oklab, var(--color-muted-foreground) 70%, transparent); }
+
+.wfc__wirelabel {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  font-size: .62rem;
+  font-weight: 650;
+  color: var(--color-foreground);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: .05rem 0;
+  unicode-bidi: plaintext;
+}
+
+.wfc__node { position: absolute; width: 56px; }
+
+.wfc__tile {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--color-foreground) 14%, transparent);
+  background: #23233a;
+  color: #e8e9f5;
+  cursor: pointer;
+  padding: 0;
+  transition: box-shadow .12s ease, transform .12s ease;
+}
+button.wfc__tile:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgb(0 0 0 / .28); }
+button.wfc__tile:active { transform: translateY(0); }
+button.wfc__tile[draggable="true"] { cursor: grab; }
+button.wfc__tile[draggable="true"]:active { cursor: grabbing; }
+
+/* Drag feedback: the tile being carried fades, the tile it would displace lights up. */
+.wfc__node.is-dragging .wfc__tile { opacity: .45; }
+.wfc__node.is-dropzone .wfc__tile {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* Only while the pointer is on the node, so the tile stays a clean shape at rest. */
+.wfc__grip {
+  position: absolute;
+  inset-block-end: 2px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+.wfc__node:hover .wfc__grip { opacity: .55; }
+.wfc__tile.is-selected {
+  box-shadow: 0 0 0 2px var(--color-ring);
+  border-color: var(--color-ring);
+}
+
+/* The rounded cap marks where the route starts, so it faces the right — the side an Arabic
+   reader begins on and the side the trigger now sits at. */
+.wfc__tile--trigger { background: #2b2140; color: #f4c76b; border-radius: 14px 50% 50% 14px; }
+.wfc__tile--result  { background: #16351f; color: #7ee2a8; }
+
+/* A final stage is where the route can end — marked on the tile, not in prose. */
+.wfc__final {
+  position: absolute;
+  inset-block-start: -3px;
+  inset-inline-end: -3px;
+  width: 10px; height: 10px;
+  border-radius: 999px;
+  background: #7ee2a8;
+  border: 2px solid var(--color-muted);
+}
+
+.wfc__label {
+  display: block;
+  width: 132px;
+  margin-inline-start: -38px;
+  margin-block-start: .4rem;
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-foreground);
+  unicode-bidi: plaintext;
+}
+.wfc__kind {
+  display: inline-block;
+  margin-block-start: .2rem;
+  padding: 0 .35rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: .6rem;
+  font-weight: 700;
+  font-style: normal;
+  opacity: .85;
+}
+
+.wfc__label em {
+  display: block;
+  font-style: normal;
+  font-weight: 400;
+  font-size: .66rem;
+  color: var(--color-muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wfc__plus {
+  position: absolute;
+  top: 20px;
+  left: -22px;
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+.wfc__node:hover .wfc__plus,
+.wfc__plus:focus-visible { opacity: 1; }
+.wfc__plus:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.wfc__del {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+.wfc__node:hover .wfc__del,
+.wfc__del:focus-visible { opacity: 1; }
+.wfc__del:hover { color: #ff8497; border-color: #ff8497; }
+
+.wfc__seed {
+  position: absolute;
+  top: 50%;
+  right: 220px;
+  transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: .4rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font-size: .8rem;
+  padding: .5rem .9rem;
+  cursor: pointer;
+}
+
+.wfc__hint {
+  display: flex; align-items: center; gap: .3rem;
+  margin: 0;
+  padding: .4rem .8rem;
+  border-block-start: 1px solid var(--color-border);
+  font-size: .72rem;
+  color: var(--color-muted-foreground);
+}
+
+/* ── The canvas's right-click menu ─────────────────────────────────────────
+   The shadcn item is built for an LTR menu with its indicator on the left, so
+   the RTL menu moves that reserved gutter to the other side and lets the icons
+   sit inline with the text. */
+.wfc__menu [role="menuitem"],
+.wfc__menu [role="menuitemradio"],
+.wfc__menu [role="menuitemcheckbox"] {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+.wfc__menu [role="menuitemradio"],
+.wfc__menu [role="menuitemcheckbox"] {
+  padding-inline-start: 2rem;
+  padding-inline-end: .5rem;
+}
+.wfc__menu [role="menuitemradio"] > span:first-child,
+.wfc__menu [role="menuitemcheckbox"] > span:first-child {
+  left: auto;
+  inset-inline-start: .5rem;
+}
+.wfc__menu [role="menuitem"] svg,
+.wfc__menu [role="menuitemcheckbox"] svg { flex: none; }
+.wfc__menu--danger,
+.wfc__menu--danger:focus { color: #e11d48; }
+
+.wfc__menudot { width: 10px; height: 10px; border-radius: 999px; flex: none; }
+
+/* ── Per-stage colour: eight keys, one click each ─────────────────────── */
+.wfd__swatches {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-block-end: .9rem;
+}
+.wfd__swatches__label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--color-muted-foreground);
+  margin-inline-end: .3rem;
+}
+.wfd__swatch {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  padding: 0;
+  font-size: .7rem;
+  line-height: 1;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--color-foreground) 16%, transparent);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.wfd__swatch:hover { transform: translateY(-1px); }
+.wfd__swatch.is-on {
+  box-shadow: 0 0 0 2px var(--color-ring);
+  border-color: var(--color-ring);
+}
+
+/* ── Designer split: canvas above, settings for the selected stage below ── */
+.wfd__canvaswrap { margin-block-end: 1rem; }
+.wfd__panelhead {
+  display: flex; align-items: center; gap: .5rem;
+  margin-block-end: .8rem;
+}
+.wfd__panelhead h3 { margin: 0; font-size: .88rem; font-weight: 650; }
+.wfd__panelhead .wfd__num { margin: 0; }
+.wfd__empty {
+  padding: 1.6rem;
+  text-align: center;
+  color: var(--color-muted-foreground);
+  font-size: .84rem;
+}

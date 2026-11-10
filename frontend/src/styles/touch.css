@@ -1,0 +1,201 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   TOUCH — what changes when the pointer is a finger.
+
+   Everything here is behind `pointer: coarse`, which is a tablet or a phone and
+   never a desktop with a mouse. That matters: this system's registers are dense
+   on purpose, and a clerk working a 27" screen with a mouse should keep the
+   density they have. Sizing up every control globally would have cost them rows
+   per screen to fix a problem they do not have.
+
+   Two things break on a tablet that no amount of width testing reveals:
+
+     · a 26px icon button is under the ~40px an adult fingertip actually covers,
+       so the neighbouring action gets hit instead;
+     · `title="…"` names nothing. There is no hover on a touch screen, so an
+       icon-only control is unlabelled — permanently.
+
+   Loaded last, after hds.css, so these minimums win over the component sheets.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@media (pointer: coarse) {
+
+  /* ── App chrome: the header cluster and the drawer toggle ──
+     These sit alone with space around them, so they get the full target. */
+  .shell__create,
+  .shell__install,
+  .shell__langbtn,
+  .shell__themebtn,
+  .shell__toggle,
+  .bell__btn,
+  .acct__trigger {
+    min-block-size: 40px;
+    min-inline-size: 40px;
+  }
+
+  /* ── The button primitive every page builds on ── */
+  .btn { min-block-size: 40px; }
+  .btn.btn-sm { min-block-size: 36px; }
+
+  /* ── Dense icon rows inside a register ──
+     32px, not 40px: these live in the row's action cell, and every pixel added
+     there pushes the table further into a horizontal scroll — trading a missed
+     tap for a column nobody can see. 32px is the same size the phone card layout
+     in mail.css already settled on. */
+  .mbx__act,
+  .reg-chev,
+  .mon-del,
+  .tree-actbtn,
+  .pwfield__toggle {
+    min-block-size: 32px;
+    min-inline-size: 32px;
+  }
+
+  /* ── Column headers ──
+     The sort/filter trigger inside a `th` renders at the header's own 13px line box. It is on
+     every register in the system, and 13px is not a target — it is a coin toss between three
+     adjacent columns. */
+  .col-sort { min-block-size: 32px; }
+
+  /* The password eye sits inside the field, so it grows to the field's height, not past it. */
+  .pw-reveal { min-block-size: 32px; min-inline-size: 32px; }
+
+  /* Dashboard: the chart's direction chips, its year picker and the mailbox folder select. */
+  .ddc__seg button,
+  .ddc__year,
+  .dmb__folder { min-block-size: 36px; }
+  /* The mailbox list is a table of links at a 22px line — the link is the row's only target. */
+  .dmb__table td { padding-block: .5rem; }
+
+  /* The shared shadcn button: h-8/h-9 in Tailwind, which is 32/36px — the small size lands
+     under the floor. Raised here rather than in the variants so the mouse layout is untouched. */
+  .ui-btn { min-block-size: 36px; }
+
+  /* Tree rows (الأقسام, المواقع, شجرة الأرشيف) sit at their text height — the row is the target. */
+  .tree-node,
+  .tree-toolbar__btn,
+  .dmb__foot button { min-block-size: 36px; }
+
+  /* Per-node actions are revealed by `group-hover`. There is no hover here, so without this the
+     rename/add/delete buttons on a tree node are unreachable — not merely hard to hit. */
+  .tree-node__actions,
+  /* Same pattern, three more places: the roles list, the locations tree (which also reveals on
+     selection, so it costs a tap first) and the logo box hint. */
+  .roles-list__actions,
+  .tree__actions,
+  .bset-logo__hint { opacity: 1; }
+
+  /* A link that does not fill its cell leaves the rest of the row dead to a tap. */
+  .dmb__table td a { display: block; padding-block: .45rem; }
+
+  /* Remaining one-offs, each the only control of its kind on its screen. */
+  .ou-name,
+  .dpk__clear,
+  .cx-bcc-toggle,
+  .bk__switch,
+  .mon-chain,
+  .bset-presets__sw { min-block-size: 32px; }
+  .bset-presets__sw { min-inline-size: 32px; }
+
+  /* A 13px checkbox is the smallest target in the app; the label beside it is usually the
+     bigger one, but the box itself has to be hittable on its own. */
+  /* `:root` here is a specificity bump, not decoration. Vite appends each component's stylesheet
+     after the global ones, so where a component already sets the property being raised — here
+     compose.css's `.cx-check input { block-size: 18px }` — an equal-specificity rule in this file
+     loses on order alone. */
+  :root input[type="checkbox"], :root input[type="radio"] {
+    inline-size: 22px; block-size: 22px; min-inline-size: 22px; min-block-size: 22px;
+  }
+
+  /* Typed controls: the header search, the searchable pickers, and every bare <select>. */
+  .gds__input,
+  .ss__input,
+  select { min-block-size: 34px; }
+
+  /* An inline link ignores min-block-size — it has to become a box first. Same `:root` bump:
+     mail.css sets `padding: 0` on this class. */
+  :root .corr__thread-link {
+    display: inline-flex; align-items: center; min-block-size: 34px; padding-block: .25rem;
+  }
+
+  /* ── Things you switch between: tabs, chips, filter pills ── */
+  [role="tab"],
+  /* The archive tree's axis switch — a pair of Tailwind buttons with no class of their own. */
+  .archive-tree__mode,
+  .mbx__filterbtn,
+  .mon-chip,
+  .role-chip,
+  .tree-toolbar__lvl,
+  .dpk__btn,
+  .corr__thread-link {
+    min-block-size: 38px;
+  }
+
+  /* A link inside a sentence must not inherit the 38px above — it would space the
+     paragraph out. Only the standalone ones are targets. */
+  p .corr__thread-link,
+  dd .corr__thread-link { min-block-size: 0; }
+
+  /* ── Rows ──
+     A register row is itself the primary target (it opens the record), so it gets
+     a comfortable height even where the cells are short. */
+  .reg-row > td,
+  .mbx__row > td { padding-block: .55rem; }
+}
+
+/* ── The icon rail, on a touch screen ────────────────────────────────────────
+   Between 769px and 1150px the rail collapses to 68px of bare icons, and
+   applayout.css leans on `title` to name them — which works with a mouse and
+   not at all with a finger. Nine outline glyphs in a column, no labels, no
+   tooltips: navigation by memory.
+
+   So on touch the labels come back, under the icons, and the rail widens just
+   enough to hold them. It costs ~30px of content width, which is far less than
+   the cost of not knowing where anything is. */
+@media (max-width: 1150px) and (min-width: 769px) and (pointer: coarse) {
+  /* Doubled class on purpose. Vite appends component stylesheets after the global ones, so
+     applayout.css's `.shell__rail { width: 68px }` — same specificity, later in the cascade —
+     would otherwise win and the labels would render inside a 68px rail. */
+  .shell.shell { --rail-occupied: 98px; }
+  .shell__rail.shell__rail { width: 98px; }
+
+  .rail__item.rail__item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 9px 5px;
+    text-align: center;
+  }
+  .rail__label.rail__label {
+    opacity: 1;
+    width: auto;
+    max-width: 100%;
+    font-size: 9.5px;
+    /* 1.2 clipped the descenders of «إدارة المستخدمين» against the box — Arabic sits lower in
+       its line box than the Latin those numbers came from. */
+    line-height: 1.4;
+    /* The rail sets nowrap on the item and the label inherits it; two-word section names would
+       otherwise render as one cut line. A declaration on the element beats the inherited value. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    /* Two lines, then cut. Done with a height cap rather than -webkit-line-clamp: the clamp needs
+       display:-webkit-box, which fights the rail's own layout and reports back as flow-root. */
+    max-block-size: 2.8em;
+    overflow: hidden;
+  }
+  .rail__icon { flex: 0 0 auto; }
+
+  /* The group headings ("السجلات والمراسلات") do not fit in 98px and would
+     ellipsize to noise. A hairline says "new group" just as well. */
+  .rail__group.rail__group {
+    opacity: 0;
+    width: auto;
+    height: 1px;
+    margin: 6px 12px;
+    padding: 0;
+    overflow: hidden;
+    background: currentColor;
+    opacity: .18;
+  }
+  .rail__section:first-child .rail__group { margin-block-start: 0; }
+}

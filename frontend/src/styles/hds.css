@@ -1,0 +1,398 @@
+/* ============================================================================
+   HDS THEME — brand palette from the HDS logo.
+   Imported LAST (after modern.css) so these :root declarations win and the whole
+   app re-skins through the existing --m-* / --brand-* / --color-* token vocabulary.
+   No component CSS is touched: every surface, button, badge and border already
+   reads these tokens.
+
+   Palette: sky-blue primary · deep-purple secondary · verdigris for icons and
+   info, on white and off-white surfaces, with a purple→sky gradient on heroes.
+
+   ── On contrast ─────────────────────────────────────────────────────────────
+   The brand hues are correct for *fills*, but three of them are too light to
+   carry small text at WCAG AA (4.5:1). Measured against white:
+
+       sky     #2E96CC → 3.31   teal #1FA8B8 → 2.86
+       warning #C0622A → 4.18   grey #AAAAAA → 2.32
+
+   So each of those gets a darkened sibling used wherever the colour becomes
+   text, or becomes a control that carries a white label. The derived shades are
+   measured against #F5F7FA — the app's real page background — not against pure
+   white, since a token that only passes on white fails on every card-less page.
+   The brand hue itself is kept for large fills that carry no small text: the
+   hero gradient and decorative washes. Both readings stay unmistakably the same
+   colour — #2E96CC and #24759F are one sky blue, only one of them survives reading.
+   ========================================================================== */
+
+:root {
+    color-scheme: light;
+
+    /* ---- Brand scale ---------------------------------------------------- */
+    --hds-primary: #2C6FD6;
+    /* the app mark's bright blue — large fills, gradients, tints */
+    --hds-primary-ink: #1B4C9E;
+    /* 7.4:1 with a white label — controls + link text. The bright #2C6FD6 carries
+       white at only 4.0:1, so fills that hold text use this one. */
+    --hds-primary-deep: #123C86;
+    /* pressed / hover on the ink shade */
+    --hds-primary-soft: #EAF1FC;
+    /* faint blue wash for selected rows */
+
+    /* Was purple. The mark has two colours — blue and amber — and a third hue in the
+       chrome read as a different product. Kept under the old variable name so every
+       gradient that references it moves at once. */
+    --hds-purple: #17418E;
+    --hds-purple-deep: #10357A;
+    --hds-purple-soft: #ECF0FA;
+
+    /* Verdigris — no longer the primary; it keeps the secondary role: icons,
+       borders, info and the "internal" classification, where staying distinct
+       from the primary sky matters. */
+    --hds-teal: #1FA8B8;
+    --hds-teal-ink: #177D89;
+    /* 4.52:1 on the page surface, 4.85 on white */
+    --hds-teal-soft: #E8F6F8;
+
+    /* Hero gradient — secondary → accent, per the brand spec. The ramp ends on
+       the readable sky rather than #2E96CC: the hero carries small white text
+       (name, badges) and white on #2E96CC is only 3.31:1. Same hue, one step
+       deeper, so every label on the hero clears AA. */
+    --hds-gradient: linear-gradient(135deg, var(--hds-purple) 0%, var(--hds-primary-ink) 100%);
+
+    /* ---- Surfaces & ink -------------------------------------------------- */
+    --m-bg: #F5F7FA;
+    --m-surface: #FFFFFF;
+    --m-surface-2: #EFF2F7;
+    /* The palette gives no rail colour; the near-black text tone is the only
+       dark in the system, so the sidebar is built from it. Keeping the rail
+       neutral is also what lets teal read as *the* interactive colour. */
+    --m-rail: #1A1A2E;
+    --m-rail-2: #252540;
+    --m-border: #E0E4EA;
+    --m-border-2: #C9D0DA;
+    --m-text: #1A1A2E;
+    --m-text-2: #4A4A63;
+    /* #AAAAAA is 2.32:1 — unreadable as body text. Muted ink is darkened to
+       4.61:1; the original light grey survives only as --m-text-faint below,
+       for decoration that is never read (rules, disabled marks). */
+    --m-text-3: #6E6E6E;
+    /* 4.54:1 even on the tinted #EFF2F7 header strips, where the lighter greys
+       dipped under AA. */
+    --m-text-faint: #AAAAAA;
+    /* Older sheets colour small glyphs (the search icon) with --text-faint, so
+       it has to be readable rather than decorative. */
+    --text-faint: #6E6E6E;
+    --text-muted: #4A4A63;
+
+    /* ---- Brand token mapping --------------------------------------------- */
+    --m-primary: var(--hds-primary-ink);
+    --m-primary-2: var(--hds-primary-deep);
+    --m-primary-fg: var(--hds-primary-ink);
+    --m-accent: var(--hds-purple);
+    --m-accent-2: var(--hds-teal);
+    --m-accent-soft: var(--hds-primary-soft);
+    --m-accent-fg: var(--hds-purple);
+    /* .btn-primary paints this behind a white label, so it takes the readable
+       teal rather than the raw brand hue (white on #1FA8B8 is only 2.86:1). */
+    --brand-solid: var(--hds-primary-ink);
+
+    --pri: var(--hds-primary-ink);
+    --pri-hover: var(--hds-primary-deep);
+    --pri-weak: var(--hds-primary-soft);
+    --pri-ink: var(--hds-primary-ink);
+    --accent: var(--hds-purple);
+    --accent-weak: var(--hds-purple-soft);
+
+    /* ---- Semantic --------------------------------------------------------- */
+    /* Success stays verdigris by brand decision — it did not follow the primary
+       when that moved to sky, or success and "in progress" would read alike.
+       Uses the readable shade so status text passes where the fill would. */
+    --m-success: var(--hds-teal-ink);
+    --success: var(--hds-teal-ink);
+    --success-weak: var(--hds-primary-soft);
+    --m-warning: #B05A26;
+    --warning: #B05A26;
+    --warning-weak: #FBF0E9;
+    --m-danger: #C0345E;
+    --danger: #C0345E;
+    --danger-weak: #FBEBF0;
+    --m-info: var(--hds-teal-ink);
+    --info: var(--hds-teal-ink);
+    --info-weak: var(--hds-teal-soft);
+    --m-seal: #C0345E;
+    --m-seal-fg: #C0345E;
+    --m-info-fg: var(--hds-teal-ink);
+    --seal: #C0345E;
+    --seal-deep: #A72B50;
+    --ok: var(--hds-teal-ink);
+    --warn: #B05A26;
+
+    /* ---- Classification — kept mutually distinct, not brand-tinted, so a
+       security marking is never confused with an interactive element. ------- */
+    --c-public: #6B7280;
+    /* One step darker than --hds-teal-ink: the badge fills with a 12% tint of
+       its own colour, and the ink itself landed at 4.35 against that tint. */
+    --c-internal: #15757F;
+    --c-confidential: #B05A26;
+    --c-secret: #C0345E;
+
+    /* ---- Typography — Inter for Latin, Cairo for Arabic ------------------- */
+    --font-display: "Cairo", "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+    --font-body: "Cairo", "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+    --font-latin: "Inter", system-ui, sans-serif;
+
+    /* ---- Re-tune the brand-* family --------------------------------------- */
+    --brand-primary: var(--hds-primary-ink);
+    --brand-primary-600: var(--hds-primary-deep);
+    --brand-primary-050: var(--hds-primary-soft);
+    --brand-secondary: var(--hds-purple);
+    --brand-secondary-050: var(--hds-purple-soft);
+    --brand-accent: var(--hds-teal);
+    --brand-accent-text: var(--hds-teal-ink);
+    --brand-success: var(--hds-teal-ink);
+    --brand-warning: #B05A26;
+    --brand-danger: #C0345E;
+    --brand-info: var(--hds-teal-ink);
+    --brand-bg: #F5F7FA;
+    --brand-surface: #FFFFFF;
+    --brand-surface-2: #EFF2F7;
+    --brand-line: #E0E4EA;
+    --brand-text: #1A1A2E;
+    --brand-text-muted: #4A4A63;
+    --brand-text-soft: #6E6E6E;
+    --brand-on-primary: #FFFFFF;
+
+    /* ---- shadcn / Tailwind colour tokens ---------------------------------- */
+    --color-ink: var(--hds-primary-ink);
+    --color-ink-deep: #1A1A2E;
+    --color-seal: #C0345E;
+    --color-brass: var(--hds-purple);
+    --color-brass-soft: var(--hds-teal);
+    --color-paper: #FFFFFF;
+    --color-parchment: #F5F7FA;
+    --color-parchment-2: #EFF2F7;
+    --color-parchment-3: #E0E4EA;
+
+    --color-background: #FFFFFF;
+    --color-foreground: #1A1A2E;
+    --color-popover: #FFFFFF;
+    --color-popover-foreground: #1A1A2E;
+    --color-accent: #EFF2F7;
+    --color-accent-foreground: #1A1A2E;
+    --color-border: #E0E4EA;
+    --color-muted: #EFF2F7;
+    --color-muted-foreground: #6E6E6E;
+    --color-destructive: #C0345E;
+    --color-destructive-foreground: #FFFFFF;
+    --color-card: #FFFFFF;
+    --color-card-foreground: #1A1A2E;
+    --color-primary: var(--hds-primary-ink);
+    --color-primary-foreground: #FFFFFF;
+    --color-secondary: #EFF2F7;
+    --color-secondary-foreground: var(--hds-primary-ink);
+    --color-input: #C9D0DA;
+    --color-ring: var(--hds-primary-ink);
+
+    /* Focus ring + shadow glows follow the brand teal. */
+    --ring-primary: 0 0 0 3px rgba(46, 150, 204, 0.30);
+    --brand-focus-ring: var(--ring-primary);
+}
+
+/* ============================================================================
+   DARK — the light-mode shades invert: on a dark surface the *brand* hues are
+   the readable ones and the darkened siblings become too dim, so teal and sky
+   go back to full strength (and a step brighter) rather than being darkened.
+   ========================================================================== */
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Dark theme: the same blues lifted until they read as *text* on a dark surface —
+       #1B4C9E is a fill colour and disappears here. */
+    --hds-primary: #6BA6F2;
+    --hds-primary-ink: #8FBEF8;
+    --hds-primary-deep: #4B86D8;
+    --hds-primary-soft: rgba(107, 166, 242, 0.16);
+    --hds-purple: #5C8FE0;
+    --hds-purple-deep: #4778C4;
+    --hds-purple-soft: rgba(92, 143, 224, 0.16);
+    --hds-teal: #2CC2D4;
+    --hds-teal-ink: #3FD2E3;
+    --hds-teal-soft: rgba(44, 194, 212, 0.14);
+
+    --m-bg: #12121F;
+    --m-surface: #1A1A2E;
+    --m-surface-2: #24243B;
+    --m-rail: #0E0E18;
+    --m-rail-2: #1A1A2E;
+    --m-border: #2E2E48;
+    --m-border-2: #3D3D5C;
+    --m-text: #F1F3F7;
+    --m-text-2: #B9BECD;
+    --m-text-3: #8A90A2;
+    --m-text-faint: #6A7080;
+
+    --m-warning: #E08A4C;
+    --warning: #E08A4C;
+    --m-danger: #E4658A;
+    --danger: #E4658A;
+    --m-seal: #E4658A;
+    --seal: #E4658A;
+
+    --c-public: #9AA1B2;
+    --c-internal: #7CC4EC;
+    --c-confidential: #E08A4C;
+    --c-secret: #E4658A;
+
+    /* Shadow modern.css's dark brand literals — without these, dark mode keeps
+       the previous indigo/violet (its dark block sets them directly, so the
+       :root mapping never reaches here). */
+    --m-primary: var(--hds-primary-ink);
+    --m-primary-2: var(--hds-primary);
+    --m-primary-fg: var(--hds-primary-ink);
+    --m-accent: var(--hds-purple);
+    --m-accent-2: var(--hds-teal);
+    --m-accent-soft: var(--hds-primary-soft);
+    --m-accent-fg: var(--hds-purple);
+    /* Fills vs. text pull opposite ways on a dark surface: .btn-primary and
+       .btn-seal paint these behind a hardcoded white label, so they must stay
+       dark enough to read (white on the bright sky is only 1.92:1), while the
+       text tokens below stay bright against the dark background. Both clear
+       3:1 against the surface, so the buttons still read as shapes. */
+    --brand-solid: #1B4C9E;
+    /* white label 5.10:1 · 3.35:1 against the dark surface */
+    --seal: #C0345E;
+    --seal-deep: #A72B50;
+    --m-seal: #C0345E;
+    --pri: var(--hds-primary-ink);
+    --pri-hover: var(--hds-primary);
+    --pri-weak: var(--hds-primary-soft);
+    --pri-ink: var(--hds-primary-ink);
+    --accent: var(--hds-purple);
+    --accent-weak: var(--hds-purple-soft);
+    --m-success: var(--hds-teal-ink);
+    --success: var(--hds-teal-ink);
+    --ok: var(--hds-teal-ink);
+    --m-info: var(--hds-teal-ink);
+    --info: var(--hds-teal-ink);
+    --m-info-fg: var(--hds-teal-ink);
+
+    --brand-primary: var(--hds-primary-ink);
+    --brand-primary-600: var(--hds-primary-deep);
+    --brand-primary-050: var(--hds-primary-soft);
+    --brand-secondary: var(--hds-purple);
+    --brand-secondary-050: var(--hds-purple-soft);
+    --brand-accent: var(--hds-teal);
+    --brand-accent-text: var(--hds-teal-ink);
+    --brand-success: var(--hds-teal-ink);
+    --brand-info: var(--hds-teal-ink);
+    --brand-on-primary: #FFFFFF;
+
+    --color-primary: var(--hds-primary-ink);
+    --color-primary-foreground: #0E0E18;
+    --color-secondary-foreground: var(--hds-primary-ink);
+    --color-ring: var(--hds-primary-ink);
+    --color-ink: var(--hds-primary-ink);
+    --color-brass: var(--hds-purple);
+    --color-brass-soft: var(--hds-teal);
+    --text-faint: #8A90A2;
+    --text-muted: #B9BECD;
+
+    --brand-bg: #12121F;
+    --brand-surface: #1A1A2E;
+    --brand-surface-2: #24243B;
+    --brand-line: #2E2E48;
+    --brand-text: #F1F3F7;
+    --brand-text-muted: #B9BECD;
+    --brand-text-soft: #8A90A2;
+
+    --color-background: #12121F;
+    --color-foreground: #F1F3F7;
+    --color-popover: #1A1A2E;
+    --color-popover-foreground: #F1F3F7;
+    --color-accent: #24243B;
+    --color-accent-foreground: #F1F3F7;
+    --color-border: #2E2E48;
+    --color-muted: #24243B;
+    --color-muted-foreground: #8A90A2;
+    --color-card: #1A1A2E;
+    --color-card-foreground: #F1F3F7;
+    --color-paper: #1A1A2E;
+    --color-parchment: #12121F;
+    --color-parchment-2: #24243B;
+    --color-parchment-3: #2E2E48;
+    --color-input: #3D3D5C;
+    --color-destructive: #E4658A;
+}
+
+/* ============================================================================
+   Hero elements — the one place the purple→sky gradient is used, per the brand
+   spec. Everything else stays flat.
+   ========================================================================== */
+/* .dash-hero builds its own ramp from --brand-primary → --brand-secondary, which
+   the mapping above already points at teal → purple, so light mode needs no rule.
+   Dark mode does: there --brand-primary is the *bright* teal (correct for a
+   button on a dark surface) but .dash-hero__name hardcodes color:#fff, and white
+   over bright teal is ~1.7:1. The dark hero therefore gets its own deep ramp so
+   the white labels stay readable. */
+[data-theme="dark"] .dash-hero {
+    background: linear-gradient(125deg, #1B5776 0%, #24759F 55%, #6C2861 130%);
+}
+
+.hero-gradient {
+    background: var(--hds-gradient);
+    color: #FFFFFF;
+}
+
+/* ============================================================================
+   Component corrections — a few places carry literal colours from the previous
+   brass/gold theme and so never re-skin through the tokens above. They are
+   fixed here rather than in the component files, so the whole HDS layer stays
+   removable in one import.
+   ========================================================================== */
+
+/* Language switch: originally a gold wash (rgba(176,137,45,…)) — off brand and
+   3.31:1. It then carried a sky tint, which made it the only tinted control in a
+   row of plain outlines. It now shares the theme toggle's neutral treatment, since
+   the two are the same class of secondary switch.
+   :root prefix raises specificity — applayout.css is imported by its component
+   and therefore lands after this file in the bundle. */
+:root .shell__langbtn {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--line);
+}
+
+:root .shell__langbtn:hover {
+    background: var(--parchment-2);
+    color: var(--text);
+}
+
+/* The global-search glyph is coloured by .shell__navbar .gds__icon via
+   --text-faint, which is set above — no extra rule needed here. */
+
+/* Three sheets disagree on the solid buttons' label: modern/sanad say #fff,
+   diwan says var(--parchment) — which in dark resolves to verdigris and put
+   teal text on a blue fill (2.37:1). Both fills are chosen above to carry a
+   white label, so the label is pinned to white here. */
+:root .btn-primary,
+:root .btn-seal {
+    color: #FFFFFF;
+}
+
+/* Same fill-vs-text split, one level down: these paint var(--m-primary) behind
+   white text, but in dark that token is the *bright* sky (right for text, 1.92
+   behind white). In dark they take the fill token instead. Light mode already
+   passes, so it is left alone. */
+[data-theme="dark"] .mbx__new,
+[data-theme="dark"] .corr-dir--out {
+    background: var(--brand-solid);
+}
+
+[data-theme="dark"] .corr-dir--in {
+    background: #177D89;
+}
+
+[data-theme="dark"] .corr-dir--int {
+    background: #6C2861;
+}

@@ -1,0 +1,171 @@
+/* Diwan dashboard: bureau tiles + real monthly series.
+   Series colours are the validated reference palette (light + dark steps). */
+
+.ddc {
+  --ddc-s1: #2a78d6;
+  --ddc-s2: #008300;
+  --ddc-s3: #e87ba4;
+  --ddc-s4: #eda100;
+  --ddc-s5: #1baf7a;
+  --ddc-surface: var(--brand-surface, var(--m-surface));
+  --ddc-border: var(--m-border);
+  --ddc-ink: var(--m-text);
+  --ddc-ink-2: var(--m-text-2);
+  --ddc-ink-3: var(--m-text-3);
+  --ddc-track: var(--m-surface-2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ddc {
+    --ddc-s1: #3987e5;
+    --ddc-s2: #008300;
+    --ddc-s3: #d55181;
+    --ddc-s4: #c98500;
+    --ddc-s5: #199e70;
+  }
+}
+
+.ddc__s1 { background: var(--ddc-s1); }
+.ddc__s2 { background: var(--ddc-s2); }
+.ddc__s3 { background: var(--ddc-s3); }
+.ddc__s4 { background: var(--ddc-s4); }
+.ddc__s5 { background: var(--ddc-s5); }
+
+/* ── Chart cards ───────────────────────────────────────────────────────────── */
+
+.ddc {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+  margin-block-end: 16px;
+}
+
+.ddc__card {
+  padding: 16px 18px;
+  background: var(--ddc-surface);
+  border: 1px solid var(--ddc-border);
+  border-radius: 12px;
+}
+
+.ddc__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-end: 12px;
+}
+.ddc__title { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--ddc-ink); }
+.ddc__sub { margin: 2px 0 0; font-size: 0.78rem; color: var(--ddc-ink-3); }
+
+.ddc__controls { display: flex; align-items: center; gap: 8px; flex: none; }
+
+.ddc__seg {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--ddc-track);
+  border: 1px solid var(--ddc-border);
+  border-radius: 999px;
+}
+.ddc__seg button {
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--ddc-ink-2);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--t-fast, 140ms) var(--ease, ease);
+}
+.ddc__seg button.is-on { background: var(--ddc-surface); color: var(--ddc-ink); font-weight: 700; }
+
+/* The department picker wears the year picker's clothes — they sit side by side and are the same
+   kind of control; only its width differs, since a department name is longer than a year. */
+.ddc__unit {
+  max-inline-size: 190px;
+  text-overflow: ellipsis;
+}
+
+.ddc__unit,
+.ddc__year {
+  block-size: 30px;
+  padding-inline: 8px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--ddc-ink);
+  background: var(--ddc-surface);
+  border: 1px solid var(--ddc-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ── Legend ────────────────────────────────────────────────────────────────── */
+
+.ddc__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--ddc-ink-2);
+}
+.ddc__legend li { display: flex; align-items: center; gap: 6px; }
+.ddc__dot { inline-size: 10px; block-size: 10px; border-radius: 3px; flex: none; }
+
+/* ── Plot ──────────────────────────────────────────────────────────────────── */
+
+.ddc__plot {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  block-size: 220px;
+  padding-block-start: 18px;
+  border-block-end: 1px solid var(--ddc-border);
+}
+
+.ddc__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  block-size: 100%;
+  min-inline-size: 0;
+}
+
+.ddc__val { font-size: 0.72rem; color: var(--ddc-ink-3); margin-block-end: 3px; }
+
+.ddc__stack {
+  inline-size: 100%;
+  max-inline-size: 34px;
+  display: flex;
+  flex-direction: column-reverse;
+  /* 2px surface gap between stacked segments */
+  gap: 2px;
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  transition: height var(--t-base, 260ms) var(--ease, ease);
+}
+
+.ddc__seg-bar {
+  display: grid;
+  place-items: center;
+  min-block-size: 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+}
+.ddc__seg-val { line-height: 1; }
+
+.ddc__xlab {
+  margin-block-start: 6px;
+  font-size: 0.72rem;
+  color: var(--ddc-ink-3);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ddc * { transition: none !important; }
+}

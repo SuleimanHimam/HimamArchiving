@@ -2,15 +2,22 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/seal.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#14213D" />
+    <!-- Installable app: the manifest is what turns this into a desktop/home-screen entry. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="الديوان" />
     <title>الديوان الإلكتروني · نظام إدارة الوثائق والأرشفة</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- SANAD design system fonts: DM Sans (display/body/latin) · IBM Plex Sans Arabic (Arabic) · IBM Plex Mono (refs).
+         Marasil/Diwan faces (Archivo, Inter, Noto Sans Arabic) kept so those skins still render if swapped back. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800;9..40,900&family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
   </head>

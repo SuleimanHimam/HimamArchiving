@@ -31,8 +31,16 @@ public sealed class AdminController(
 {
     // ── helpers ────────────────────────────────────────────────────────────
 
+    private string Conn => config.GetConnectionString("Default") ?? "";
+
+    /// <summary>Which engine this deployment runs on — the backup mechanics differ completely.</summary>
+    private DbProvider Provider => DatabaseProviders.Parse(config["Database:Provider"], Conn);
+
+    /// <summary>Where SQL Server should write its .bak, or null to use the instance's own default.</summary>
+    private string? SqlBackupDir => config["Backup:SqlServerDirectory"];
+
     private Dictionary<string, string> CsParams() =>
-        MySqlBackupTools.ParseConnectionString(config.GetConnectionString("Default") ?? "");
+        MySqlBackupTools.ParseConnectionString(Conn);
 
     private static string? FindTool(string name) => MySqlBackupTools.FindTool(name);
 
@@ -57,11 +65,13 @@ public sealed class AdminController(
 
     // ── endpoints ──────────────────────────────────────────────────────────
 
-    /// <summary>Stream a full mysqldump SQL file for download.</summary>
+    /// <summary>Stream a full database backup for download — a mysqldump .sql or a SQL Server .bak.</summary>
     [HttpGet("backup")]
     [HasPermission("Backup.Edit")]
     public async Task<IActionResult> Backup(CancellationToken ct)
     {
+        if (Provider == DbProvider.SqlServer) return await BackupSqlServerAsync(ct);
+
         var dump = FindTool("mysqldump");
         if (dump is null)
             return StatusCode(503, new { error = "mysqldump_not_found" });
@@ -99,7 +109,42 @@ public sealed class AdminController(
         finally { System.IO.File.Delete(optFile); }
     }
 
-    /// <summary>Restore database from an uploaded SQL dump.</summary>
+    /// <summary>
+    /// The SQL Server half of <see cref="Backup"/>: the engine writes the .bak itself, then the
+    /// API streams that file back and deletes its copy of it.
+    /// </summary>
+    private async Task<IActionResult> BackupSqlServerAsync(CancellationToken ct)
+    {
+        string path;
+        try { path = await SqlServerBackupTools.BackupAsync(Conn, SqlBackupDir, ct); }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "SQL Server backup failed");
+            return StatusCode(503, new { error = "backup_failed", details = ex.Message });
+        }
+
+        // Written by the SQL Server service account on the database server. Same machine — the
+        // normal layout — and it is right there; a remote instance needs a share both can see.
+        if (!System.IO.File.Exists(path))
+            return StatusCode(503, new { error = "backup_file_unreachable", path });
+
+        try
+        {
+            Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{Path.GetFileName(path)}\"");
+            Response.ContentType = "application/octet-stream";
+            await using (var src = System.IO.File.OpenRead(path))
+                await src.CopyToAsync(Response.Body, ct);
+            return new EmptyResult();
+        }
+        finally
+        {
+            // The download is the copy that matters; leaving .bak files on the server would fill
+            // the disk one click at a time.
+            try { System.IO.File.Delete(path); } catch (Exception ex) { logger.LogWarning(ex, "Could not delete {Path}", path); }
+        }
+    }
+
+    /// <summary>Restore database from an uploaded dump (.sql for MySQL, .bak for SQL Server).</summary>
     [HttpPost("restore")]
     [HasPermission("Backup.Edit")]
     [RequestSizeLimit(500 * 1024 * 1024)]
@@ -107,6 +152,8 @@ public sealed class AdminController(
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { error = "no_file" });
+
+        if (Provider == DbProvider.SqlServer) return await RestoreSqlServerAsync(file, ct);
 
         var mysql = FindTool("mysql");
         if (mysql is null)
@@ -147,16 +194,78 @@ public sealed class AdminController(
         finally { System.IO.File.Delete(optFile); }
     }
 
-    /// <summary>Check whether mysqldump and mysql are available on the server.</summary>
+    /// <summary>
+    /// The SQL Server half of <see cref="Restore"/>. The upload has to land where the *engine*
+    /// can read it — RESTORE reads the file itself — so it goes to the same directory the engine
+    /// backs up to, not to the API's temp folder.
+    /// </summary>
+    private async Task<IActionResult> RestoreSqlServerAsync(IFormFile file, CancellationToken ct)
+    {
+        string dir;
+        try
+        {
+            dir = SqlBackupDir ?? await SqlServerBackupTools.DefaultBackupDirectoryAsync(Conn, ct)
+                ?? Path.GetTempPath();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Could not resolve the SQL Server backup directory");
+            return StatusCode(503, new { error = "restore_failed", details = ex.Message });
+        }
+
+        var staged = Path.Combine(dir, $"restore_{Guid.NewGuid():N}.bak");
+        try
+        {
+            await using (var dst = System.IO.File.Create(staged))
+                await file.OpenReadStream().CopyToAsync(dst, ct);
+
+            await SqlServerBackupTools.RestoreAsync(Conn, staged, ct);
+
+            logger.LogInformation("Database restored from {File} ({Bytes} bytes)", file.FileName, file.Length);
+            return Ok(new { restored = true, file = file.FileName, bytes = file.Length });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "SQL Server restore failed");
+            return StatusCode(500, new { error = "restore_failed", details = ex.Message });
+        }
+        finally
+        {
+            try { System.IO.File.Delete(staged); } catch (Exception ex) { logger.LogWarning(ex, "Could not delete {Path}", staged); }
+        }
+    }
+
+    /// <summary>Whether this server can actually take a backup: the MySQL CLIs, or the engine itself.</summary>
     [HttpGet("backup/status")]
     [HasPermission("Backup.View")]
-    public IActionResult Status() => Ok(new
+    public async Task<IActionResult> Status(CancellationToken ct)
     {
-        mysqldumpFound = FindTool("mysqldump") is not null,
-        mysqlFound     = FindTool("mysql") is not null,
-        mysqldumpPath  = FindTool("mysqldump"),
-        mysqlPath      = FindTool("mysql"),
-    });
+        if (Provider == DbProvider.SqlServer)
+        {
+            var (ok, dir, error) = await SqlServerBackupTools.ProbeAsync(Conn, SqlBackupDir, ct);
+            return Ok(new
+            {
+                provider = "SqlServer",
+                // The same two flags the settings screen reads, answered for this engine: no
+                // external tool is needed, so readiness is "can we reach the instance".
+                mysqldumpFound = ok,
+                mysqlFound     = ok,
+                mysqldumpPath  = dir,
+                mysqlPath      = dir,
+                backupDirectory = dir,
+                error,
+            });
+        }
+
+        return Ok(new
+        {
+            provider = "MySql",
+            mysqldumpFound = FindTool("mysqldump") is not null,
+            mysqlFound     = FindTool("mysql") is not null,
+            mysqldumpPath  = FindTool("mysqldump"),
+            mysqlPath      = FindTool("mysql"),
+        });
+    }
 
     // ── scheduled auto-backup ────────────────────────────────────────────────
 

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="الديوان الإلكتروني">
+  <!-- Three sheets seen in isometric, the middle one amber. Drawn as vector rather than a scaled
+       bitmap: the whole point of the mark is that it survives 16px in a browser tab. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1E56AD"/><stop offset="1" stop-color="#123C86"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#tile)"/>
+
+  <g transform="translate(32 33) scale(1.12) translate(-32 -33)">
+  <!-- bottom sheet -->
+  <path d="M32 40.5 55 51 32 61.5 9 51Z" fill="#C9D8EE"/>
+  <path d="M32 38 55 48.5 32 59 9 48.5Z" fill="#FFFFFF"/>
+
+  <!-- middle sheet, amber -->
+  <path d="M32 31 55 41.5 32 52 9 41.5Z" fill="#C8820F"/>
+  <path d="M32 28.5 55 39 32 49.5 9 39Z" fill="#F5A623"/>
+
+  <!-- top sheet, with a folded corner and three rule lines -->
+  <path d="M32 21.5 55 32 32 42.5 9 32Z" fill="#C9D8EE"/>
+  <path d="M32 19 55 29.5 32 40 9 29.5Z" fill="#FFFFFF"/>
+  <path d="M44.5 25.2 55 29.5 47.5 33Z" fill="#2C6FD6"/>
+  <g stroke="#1E56AD" stroke-width="2.6" stroke-linecap="round">
+    <path d="M23.5 29.6 30.5 33"/>
+    <path d="M27.5 27.7 34.5 31.1"/>
+    <path d="M31.5 25.8 38.5 29.2"/>
+  </g>
+  </g>
+</svg>

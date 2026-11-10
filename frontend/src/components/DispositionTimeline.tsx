@@ -1,4 +1,5 @@
 import { DISPOSITION_STATUS } from '../lib/disposition'
+import { X, Check } from 'lucide-react'
 
 /** Horizontal stepper: Verification → Final Approval → Done. Highlights the current stage,
  * and turns red if the request was rejected. */
@@ -24,7 +25,7 @@ export default function DispositionTimeline({ status }: { status: number }) {
               <span style={{
                 width: 28, height: 28, borderRadius: '50%', background: color, color: '#fff',
                 display: 'grid', placeItems: 'center', fontSize: '.8rem', fontWeight: 700,
-              }}>{rejected && i === reached ? '✕' : done ? '✓' : i + 1}</span>
+              }}>{rejected && i === reached ? <X size={13} aria-hidden /> : done ? <Check size={13} aria-hidden /> : i + 1}</span>
               <span style={{ fontSize: '.72rem', color: active || done ? 'var(--ink-text,#211d17)' : '#8a8068', whiteSpace: 'nowrap' }}>{label}</span>
             </div>
             {i < steps.length - 1 && (

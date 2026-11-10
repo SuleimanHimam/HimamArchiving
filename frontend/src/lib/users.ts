@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Confidentiality } from './incomingMail'
+import type { Confidentiality } from './shared'
 
 export interface AdminRole { id: number; name: string; description: string | null }
 
@@ -18,6 +18,12 @@ export interface AdminUser {
   isActive: boolean
   roles: string[]
   roleIds: number[]
+  /** The department the user is filed under. */
+  orgUnitId: number | null
+  orgUnitName: string | null
+  /** Further departments the system administrator put them in charge of. */
+  extraOrgUnitIds: number[]
+  extraOrgUnitNames: string[]
 }
 
 export type Gender = 'NotSpecified' | 'Male' | 'Female'
@@ -52,6 +58,29 @@ export interface RolePermissions {
   permissionCodes: string[]
 }
 
+/** One person's permissions, split by where each part comes from. */
+export interface UserPermissions {
+  userId: number
+  fullName: string
+  /** From their roles — the same for everyone holding those roles, and not editable here. */
+  rolePermissionCodes: string[]
+  /** Granted to this person alone, on top of their roles. */
+  extraPermissionCodes: string[]
+  /** What the signed-in caller may add or remove. A head may only pass on what they hold, so this
+   *  is narrower for them than for the administrator; anything outside it renders disabled. */
+  grantableCodes: string[]
+}
+
+/** Sidebar sections hidden for one person. Presentation only — permissions still decide access. */
+export interface UserNavSections {
+  userId: number
+  fullName: string
+  /** Hidden for this person alone. */
+  hidden: string[]
+  /** Hidden institution-wide by the administrator; not editable from the user screen. */
+  hiddenForEveryone: string[]
+}
+
 export const usersApi = {
   list: () => api.get<AdminUser[]>('/users').then((r) => r.data),
   roles: () => api.get<AdminRole[]>('/users/roles').then((r) => r.data),
@@ -68,6 +97,27 @@ export const usersApi = {
 
   resetPassword: (id: number, newPassword: string) =>
     api.post(`/users/${id}/reset-password`, { newPassword }),
+
+  /** Replaces the extra departments this user may act in. System administrator only —
+   *  the server refuses it for anyone else, whatever their permissions. */
+  setDepartments: (id: number, orgUnitIds: number[], note?: string) =>
+    api.put<AdminUser>(`/users/${id}/departments`, { orgUnitIds, note: note ?? null }).then((r) => r.data),
+
+  /** Sidebar sections hidden for one person, plus the ones hidden institution-wide. */
+  getUserNavSections: (id: number) =>
+    api.get<UserNavSections>(`/users/${id}/nav-sections`).then((r) => r.data),
+
+  setUserNavSections: (id: number, hidden: string[]) =>
+    api.put<UserNavSections>(`/users/${id}/nav-sections`, { hidden }).then((r) => r.data),
+
+  /** Permissions granted to one person on top of their roles. */
+  getUserPermissions: (id: number) =>
+    api.get<UserPermissions>(`/users/${id}/permissions`).then((r) => r.data),
+
+  /** Replaces the personal grants. Codes their roles already carry are ignored by the server. */
+  setUserPermissions: (id: number, permissionCodes: string[], note?: string) =>
+    api.put<UserPermissions>(`/users/${id}/permissions`, { permissionCodes, note: note ?? null })
+      .then((r) => r.data),
 
   // Role management
   getRolePermissions: (roleId: number) =>
@@ -93,26 +143,34 @@ export const ROLE_LABELS: Record<string, string> = {
   Employee: 'موظف',
 }
 
+/** Arabic label for a role name, falling back to the raw value for custom roles. */
+export const roleLabel = (name: string | null | undefined): string =>
+  (name && ROLE_LABELS[name]) || name || '—'
+
+// Every resource the server's PermissionCatalog defines. A resource missing from this map still
+// renders (the code falls back to the raw name), but it renders in English and lands in no group,
+// so keep it in step with backend/src/Archiving.Infrastructure/Persistence/PermissionCatalog.cs.
 export const RESOURCE_LABELS: Record<string, string> = {
+  Correspondence: 'المراسلات (الديوان والداخلي)',
   Documents:      'الوثائق',
-  IncomingMail:   'البريد الوارد',
-  OutgoingMail:   'البريد الصادر',
-  Workflow:       'سير العمل',
-  Archive:        'الأرشيف المادي',
-  Reports:        'التقارير',
-  Audit:          'سجل المراقبة',
-  Users:          'المستخدمون',
-  Organization:   'الهيكل التنظيمي',
-  Classification: 'التصنيف السري',
-  Preservation:   'سياسات الحفظ',
-  Backup:         'النسخ الاحتياطي',
-  Scanner:        'الأجهزة (طابعة / ماسح)',
-  CustomFields:   'الحقول المخصصة',
   Notes:          'الملاحظات',
   Export:         'التصدير',
-  TableColumns:   'تخصيص أعمدة الجداول',
+  Archive:        'الأرشيف المادي',
+  Preservation:   'سياسات الحفظ',
+  Disposition:    'التخلص من السجلات',
   Destruction:    'الإتلاف',
   LegalHold:      'الحجز القانوني',
+  Workflow:       'سير العمل والتصعيد',
+  Audit:          'سجل المراقبة',
+  Users:          'المستخدمون والأدوار',
+  Organization:   'الهيكل التنظيمي والجهات',
+  PrintDesign:    'تصاميم الطباعة (الترويسات)',
+  Settings:       'إعدادات النظام',
+  Classification: 'التصنيف السري',
+  CustomFields:   'الحقول المخصصة',
+  TableColumns:   'تخصيص أعمدة الجداول',
+  Scanner:        'الأجهزة (طابعة / ماسح)',
+  Backup:         'النسخ الاحتياطي',
 }
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -129,11 +187,14 @@ export const ACTION_LABELS: Record<string, string> = {
 // Logical display order for action columns
 export const ACTION_ORDER = ['View', 'Create', 'Edit', 'Delete', 'Approve', 'Forward', 'Print', 'Archive']
 
-// Resource groups — controls section headings, row order, and per-section column labels
+// Resource groups — controls section headings, row order, and per-section column labels.
+// The four groups together must cover every key in RESOURCE_LABELS: RolesAdmin renders rows
+// group by group, so a resource listed in none of them is invisible in the matrix and can
+// never be granted, however faithfully the server enforces it.
 export const RESOURCE_GROUPS: { label: string; resources: string[]; actionLabels: Record<string, string> }[] = [
   {
     label: 'المراسلات والوثائق',
-    resources: ['IncomingMail', 'OutgoingMail', 'Documents', 'Workflow', 'Notes', 'Export'],
+    resources: ['Correspondence', 'Documents', 'Notes', 'Export'],
     actionLabels: {
       View:    'استعراض',
       Create:  'تسجيل',
@@ -146,11 +207,25 @@ export const RESOURCE_GROUPS: { label: string; resources: string[]; actionLabels
     },
   },
   {
-    label: 'الحفظ والرقابة',
-    resources: ['Archive', 'Reports', 'Audit', 'LegalHold', 'Destruction'],
+    label: 'الحفظ والتخلص من السجلات',
+    resources: ['Archive', 'Preservation', 'Disposition', 'Destruction', 'LegalHold'],
     actionLabels: {
       View:    'استعراض',
       Create:  'إدراج',
+      Edit:    'تعديل',
+      Delete:  'حذف',
+      Approve: 'اعتماد',
+      Forward: 'مشاركة',
+      Print:   'طباعة',
+      Archive: 'حفظ',
+    },
+  },
+  {
+    label: 'الرقابة والحوكمة',
+    resources: ['Workflow', 'Audit'],
+    actionLabels: {
+      View:    'استعراض',
+      Create:  'إنشاء',
       Edit:    'تعديل',
       Delete:  'حذف',
       Approve: 'مراجعة',
@@ -161,7 +236,7 @@ export const RESOURCE_GROUPS: { label: string; resources: string[]; actionLabels
   },
   {
     label: 'إدارة النظام',
-    resources: ['Users', 'Organization', 'Classification', 'Preservation', 'Backup', 'Scanner', 'CustomFields', 'TableColumns'],
+    resources: ['Users', 'Organization', 'PrintDesign', 'Letterhead', 'Settings', 'Classification', 'CustomFields', 'TableColumns', 'Scanner', 'Backup'],
     actionLabels: {
       View:    'استعراض',
       Create:  'إنشاء',

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Archiving.LicenseGen</RootNamespace>
+    <AssemblyName>licensegen</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The two files that define the licence format and the machine fingerprint, shared with the
+         product by link rather than by copy: generator and verifier can never drift apart. A project
+         reference is avoided on purpose — this tool must not drag EF Core and the rest of the server
+         onto a vendor-side machine. -->
+    <Compile Include="..\..\backend\src\Archiving.Infrastructure\Licensing\LicenseToken.cs"
+             Link="LicenseToken.cs" />
+    <Compile Include="..\..\backend\src\Archiving.Infrastructure\Licensing\MachineFingerprint.cs"
+             Link="MachineFingerprint.cs" />
+  </ItemGroup>
+
+</Project>

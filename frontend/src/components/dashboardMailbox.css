@@ -1,0 +1,125 @@
+/* Inline dashboard mailbox — folder picker, search, compact table. */
+
+.dmb {
+  background: var(--brand-surface, var(--m-surface));
+  border: 1px solid var(--m-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-block-end: 16px;
+}
+
+.dmb__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-block-end: 1px solid var(--m-border);
+}
+
+.dmb__folder {
+  block-size: 32px;
+  padding-inline: 10px;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--m-text);
+  background: var(--m-surface-2);
+  border: 1px solid var(--m-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dmb__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 32px;
+  padding-inline: 10px;
+  background: var(--m-surface-2);
+  border: 1px solid var(--m-border);
+  border-radius: 6px;
+}
+.dmb__search svg { inline-size: 15px; block-size: 15px; color: var(--m-text-3); flex: none; }
+.dmb__search input {
+  flex: 1;
+  min-inline-size: 0;
+  font-family: inherit;
+  font-size: 0.84rem;
+  color: var(--m-text);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.dmb__scroll { overflow-x: auto; }
+
+.dmb__table { inline-size: 100%; border-collapse: collapse; font-size: 0.82rem; }
+
+.dmb__table th {
+  padding: 8px 12px;
+  text-align: start;
+  font-weight: 600;
+  color: var(--m-text-3);
+  background: var(--m-surface-2);
+  white-space: nowrap;
+}
+
+.dmb__table td {
+  padding: 9px 12px;
+  color: var(--m-text);
+  border-block-start: 1px solid var(--m-border);
+  vertical-align: middle;
+}
+
+.dmb__table tbody tr { transition: background var(--t-fast, 140ms) var(--ease, ease); }
+.dmb__table tbody tr:hover { background: var(--m-surface-2); }
+
+/* Registry numbers and dates stay Latin-digit and LTR-ordered. */
+.dmb__num { direction: ltr; text-align: start; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.dmb__subj { max-inline-size: 26ch; }
+.dmb__subj a {
+  color: var(--m-text);
+  text-decoration: none;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dmb__subj a:hover { color: var(--m-primary); text-decoration: underline; }
+
+.dmb__party { color: var(--m-text-2); max-inline-size: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.dmb__c { text-align: center; }
+.dmb__ico { inline-size: 15px; block-size: 15px; display: inline-block; vertical-align: middle; }
+.dmb__ico--read { color: var(--m-text-3); }
+.dmb__ico--unread { color: var(--m-primary); }
+
+.dmb__empty { text-align: center; color: var(--m-text-3); padding-block: 22px; }
+
+.dmb__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 14px;
+  font-size: 0.78rem;
+  color: var(--m-text-3);
+  border-block-start: 1px solid var(--m-border);
+}
+
+.dmb__pager { display: flex; gap: 6px; }
+.dmb__pager button {
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--m-text);
+  background: var(--m-surface-2);
+  border: 1px solid var(--m-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dmb__pager button:disabled { opacity: 0.42; cursor: default; }
+.dmb__pager button:not(:disabled):hover { background: var(--m-accent-soft); }

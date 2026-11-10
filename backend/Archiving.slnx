@@ -4,6 +4,7 @@
     <Project Path="src/Archiving.Application/Archiving.Application.csproj" />
     <Project Path="src/Archiving.Domain/Archiving.Domain.csproj" />
     <Project Path="src/Archiving.Infrastructure/Archiving.Infrastructure.csproj" />
+    <Project Path="src/Archiving.Migrations.SqlServer/Archiving.Migrations.SqlServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Archiving.Tests/Archiving.Tests.csproj" />

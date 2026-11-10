@@ -12,6 +12,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <!-- Reads generated letters back so the golden-PDF test can prove the Arabic actually
+         rendered, rather than only that bytes were produced. -->
+    <PackageReference Include="PdfPig" Version="0.1.14" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>

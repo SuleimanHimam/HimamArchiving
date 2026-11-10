@@ -13,6 +13,11 @@ export interface ResolvedCol { key: string; label: string; visible: boolean }
 // Registry of customizable tables → their columns (in default order).
 export const TABLE_DEFS: Record<string, ColDef[]> = {
   documents: [
+    // The registered number leads the row, as it does in الوارد and الصادر. It is what a
+    // document is referred to by on paper and in conversation, so a register that opens on the
+    // title alone makes people open rows just to read back the number they were given.
+    { key: 'documentNumber', label: 'رقم الوثيقة' },
+    { key: 'fileType', label: 'الملف' },
     { key: 'title', labelKey: 'documents.columns.title' },
     { key: 'type', labelKey: 'documents.columns.type' },
     { key: 'confidentiality', labelKey: 'documents.columns.confidentiality' },
@@ -20,7 +25,6 @@ export const TABLE_DEFS: Record<string, ColDef[]> = {
     { key: 'location', labelKey: 'documents.columns.location' },
     { key: 'date', labelKey: 'documents.columns.date' },
     // Extra data fields (off by default):
-    { key: 'documentNumber', label: 'رقم الوثيقة', defaultHidden: true },
     { key: 'documentDate', label: 'تاريخ الوثيقة', defaultHidden: true },
     { key: 'version', label: 'الإصدار', defaultHidden: true },
     { key: 'box', label: 'رقم الصندوق', defaultHidden: true },

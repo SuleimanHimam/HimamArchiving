@@ -77,11 +77,11 @@
 
 /* Scanner section — brass accent */
 .dev-scanner .dev-section__head {
-  background: rgba(176,137,45,.09);
-  border-bottom: 1px solid rgba(176,137,45,.2);
+  background: rgba(46,150,204,.09);
+  border-bottom: 1px solid rgba(46,150,204,.2);
 }
 .dev-scanner .dev-section__icon { color: var(--brass); }
-.dev-scanner .dev-section__count { background: rgba(176,137,45,.18); color: var(--brass); }
+.dev-scanner .dev-section__count { background: rgba(46,150,204,.18); color: var(--brass); }
 
 /* Printer section — ink/seal accent */
 .dev-printer .dev-section__head {
@@ -123,7 +123,7 @@
 }
 .dev-item:hover:not(.is-readonly) { border-color: var(--brass); }
 .dev-item.is-readonly { cursor: default; opacity: .8; }
-.dev-item.is-active { background: rgba(176,137,45,.07); }
+.dev-item.is-active { background: rgba(46,150,204,.07); }
 
 /* Active border by type */
 .dev-scanner .dev-item.is-active { border-color: var(--brass); }
@@ -193,3 +193,27 @@
 /* ── Spinner animation ── */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin .8s linear infinite; display: inline-block; }
+
+/* ── Acquisition defaults ────────────────────────────────────────────────────
+   A compact grid of selects rather than a full form: these are per-browser device
+   preferences, not saved records, so every change applies immediately. */
+.dev-scanprefs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 14px;
+  margin-block-start: 14px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--m-border, #e5e7eb);
+  border-radius: 12px;
+}
+.dev-scanprefs legend { padding-inline: 6px; font-size: .82rem; font-weight: 700; color: var(--m-text-2, #4b5563); }
+.dev-scanprefs label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--m-text-2, #4b5563); }
+.dev-scanprefs select {
+  block-size: 36px; padding-inline: 8px; font: inherit; font-size: .85rem;
+  color: var(--m-text, #111827); background: var(--m-surface, #fff);
+  border: 1px solid var(--m-border, #e5e7eb); border-radius: 8px;
+}
+.dev-scanprefs__check { flex-direction: row; align-items: center; gap: 8px; align-self: end; padding-block-end: 8px; }
+.dev-scanprefs__check input { inline-size: 16px; block-size: 16px; }
+.dev-scanprefs__note { grid-column: 1 / -1; margin: 0; font-size: .76rem; color: var(--m-text-3, #6b7280); }
+.dev-scanprefs:disabled { opacity: .6; }

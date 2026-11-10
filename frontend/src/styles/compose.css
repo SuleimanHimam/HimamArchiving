@@ -1,0 +1,641 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   Compose form (internal / diwan) — redesigned RTL enterprise layout.
+   Scoped under `.cx`. HDS accent palette is absolute (reads on light + dark);
+   surfaces/ink resolve to app theme tokens so dark mode keeps working.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.cx {
+  /* HDS accents — deliberately absolute */
+  --hds-teal: #1AA8B8;
+  --hds-teal-strong: #12808c;
+  --hds-teal-soft: color-mix(in srgb, #1AA8B8 12%, transparent);
+  --hds-req: #C0345E;
+  /* Was #7B2D6E. The mark carries two colours — blue and amber — and a plum action bar at the
+     top of every Diwan compose read as a different product. The token name is kept so the
+     accents below (scan buttons, kickers) move with it. */
+  --hds-purple: #1B4C9E;
+  --hds-purple-soft: color-mix(in srgb, #1B4C9E 14%, transparent);
+
+  /* Surfaces / ink — themed so dark mode is preserved */
+  --cx-ink: var(--m-text);
+  --cx-label: color-mix(in srgb, var(--m-text) 45%, transparent);
+  --cx-line: var(--m-border);
+  --cx-surface: var(--m-surface);
+  --cx-sec-bg: color-mix(in srgb, var(--m-text) 3%, var(--m-surface)); /* ≈ #f8f9fa on light */
+
+  max-inline-size: 980px;
+  margin-inline: auto;
+  /* Fill the content frame so the compose fits the screen without a page scroll */
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Tab bar (whole-form tabs: only the active panel shows) ─────────────────── */
+.cx-tabs {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  padding: 4px; margin-block-end: 14px;
+  background: var(--cx-sec-bg);
+  border: 1px solid var(--cx-line); border-radius: 12px;
+}
+.cx-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border: 0; border-radius: 9px;
+  background: transparent; color: var(--m-text-2);
+  font: inherit; font-weight: 600; font-size: .9rem; cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.cx-tab:hover { background: color-mix(in srgb, var(--cx-ink) 5%, transparent); }
+.cx-tab[data-on='true'] { background: var(--hds-teal); color: #fff; }
+.cx-tab__count {
+  min-inline-size: 18px; padding: 0 6px; border-radius: 999px;
+  font-size: .68rem; font-weight: 700; line-height: 1.5;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+}
+
+/* Quick-action buttons inside the details tab (attach / scan without switching) */
+.cx-quick { display: flex; gap: 8px; flex-wrap: wrap; margin-block-end: 14px; }
+.cx-quick--bottom { margin-block: 12px 0; }
+.cx-quick__btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1px solid var(--hds-teal); border-radius: 9px;
+  background: var(--cx-surface); color: var(--hds-teal-strong);
+  font: inherit; font-weight: 600; font-size: .86rem; cursor: pointer;
+  transition: background-color .15s ease;
+}
+.cx-quick__btn:hover { background: var(--hds-teal-soft); }
+.cx-quick__btn--scan { border-color: var(--hds-purple); color: var(--hds-purple); }
+.cx-quick__btn--scan:hover { background: var(--hds-purple-soft); }
+
+/* Panel area fills the remaining height; content scrolls inside if it must */
+.cx-tabwrap { flex: 1 1 auto; min-block-size: 0; display: flex; flex-direction: column; }
+.cx-tabpane { flex: 1 1 auto; min-block-size: 0; overflow: auto; }
+/* Extra block-start room: the floated caption straddles the field's top border and
+   pokes ~9px above it, so 2px of padding leaves the first row crowding the bar above. */
+.cx-tabpane--pad { padding: 2px; padding-block-start: 16px; }
+/* Editor pane: no scroll — the editor itself flexes to fill, footer sits below */
+.cx-tabpane--editor { overflow: hidden; display: flex; flex-direction: column; }
+.cx-tabpane--editor .cx-editor { flex: 1 1 auto; min-block-size: 0; block-size: auto; resize: none; }
+
+/* Combined pane (data + content): fields keep their height, the editor fills the
+   rest so the whole page fits the screen without scrolling */
+.cx-tabpane--fill { overflow: hidden; display: flex; flex-direction: column; }
+.cx-tabpane--fill .cx-editor { flex: 1 1 auto; min-block-size: 140px; block-size: auto; resize: none; }
+.cx-tabpane--fill .cx-inline-legend { margin-block: 12px 8px; }
+
+/* ── Sticky top bar ─────────────────────────────────────────────────────────── */
+.cx-topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 14px 20px;
+  margin-block-end: 16px;
+  background: color-mix(in srgb, var(--cx-surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--cx-line);
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .06);
+}
+.cx-topbar__lead { min-inline-size: 0; }
+.cx-kicker { font-size: .72rem; font-weight: 600; letter-spacing: .04em; color: var(--hds-purple); }
+.cx-title { font-size: 1.25rem; font-weight: 700; color: var(--cx-ink); margin-block: 2px 0; line-height: 1.2; }
+
+.cx-topbar__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+.cx-autosave {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .76rem; color: var(--hds-teal-strong);
+  grid-column: 1 / -1;
+}
+.cx-autosave::before { content: '✓'; font-weight: 700; }
+
+/* Progress row spans the full bar width */
+.cx-progress {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 10px;
+}
+.cx-progress__track {
+  flex: 1; block-size: 6px; border-radius: 999px;
+  background: color-mix(in srgb, var(--cx-ink) 10%, transparent);
+  overflow: hidden;
+}
+.cx-progress__fill {
+  block-size: 100%; border-radius: inherit;
+  background: linear-gradient(90deg, var(--hds-teal), var(--hds-purple));
+  transition: inline-size .4s var(--ease, ease);
+}
+.cx-progress__label { font-size: .74rem; font-weight: 600; color: var(--cx-label); min-inline-size: 5.5ch; text-align: end; }
+
+/* ── Buttons (teal primary) ─────────────────────────────────────────────────── */
+.cx .btn-primary { background: var(--hds-teal); border-color: var(--hds-teal); color: #fff; }
+.cx .btn-primary:hover:not(:disabled) { background: var(--hds-teal-strong); border-color: var(--hds-teal-strong); }
+.cx .btn-primary:disabled { opacity: .55; }
+
+/* ── Sections ───────────────────────────────────────────────────────────────── */
+.cx-body { display: flex; flex-direction: column; gap: 14px; }
+
+.cx-sec {
+  border: 1px solid var(--cx-line);
+  border-radius: 14px;
+  background: var(--cx-surface);
+  overflow: hidden;
+}
+.cx-sec__head {
+  inline-size: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px;
+  background: var(--cx-sec-bg);
+  border: 0; border-block-end: 1px solid transparent;
+  font: inherit; text-align: start; cursor: pointer;
+  transition: border-color .2s ease;
+}
+.cx-sec[data-open='true'] .cx-sec__head { border-block-end-color: var(--cx-line); }
+
+.cx-sec__icon {
+  inline-size: 30px; block-size: 30px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: 9px; font-size: 1rem;
+  color: var(--hds-purple);
+  background: var(--hds-purple-soft);
+}
+.cx-sec__title { font-size: 15px; font-weight: 600; color: var(--cx-ink); }
+
+.cx-sec__count {
+  min-inline-size: 20px; padding: 1px 8px; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; line-height: 1.6;
+  color: var(--hds-teal-strong); background: var(--hds-teal-soft);
+}
+.cx-sec__req {
+  font-size: .74rem; font-weight: 600; color: var(--hds-req);
+  padding: 2px 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--hds-req) 10%, transparent);
+}
+.cx-sec__check {
+  inline-size: 20px; block-size: 20px; display: grid; place-items: center;
+  border-radius: 999px; font-size: .72rem; font-weight: 800;
+  color: #fff; background: var(--hds-teal);
+}
+.cx-sec__spacer { margin-inline-start: auto; }
+.cx-sec__arrow {
+  font-size: 1rem; color: var(--cx-label); transition: transform .2s ease;
+  transform: rotate(-90deg);
+}
+.cx-sec[data-open='true'] .cx-sec__arrow { transform: rotate(0deg); }
+
+.cx-sec__body { padding: 20px 24px; }
+
+/* ── Fields ─────────────────────────────────────────────────────────────────── */
+.cx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+.cx-grid .cx-field--wide { grid-column: 1 / -1; }
+
+.cx-field { display: flex; flex-direction: column; gap: 4px; min-inline-size: 0; }
+.cx-field > .cx-lbl { font-size: 12px; color: var(--cx-label); margin-block-end: 4px; font-weight: 500; }
+.cx-req { color: var(--hds-req); margin-inline-start: 2px; }
+
+/* Inputs styled to match the documents forms (LabeledInput family): 48px tall,
+   rounded-lg, neutral --color-input border, white/ink surface, ink focus ring. */
+.cx-field input,
+.cx-field select,
+.cx-field .ss__input {
+  box-sizing: border-box;
+  block-size: 2.9rem;               /* room for a clear gap between caption and value; rem so the label math holds (1rem=14px here) */
+  inline-size: 100%;
+  padding-inline: 0.75rem;
+  padding-block-start: 1rem;        /* pushes the value well below the floated caption */
+  padding-block-end: 0.25rem;
+  border: 1px solid var(--color-input);
+  border-radius: 0.85rem;           /* more rounded */
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);   /* shadow-sm */
+  transition: border-color .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s cubic-bezier(.2, .8, .2, 1);
+}
+.cx-field input:focus,
+.cx-field select:focus,
+.cx-field .ss__input:focus {
+  outline: none;
+  border-color: var(--color-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ring) 20%, transparent);
+}
+
+/* ── Floating label ──────────────────────────────────────────────────────────
+   Label rests over the control when empty; floats to a caption on the border
+   when focused or filled. Text inputs use :placeholder-shown (so the input keeps
+   an empty " " placeholder); selects / date / search controls float always. */
+.cx-field { position: relative; }
+.cx-fl {
+  position: absolute; inset-block-start: 50%; inset-inline-start: 0.5rem;
+  transform: translateY(-50%) scale(1); transform-origin: left center;
+  pointer-events: none; padding-inline: 0.25rem; z-index: 1;
+  font-size: 0.875rem; font-weight: 500;
+  color: color-mix(in srgb, var(--color-muted-foreground) 70%, transparent);
+  background: var(--color-background); border-radius: 6px;
+  max-inline-size: calc(100% - 1.25rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  will-change: transform, color;
+  /* GPU-accelerated: animate transform + color only (never inset-block-start/font-size,
+     which reflow every frame and look abrupt). scale(.8) replaces the font-size shrink.
+     The lift overshoots slightly (spring-ish curve) so the caption "settles" onto the
+     border instead of stopping dead; background/shadow ride the same timing. */
+  transition:
+    transform .38s cubic-bezier(.34, 1.4, .64, 1),
+    color .28s ease,
+    background-color .28s ease,
+    box-shadow .28s ease;
+}
+[dir="rtl"] .cx-fl { transform-origin: right center; }
+/* Keep the label micro-animation alive under reduced motion — but drop the overshoot,
+   which is the part that reads as "motion". !important beats the app-wide
+   `* { transition-duration: .001ms !important }` blankets (diwan.css /
+   sanad-registry.css) that otherwise freeze it on desktops with OS animations off. */
+@media (prefers-reduced-motion: reduce) {
+  .cx-fl {
+    transition:
+      transform .22s cubic-bezier(.2, .8, .2, 1),
+      color .2s ease,
+      background-color .2s ease,
+      box-shadow .2s ease !important;
+  }
+}
+.cx-field:focus-within > .cx-fl,
+.cx-field:has(input:not(:placeholder-shown)) > .cx-fl,
+.cx-field:has(textarea:not(:placeholder-shown)) > .cx-fl,
+.cx-field:has(> select) > .cx-fl,
+.cx-field:has(> .ss) > .cx-fl,
+.cx-field:has(> .dpk) > .cx-fl,
+.cx-field:has(> .msel) > .cx-fl {
+  /* Lift by half the field height (2.9rem) so the caption lands ON the top border.
+     MUST be rem to match the rem height — a literal px offset drifts (1rem=14px here). */
+  transform: translateY(calc(-50% - 1.45rem)) scale(.8);
+  font-weight: 600; color: var(--color-foreground);
+  /* Caption reads as a chip seated on the border, not floating text over it. */
+  letter-spacing: .01em;
+  box-shadow: 0 0 0 3px var(--color-background);
+  /* max-inline-size clamps the PRE-transform width, so the resting `100% - 1.25rem`
+     renders at only 0.8x of that once floated — captions ellipsised ~25% early for no
+     reason. Dividing the clamp by the same .8 makes the *painted* width land exactly on
+     `100% - 1.25rem`: long titles show in full, nothing spills past the field. */
+  max-inline-size: calc(125% - 1.5625rem);
+}
+/* Active field: caption picks up the ink accent together with the focus ring, so
+   label and control light up as one interactive unit; filled-but-blurred settles
+   back to the neutral caption above. The tinted pill is opaque (color-mix against
+   --color-background) so it still masks the border it sits on. */
+.cx-field:focus-within > .cx-fl {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-background));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 9%, var(--color-background));
+}
+/* Required marker rides along, staying legible against the tinted pill. */
+.cx-fl .cx-req { transition: color .28s ease; }
+.cx-field:focus-within > .cx-fl .cx-req { color: var(--hds-req); }
+/* Give the control room so the resting label doesn't collide with typed text is
+   unnecessary (label sits above text), but placeholders are blanked to " ". */
+
+/* ── Multi-select inside a compose field ────────────────────────────────────────
+   MultiSearchSelect stacks its chips ABOVE the text input, so the control grows as
+   recipients are added. Left alone the field's caption — anchored to 50% of the
+   field — drifts down into the chips, and the chips sit outside the input's border.
+
+   So the wrapper itself becomes the bordered control (chips and input both live
+   inside it) and the caption is anchored to a fixed offset from the top instead of
+   the centre, keeping it on the top border no matter how many chips wrap. */
+.cx-field .ss--multi {
+  box-sizing: border-box;
+  /* Chips flow ON the typing line rather than in a block above it, so a couple of
+     recipients cost no extra height at all — the control only grows once they wrap. */
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  min-block-size: 2.9rem;                /* matches the plain fields when empty */
+  padding: 0.85rem 0.75rem 0.2rem;       /* block-start clears the floated caption */
+  border: 1px solid var(--color-input);
+  border-radius: 0.85rem;
+  background: var(--color-background);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: border-color .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s cubic-bezier(.2, .8, .2, 1);
+}
+/* `contents` dissolves the chips wrapper so each chip becomes a flex item of the
+   control itself and can share the line with the input. */
+.cx-field .ss--multi .ss__chips { display: contents; }
+.cx-field .ss--multi .ss__chip { font-size: .74rem; padding: 1px 5px 1px 7px; }
+.cx-field .ss--multi:focus-within {
+  border-color: var(--color-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ring) 20%, transparent);
+}
+/* The inner input is now just the typing line — the wrapper carries the chrome. */
+.cx-field .ss--multi .ss__input,
+.cx-field .ss--multi .ss__input:focus {
+  flex: 1 1 6rem;                        /* shares the line with the chips, wraps when tight */
+  inline-size: auto; min-inline-size: 6rem;
+  block-size: auto; min-block-size: 1.35rem;
+  padding: 0; padding-inline-end: 18px;
+  border: 0; border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.cx-field .ss--multi .ss__caret { inset-block-end: 0.6rem; }
+/* Anchor the caption to the collapsed control's mid-line (half of 2.9rem) rather
+   than to 50% of a field whose height changes with every chip. */
+.cx-field:has(> .ss--multi) > .cx-fl { inset-block-start: 1.45rem; }
+
+/* Incomplete required field → teal start-border accent */
+.cx-field.is-incomplete input,
+.cx-field.is-incomplete .ss__input,
+.cx-field.is-incomplete .cx-recip {
+  border-inline-start: 3px solid var(--hds-teal);
+}
+.cx-err { font-size: .74rem; color: var(--hds-req); margin-block-start: 2px; }
+
+/* ── Attachments ────────────────────────────────────────────────────────────── */
+.cx-dz {
+  min-block-size: 120px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 16px;
+  border: 2px dashed color-mix(in srgb, var(--hds-teal) 55%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--hds-teal) 4%, transparent);
+  text-align: center;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.cx-dz.is-drag { border-color: var(--hds-teal); background: var(--hds-teal-soft); }
+.cx-dz__actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cx-dz__btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 9px;
+  border: 1px solid var(--hds-teal);
+  background: var(--cx-surface); color: var(--hds-teal-strong);
+  font: inherit; font-weight: 600; cursor: pointer;
+  transition: background-color .15s ease;
+}
+.cx-dz__btn:hover { background: var(--hds-teal-soft); }
+.cx-dz__btn--scan { border-color: var(--hds-purple); color: var(--hds-purple); }
+.cx-dz__btn--scan:hover { background: var(--hds-purple-soft); }
+.cx-dz__hint { font-size: .78rem; color: var(--cx-label); margin: 0; }
+
+.cx-att-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px; margin-block-start: 12px;
+}
+.cx-att {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px; border: 1px solid var(--cx-line); border-radius: 11px;
+  background: var(--cx-surface);
+}
+.cx-att__thumb {
+  inline-size: 44px; block-size: 44px; flex-shrink: 0;
+  display: grid; place-items: center; overflow: hidden;
+  border-radius: 8px; font-size: 1.2rem;
+  background: color-mix(in srgb, var(--cx-ink) 6%, transparent);
+}
+.cx-att__thumb img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.cx-att__thumb[data-kind='pdf'] { background: color-mix(in srgb, #c0392b 14%, transparent); }
+.cx-att__thumb[data-kind='doc'] { background: color-mix(in srgb, #2b6cb0 14%, transparent); }
+.cx-att__thumb[data-kind='xls'] { background: color-mix(in srgb, #276749 14%, transparent); }
+.cx-att__meta { min-inline-size: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.cx-att__name { font-size: .82rem; font-weight: 500; color: var(--cx-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cx-att__badges { display: flex; align-items: center; gap: 6px; }
+.cx-att__badge {
+  font-size: .64rem; font-weight: 700; letter-spacing: .03em;
+  padding: 1px 6px; border-radius: 5px;
+  color: var(--hds-purple); background: var(--hds-purple-soft);
+}
+.cx-att__size { font-size: .7rem; color: var(--cx-label); }
+.cx-att__x {
+  inline-size: 24px; block-size: 24px; flex-shrink: 0; border: 0; border-radius: 7px;
+  background: transparent; color: var(--hds-req); cursor: pointer; font-size: .85rem;
+}
+.cx-att__x:hover { background: color-mix(in srgb, var(--hds-req) 12%, transparent); }
+
+/* ── Recipients ─────────────────────────────────────────────────────────────── */
+.cx-recip { display: flex; flex-direction: column; gap: 8px; }
+.cx-recip__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.cx-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .74rem; font-weight: 600;
+  padding: 3px 10px; border-radius: 999px;
+}
+.cx-tag--to  { color: var(--hds-teal-strong); background: var(--hds-teal-soft); }
+.cx-tag--cc  { color: var(--hds-purple); background: var(--hds-purple-soft); }
+.cx-tag--bcc { color: var(--m-text-2); background: color-mix(in srgb, var(--m-text) 10%, transparent); }
+
+.cx-recip__row { display: flex; gap: 8px; align-items: center; }
+.cx-recip__row .ss { flex: 1; }
+.cx-recip__row select { block-size: 40px; inline-size: auto; min-inline-size: 8.5rem; }
+
+/* Segmented To/CC/BCC toggle */
+.cx-seg { display: inline-flex; border: 1px solid var(--cx-line); border-radius: 9px; overflow: hidden; flex-shrink: 0; }
+.cx-seg button {
+  padding: 0 12px; block-size: 40px; border: 0; background: var(--cx-surface);
+  color: var(--m-text-2); font: inherit; font-weight: 600; font-size: .8rem; cursor: pointer;
+  border-inline-start: 1px solid var(--cx-line);
+}
+.cx-seg button:first-child { border-inline-start: 0; }
+.cx-seg button[data-on='true'][data-addr='to']  { background: var(--hds-teal); color: #fff; }
+.cx-seg button[data-on='true'][data-addr='cc']  { background: var(--hds-purple); color: #fff; }
+.cx-seg button[data-on='true'][data-addr='bcc'] { background: var(--m-text-2); color: var(--m-surface); }
+
+.cx-recip__x {
+  inline-size: 40px; block-size: 40px; flex-shrink: 0; border: 1px solid var(--cx-line);
+  border-radius: 9px; background: var(--cx-surface); color: var(--hds-req); cursor: pointer;
+}
+.cx-recip__x:hover { background: color-mix(in srgb, var(--hds-req) 10%, transparent); }
+.cx-recip__add {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1px dashed var(--hds-teal); border-radius: 9px;
+  background: transparent; color: var(--hds-teal-strong); font: inherit; font-weight: 600; cursor: pointer;
+}
+.cx-recip__add:hover { background: var(--hds-teal-soft); }
+.cx-recip__hint { font-size: .76rem; color: var(--cx-label); margin: 2px 0 0; }
+
+/* ── Rich-text editor: single-row sticky toolbar, resizable, tall ───────────── */
+.cx-editor {
+  --rte-canvas-max: none;
+  display: flex; flex-direction: column;
+  block-size: 460px; min-block-size: 400px;
+  resize: vertical; overflow: hidden;
+  border-radius: 12px;
+}
+.cx-editor .rte { flex: 1; min-block-size: 0; border-radius: 12px 12px 0 0; }
+/* Collapse the ribbon to one horizontally-scrollable, sticky row */
+.cx-editor .rte__ribbon { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+/* Hide the editor's built-in status strip; we show our own footer below */
+.cx-editor .rte__status { display: none; }
+
+.cx-editor__foot {
+  display: flex; align-items: center; gap: 14px;
+  padding: 7px 14px;
+  border: 1px solid var(--cx-line); border-block-start: 0;
+  border-radius: 0 0 12px 12px;
+  background: var(--cx-sec-bg);
+  font-size: .74rem; color: var(--cx-label);
+}
+.cx-editor__foot b { color: var(--cx-ink); font-weight: 700; }
+
+.cx-error { color: var(--hds-req); font-size: .82rem; margin: 4px 0 0; }
+.cx-scanmsg { color: var(--m-text-2); font-size: .82rem; margin: 4px 0 0; }
+
+/* Inline section heading when panes are combined (data + content together) */
+.cx-inline-legend {
+  display: flex; align-items: center; gap: 8px;
+  margin: 18px 0 10px; padding-block-end: 6px;
+  border-block-end: 1px solid var(--cx-line);
+  font-size: 14px; font-weight: 700; color: var(--cx-ink);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Full-page variant (Diwan) — flat, dense, edge-to-edge on every screen.
+   ════════════════════════════════════════════════════════════════════════════ */
+.cx--full { max-inline-size: none; margin-inline: 0; }
+
+/* Solid colored action bar — echoes the reference outgoing-mail header */
+.cx-bar {
+  position: sticky; inset-block-start: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 11px 18px; margin-block-end: 16px;
+  background: var(--hds-purple); color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .12);
+}
+/* Internal correspondence is teal-barred so it reads apart from the Diwan (external)
+   register at a glance. Only the bar changes — the accents inside the form are shared. */
+.cx--internal .cx-bar { background: var(--hds-teal); }
+
+.cx-bar__title { display: flex; align-items: center; gap: 10px; min-inline-size: 0; }
+.cx-bar__title h1 { font-size: 1.1rem; font-weight: 700; color: #fff; margin: 0; line-height: 1.2; }
+.cx-bar__icon { font-size: 1.15rem; opacity: .9; }
+.cx-bar__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.cx-bar__btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px; border: 0;
+  font: inherit; font-weight: 600; font-size: .86rem; cursor: pointer;
+  background: rgba(255, 255, 255, .16); color: #fff; transition: background-color .15s ease;
+}
+.cx-bar__btn:hover { background: rgba(255, 255, 255, .28); }
+.cx-bar__btn--exit { background: rgba(0, 0, 0, .2); }
+.cx-bar__btn--exit:hover { background: rgba(0, 0, 0, .34); }
+.cx-bar__btn--add { background: #1E9E63; }
+.cx-bar__btn--add:hover { background: #17864f; }
+.cx-bar__btn:disabled { opacity: .6; cursor: default; }
+
+/* Flat panel with a colored tab label (البريد الصادر / المحتوى / المرفقات) */
+.cx-panel { border: 1px solid var(--cx-line); border-radius: 12px; background: var(--cx-surface); overflow: hidden; }
+.cx-panel + .cx-panel { margin-block-start: 14px; }
+.cx-panel__head {
+  display: flex; align-items: flex-end; gap: 6px;
+  padding: 0 14px; background: var(--cx-sec-bg); border-block-end: 1px solid var(--cx-line);
+}
+.cx-panel__tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; margin-block-end: -1px;
+  font-size: 14px; font-weight: 700; color: #fff;
+  background: var(--hds-teal); border-radius: 8px 8px 0 0;
+}
+.cx-panel__tab .cx-panel__ic { opacity: .9; }
+.cx-panel__body { padding: 18px 20px; }
+
+/* Dense auto-fitting grid: many columns on wide screens, collapses gracefully */
+.cx-grid--auto { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.cx-grid .cx-field--2 { grid-column: span 2; }
+.cx-grid--auto .cx-field--2 { grid-column: span 2; }
+
+/* ── Two rows (internal compose) ────────────────────────────────────────────────
+   Row 1 = the recipient pickers, row 2 = subject + reply-due date. The recipient
+   grid auto-fits, so revealing BCC widens the row into three columns rather than
+   pushing the form onto a third row. */
+.cx-rows { display: flex; flex-direction: column; gap: 14px; }
+.cx-rows__recips {
+  display: grid; gap: 14px; align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.cx-rows__split { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+@media (max-width: 720px) { .cx-rows__split { grid-template-columns: 1fr; } }
+
+/* Reveal-BCC link — deliberately a thin link, not a row, so the form still reads
+   as two rows of fields. Pulled tight against the recipients above it. */
+.cx-bcc-toggle {
+  align-self: flex-start;
+  margin-block-start: -8px;
+  border: 0; background: transparent; padding: 0;
+  font: inherit; font-size: .75rem; font-weight: 600; line-height: 1;
+  color: var(--hds-teal-strong); cursor: pointer;
+}
+.cx-bcc-toggle:hover { text-decoration: underline; }
+
+/* Internal compose fits the viewport — fields, editor and attachments are all
+   visible without scrolling. The pane stops scrolling and becomes the flex
+   context; the editor is the only elastic part, absorbing whatever height the
+   fixed rows above and the attachments below leave over. */
+.cx--internal .cx-tabpane {
+  /* `auto`, not `hidden`: the elastic editor absorbs the slack so nothing scrolls in
+     the normal case, but content that genuinely cannot fit — many wrapped recipient
+     chips, a very short window — stays reachable instead of being clipped away. */
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.cx--internal .cx-editor {
+  flex: 1 1 auto;
+  block-size: auto;
+  min-block-size: 120px;   /* still a usable writing area on short screens */
+  resize: none;
+}
+/* Headings, hint and the attachments card keep their natural height and never
+   shrink into illegibility. */
+.cx--internal .cx-inline-legend,
+.cx--internal .cx-editor__foot,
+.cx--internal .cx-recip__hint { flex: 0 0 auto; }
+.cx--internal .cx-rows { flex: 0 0 auto; }
+
+/* Short screens (laptops at 720–780px): the editor alone cannot give back enough
+   height, so the surrounding chrome tightens too — section headings lose most of
+   their margin and the internal-only hint is dropped. */
+@media (max-height: 800px) {
+  .cx--internal .cx-inline-legend { margin: 8px 0 6px; padding-block-end: 4px; }
+  .cx--internal .cx-recip__hint { display: none; }
+  .cx--internal .cx-editor__foot { padding: 4px 12px; }
+  .cx--internal .cx-editor { min-block-size: 100px; }
+}
+
+/* Inline checkbox field */
+.cx-check { flex-direction: row; align-items: center; gap: 8px; }
+.cx-check input { inline-size: 18px; block-size: 18px; accent-color: var(--hds-teal); }
+.cx-check .cx-lbl { margin: 0; }
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .cx-grid:not(.cx-grid--auto) { grid-template-columns: 1fr; }
+  .cx-topbar { grid-template-columns: 1fr; }
+  .cx-topbar__actions { justify-content: flex-start; }
+  .cx-sec__body, .cx-panel__body { padding: 16px; }
+  .cx-grid .cx-field--2, .cx-grid--auto .cx-field--2 { grid-column: 1 / -1; }
+  /* The auto-fit grid keeps two ~210px tracks down to ~460px, which squeezes Arabic
+     captions into ellipses. Below that it is one field per row. */
+  .cx-grid--auto { grid-template-columns: 1fr; }
+  /* A 460px fixed editor plus the field grid does not fit a phone screen — it pushed
+     the send bar far below the fold. */
+  .cx-editor { block-size: 300px; min-block-size: 220px; }
+  /* The action bar is the only way to send or leave: it wraps instead of clipping,
+     and the buttons spread across the width rather than crowding one end. */
+  .cx-bar { flex-wrap: wrap; padding: 10px 12px; }
+  .cx-bar__actions { flex: 1 1 100%; justify-content: flex-start; }
+  .cx-bar__btn { flex: 1 1 auto; justify-content: center; }
+  .cx-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .cx-tabs::-webkit-scrollbar { display: none; }
+  .cx-tab { flex-shrink: 0; }
+  .cx-tab--action { margin-inline-start: 0; }
+  /* Recipient row: the To/CC/BCC toggle and the remove button keep their size, the
+     picker takes the rest of a second line instead of being crushed to a few pixels. */
+  .cx-recip__row { flex-wrap: wrap; }
+  .cx-recip__row .ss { flex: 1 1 100%; order: -1; }
+}
+
+/* A tab-shaped action (design picker): sits with the tabs but never becomes "selected". */
+.cx-tab--action { margin-inline-start: auto; opacity: .85; }
+.cx-tab--action:hover { opacity: 1; }

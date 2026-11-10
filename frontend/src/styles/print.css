@@ -56,7 +56,10 @@
   .print-table thead { display: table-header-group; } /* repeat header on each page */
   .print-table tr { break-inside: avoid; }
 
-  @page { margin: 18mm 16mm; }
+  /* Zero margin removes the browser's own date/title header and page footer, which are drawn
+     inside the page margin. The margin moves onto the body so the text still sits off the edge. */
+  @page { margin: 0; }
+  body { padding: 18mm 16mm; }
 }
 
 /* The print register is hidden on screen. */

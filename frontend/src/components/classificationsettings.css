@@ -12,7 +12,7 @@
   border: 1.5px dashed var(--brass);
   border-radius: var(--radius-lg);
   padding: .8rem 1rem;
-  background: rgba(176,137,45,.04);
+  background: rgba(46,150,204,.04);
 }
 .clf-new-label {
   display: flex; align-items: center; gap: .4rem;
@@ -174,7 +174,7 @@
 .clf-role-chip input[type="checkbox"] { display: none; }
 .clf-role-chip:hover { border-color: var(--brass); color: var(--brass); }
 .clf-role-chip.is-checked {
-  border-color: var(--brass); background: rgba(176,137,45,.1); color: var(--brass);
+  border-color: var(--brass); background: rgba(46,150,204,.1); color: var(--brass);
   font-weight: 700;
 }
 .clf-role-chip.is-checked::before { content: '✓ '; }

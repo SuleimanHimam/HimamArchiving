@@ -6,7 +6,27 @@ export interface RoomConnection { id: number; roomId: number; connectedRoomId: n
 export interface Cabinet { id: number; roomId: number; roomName: string; nameAr: string; nameEn: string | null; cabinetCode: string | null; shelfCount: number; notes: string | null; isActive: boolean; shelvesActual: number }
 export interface Shelf { id: number; cabinetId: number; cabinetName: string; shelfNumber: string; capacity: number | null; notes: string | null; isActive: boolean; boxCount: number }
 export interface Box { id: number; shelfId: number | null; roomId: number | null; boxCode: string; barcode: string | null; capacity: number | null; currentCount: number; isFull: boolean; notes: string | null; isActive: boolean }
+/** The five levels of the physical hierarchy, from the building down to the box a document sits in. */
+export type LocationKind = 'Building' | 'Room' | 'Cabinet' | 'Shelf' | 'Box'
+export const LOCATION_KIND_LABELS: Record<LocationKind, string> = {
+  Building: 'مبنى', Room: 'غرفة', Cabinet: 'خزانة', Shelf: 'رف', Box: 'صندوق',
+}
+
 export interface TreeNode { id: number; type: string; name: string; code: string | null; children: TreeNode[] }
+
+/** One place per row, depth-first, each carrying the full path to it ("مبنى › غرفة ٣ › ..."),
+ *  so the tree can be offered as a flat list of choices without losing where each one sits. */
+export interface PlaceOption { kind: LocationKind; id: number; name: string; path: string; depth: number }
+
+export function flattenPlaces(nodes: TreeNode[], trail = '', depth = 0): PlaceOption[] {
+  const out: PlaceOption[] = []
+  for (const n of nodes) {
+    const path = trail ? `${trail} › ${n.name}` : n.name
+    out.push({ kind: n.type as LocationKind, id: n.id, name: n.name, path, depth })
+    out.push(...flattenPlaces(n.children, path, depth + 1))
+  }
+  return out
+}
 export interface Breadcrumb { boxId: number; path: string; locationCode: string; parts: string[] }
 export interface LocationAncestry { boxId: number; shelfId: number | null; cabinetId: number | null; roomId: number | null; buildingId: number | null }
 

@@ -1,0 +1,124 @@
+/* Design picker: a grid of cards, each showing the design itself scaled down. */
+
+.dg__lede { max-inline-size: 60ch; margin-block-start: .35rem; }
+
+.dg__headactions { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.dg__headactions .btn { display: inline-flex; align-items: center; gap: .35rem; }
+
+/* Import caveats: what did not survive the trip between systems. */
+.dg__notes {
+  margin-block: .8rem; padding: .6rem .8rem; font-size: .82rem;
+  border-radius: var(--radius, 10px);
+  background: color-mix(in srgb, var(--brass, #C8A24B) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brass, #C8A24B) 35%, transparent);
+}
+.dg__noteshead { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.dg__notes ul { margin: .4rem 0 0; padding-inline-start: 1.1rem; display: flex; flex-direction: column; gap: .2rem; }
+
+/* Tabs + filters ------------------------------------------------------------- */
+.dg__bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .8rem; flex-wrap: wrap; margin-block: .9rem;
+}
+.dg__filters { display: flex; gap: .6rem; flex-wrap: wrap; }
+.dg__filter { display: flex; align-items: center; gap: .4rem; font-size: .82rem; }
+.dg__filter > span { color: var(--text-muted); }
+.dg__filter select {
+  font: inherit; font-size: .84rem; padding: .35rem .5rem;
+  border: 1px solid var(--line); border-radius: var(--radius, 8px);
+  background: var(--surface, #fff); color: var(--text);
+}
+.dg__filter select:disabled { opacity: .55; }
+
+.dg__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.dg__card {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--line); border-radius: var(--radius, 12px);
+  background: var(--surface, #fff);
+  overflow: hidden;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.dg__card:hover { border-color: var(--ink); box-shadow: 0 6px 20px rgb(0 0 0 / .10); }
+
+.dg__card--new {
+  cursor: pointer; align-items: center; justify-content: center; gap: .3rem;
+  min-block-size: 260px; padding: 1rem; text-align: center;
+  border-style: dashed; background: transparent; color: var(--text);
+  font: inherit;
+}
+.dg__card--new:hover { transform: translateY(-2px); }
+.dg__plus { font-size: 1.8rem; color: var(--ink); line-height: 1; }
+.dg__newlabel { font-weight: 700; font-size: .92rem; }
+
+/* Thumbnail ------------------------------------------------------------------ */
+.dg__thumbwrap {
+  display: block; inline-size: 100%; padding: 0; border: 0; cursor: pointer;
+  background: var(--parchment, #eee);
+  border-block-end: 1px solid var(--line);
+}
+
+/* A4 aspect (210×297). The page inside is rendered at full width then scaled, so the
+   proportions match what actually prints instead of a narrow re-flow. */
+.dg__thumb {
+  position: relative; inline-size: 100%; aspect-ratio: 210 / 297;
+  overflow: hidden; background: #fff;
+}
+.dg__page {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  inline-size: 780px;                 /* the width designs are authored against */
+  transform-origin: top right;        /* RTL: the page's leading edge */
+  transform: scale(.29);
+  padding: 18px;
+  font-family: 'Segoe UI', Tahoma, sans-serif; color: #1f2937;
+  pointer-events: none; user-select: none;
+}
+[dir='ltr'] .dg__page { transform-origin: top left; }
+
+.dg__thumb--bad {
+  display: grid; place-items: center; padding: 1rem;
+  color: var(--text-muted); font-size: .78rem; text-align: center;
+}
+
+/* Meta ----------------------------------------------------------------------- */
+.dg__meta { display: flex; flex-direction: column; gap: .3rem; padding: .7rem .8rem; }
+.dg__name {
+  margin: 0; font-size: .92rem; font-weight: 700; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dg__scope { margin: 0; font-size: .74rem; color: var(--text-muted); }
+.dg__actions { display: flex; gap: .35rem; margin-block-start: .35rem; }
+.dg__del { color: var(--seal); }
+
+/* A disabled design still prints nothing, so it is dimmed rather than hidden — it is a design
+   somebody made, and hiding it would look like it was deleted. */
+.dg__card.is-off .dg__thumb, .dg__card.is-off .dg__page { opacity: .5; filter: grayscale(.6); }
+.dg__off {
+  margin-inline-start: .4rem; padding: .05rem .35rem; border-radius: 999px;
+  font-size: .66rem; font-weight: 600; vertical-align: middle;
+  background: var(--parchment-2, #efe7d5); color: var(--text-muted);
+}
+
+/* Full-size preview ----------------------------------------------------------- */
+.dg__previewbox { max-inline-size: min(900px, 94vw); }
+.dg__previewscroll { max-block-size: 76vh; overflow: auto; background: var(--parchment, #eee); padding: 12px; }
+.dg__full { display: flex; justify-content: center; }
+.dg__fullpage {
+  inline-size: 780px; flex: 0 0 auto; padding: 24px; background: #fff;
+  box-shadow: 0 2px 14px rgb(0 0 0 / .18);
+  font-family: 'Segoe UI', Tahoma, sans-serif; color: #1f2937;
+}
+
+/* Owner line: department and user, small and quiet under the scope. */
+.dg__owner { margin: 0; display: flex; flex-wrap: wrap; gap: .3rem; }
+.dg__tag {
+  font-size: .7rem; line-height: 1.6; padding: 0 .4rem;
+  border-radius: 999px; border: 1px solid var(--line);
+  color: var(--text-muted); background: var(--parchment, #f6f2e8);
+  max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

@@ -20,6 +20,7 @@ function routeFor(n: NotificationDto): string | null {
     case 'Workflow': return '/app/workflow'
     case 'Destruction': return '/app/disposition'
     case 'Disposition': return '/app/disposition'
+    case 'Correspondence': return '/app/incoming'
     default: return null
   }
 }
@@ -37,7 +38,7 @@ export default function NotificationBell() {
   const markAll = useMarkAllRead()
 
   const items = list?.items ?? []
-  const locale = i18n.language === 'ar' ? 'ar' : 'en'
+  const locale = i18n.language === 'ar' ? 'ar-u-nu-latn' : 'en'
 
   // Refetch full list whenever panel opens.
   function toggle() {
@@ -64,7 +65,9 @@ export default function NotificationBell() {
   return (
     <div className="bell" ref={ref}>
       <button className="bell__btn" onClick={toggle} title={t('notifications.title')} aria-label={t('notifications.title')}>
-        <span className="bell__icon"><BellDot size={19} strokeWidth={1.75} /></span>
+        {/* strokeWidth 2, matching the other lucide icons in the header — at 1.75
+            the bell rendered visibly lighter than everything beside it. */}
+        <span className="bell__icon"><BellDot size={18} strokeWidth={2} /></span>
         {unread > 0 && <span className="bell__badge">{unread > 99 ? '99+' : unread}</span>}
       </button>
 

@@ -1,4 +1,5 @@
 import { api } from './api'
+import { applyClassificationLabels } from './shared'
 
 export interface ClassificationType {
   id: number
@@ -27,6 +28,21 @@ export const classificationApi = {
   update: (id: number, body: UpsertClassification) => api.put<ClassificationType>(`/classification-types/${id}`, body).then((r) => r.data),
   setRoles: (id: number, roleIds: number[]) => api.put(`/classification-types/${id}/roles`, { roleIds }).then((r) => r.data),
   delete: (id: number) => api.delete(`/classification-types/${id}`),
+}
+
+/** Pulls the admin-managed names into the shared label table. Called once per session by the
+ *  app shell, and again after the settings screen saves, so a rename shows up without a reload.
+ *
+ *  Reads `/labels`, not the full catalogue: the catalogue is behind Classification.View, which
+ *  most staff do not hold, while everyone sees classification badges. */
+export async function syncClassificationLabels(): Promise<boolean> {
+  try {
+    const rows = await api.get<{ nameAr: string; sortOrder: number }[]>('/classification-types/labels')
+    applyClassificationLabels(rows.data)
+    return true
+  } catch {
+    return false   // keep the built-in names; a missing catalogue must not blank every badge
+  }
 }
 
 // Preset colour swatches for the colour picker

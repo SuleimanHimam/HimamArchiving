@@ -19,6 +19,79 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Archiving.Domain.Entities.ArchivedObject", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Algorithm")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("ChecksumSha256")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<int>("ChunkSize")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("KekId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime?>("LastRewrappedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<byte[]>("NoncePrefix")
+                        .HasMaxLength(16)
+                        .HasColumnType("varbinary(16)");
+
+                    b.Property<DateTime?>("ShreddedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("ShreddedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("WrappedDek")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varbinary(1024)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KekId");
+
+                    b.HasIndex("ShreddedAtUtc");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
+
+                    b.ToTable("ArchivedObjects");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")
@@ -52,6 +125,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<string>("IpAddress")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("MachineName")
                         .HasMaxLength(256)
@@ -338,6 +414,120 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("ClassificationTypes");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.ContactChannel", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ContactId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactId");
+
+                    b.ToTable("ContactChannels");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.CorrespondenceGroup", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long>("InstitutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CorrespondenceGroups");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.CorrespondenceGroupMember", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("MemberType")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("OrgUnitId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.ToTable("CorrespondenceGroupMembers");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.CustomFieldDefinition", b =>
                 {
                     b.Property<long>("Id")
@@ -348,6 +538,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DocumentTypeId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("EntityType")
@@ -389,7 +582,11 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DocumentTypeId");
+
                     b.HasIndex("EntityType");
+
+                    b.HasIndex("EntityType", "DocumentTypeId");
 
                     b.HasIndex("EntityType", "FieldKey")
                         .IsUnique();
@@ -439,6 +636,53 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("CustomFieldValues");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DailyMetricSnapshot", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Breakdown")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("InstitutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MetricType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("OrgUnitId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MetricType", "Date");
+
+                    b.ToTable("DailyMetricSnapshots");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.DesignatedCommunity", b =>
@@ -876,10 +1120,310 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("DispositionRequests");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanAccess", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DiwanMailId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("GrantedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("DiwanMailId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("DiwanAccess");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanAttachment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Checksum")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DiwanMailId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<int>("OcrStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OcrText")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiwanMailId");
+
+                    b.ToTable("DiwanAttachments");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanBureau", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DiwanMailId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("OrgUnitId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrgUnitId");
+
+                    b.HasIndex("DiwanMailId", "OrgUnitId")
+                        .IsUnique();
+
+                    b.ToTable("DiwanBureaus");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanMail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AddresseeName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("AddresseeTitle")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("ArchivedDocumentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<long?>("CategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Classification")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("ExternalOrgId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ExternalOrgName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("FileNumber")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long>("InstitutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("IssueDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Keywords")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("MailDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("NoReplyNotifiedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("ParentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("ReferenceToId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RegisterNumber")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("RegistrationDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("RemindOnNoReply")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<long?>("ReplyToId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ResponseDeadline")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("ResponsePeriodDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SentDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("ExternalOrgId");
+
+                    b.HasIndex("InstitutionId", "MailDate");
+
+                    b.HasIndex("InstitutionId", "RegisterNumber")
+                        .IsUnique();
+
+                    b.HasIndex("RemindOnNoReply", "ResponseDeadline");
+
+                    b.HasIndex("InstitutionId", "Direction", "Status");
+
+                    b.ToTable("DiwanMails");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.Document", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ArchiveMode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ArchiveReturnReason")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("ArchiveWorkflowInstanceId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("BoxId")
@@ -955,6 +1499,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<int>("RetentionMonths")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("SentToArchiveAtUtc")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -968,6 +1515,10 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
                     b.Property<long?>("UpdatedBy")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("VerificationCode")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
 
                     b.Property<int>("Version")
                         .HasColumnType("int");
@@ -988,6 +1539,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.HasIndex("OwningOrgUnitId");
 
                     b.HasIndex("ParentDocumentId");
+
+                    b.HasIndex("VerificationCode")
+                        .IsUnique();
 
                     b.ToTable("Documents");
                 });
@@ -1281,6 +1835,12 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<long>("DocumentId")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<long>("SharedByUserId")
                         .HasColumnType("bigint");
 
@@ -1341,10 +1901,29 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
+                    b.Property<string>("Note")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("OrgUnitId")
+                        .HasColumnType("bigint");
+
                     b.Property<bool>("RequiresApproval")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("RequiresPhysicalArchiving")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("RetentionMonths")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetentionUnit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetentionValue")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1357,7 +1936,255 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("OrgUnitId");
+
                     b.ToTable("DocumentTypes");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.EscalationLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ActionTaken")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("EscalatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("EscalatedToPositionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("EscalationLevel")
+                        .HasColumnType("int");
+
+                    b.Property<long>("EscalationRuleId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("WorkflowInstanceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("WorkflowStageId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowInstanceId", "WorkflowStageId", "EscalationLevel");
+
+                    b.ToTable("EscalationLogs");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.EscalationRule", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Action")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("EscalateToPositionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("EscalationLevel")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("NotifyOriginator")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("OverdueMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("WorkflowDefinitionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("WorkflowStageId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowDefinitionId", "WorkflowStageId", "IsActive");
+
+                    b.ToTable("EscalationRules");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.EventLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EventData")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TriggeredByUserId")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventType");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("EventLogs");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ExternalContact", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("OrganizationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("ExternalContacts");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ExternalOrganization", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("ExternalOrganizations");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.FixityCheck", b =>
@@ -1422,11 +2249,19 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
+                    b.Property<string>("Color")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<long?>("CreatedBy")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1452,36 +2287,14 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("Folders");
                 });
 
-            modelBuilder.Entity("Archiving.Domain.Entities.IncomingMail", b =>
+            modelBuilder.Entity("Archiving.Domain.Entities.FolderShare", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("AssignedToOrgUnitId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("AssignedToPositionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("AssignedToUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Body")
-                        .HasMaxLength(256)
-                        .HasColumnType("longtext");
-
-                    b.Property<long?>("CategoryId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("ClosedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Confidentiality")
-                        .HasColumnType("int");
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -1489,59 +2302,14 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<long?>("CreatedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("DeletedBy")
+                    b.Property<long>("FolderId")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("DocumentTypeId")
+                    b.Property<long>("SharedByUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<DateTime?>("IssueDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Keywords")
-                        .HasMaxLength(256)
-                        .HasColumnType("longtext");
-
-                    b.Property<long?>("ParentMailId")
+                    b.Property<long>("SharedWithUserId")
                         .HasColumnType("bigint");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ReceivedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("SenderEntity")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<string>("SenderName")
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<string>("SenderReference")
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<string>("TransactionNumber")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -1549,27 +2317,14 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<long?>("UpdatedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("WorkflowInstanceId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedToOrgUnitId");
+                    b.HasIndex("SharedWithUserId");
 
-                    b.HasIndex("AssignedToPositionId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("DocumentTypeId");
-
-                    b.HasIndex("ParentMailId");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("TransactionNumber")
+                    b.HasIndex("FolderId", "SharedWithUserId")
                         .IsUnique();
 
-                    b.ToTable("IncomingMails");
+                    b.ToTable("FolderShares");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.InformationPackage", b =>
@@ -1636,7 +2391,35 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
+                    b.Property<string>("ColorLoginAccent")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ColorLoginBg")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ColorNavBg")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ColorNavText")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<string>("ColorPrimary")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ColorRailAccent")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ColorRailBg")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ColorRailText")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
@@ -1694,6 +2477,366 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Institutions");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.IntegrationHook", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CallbackUrl")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("HeadersJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("HttpMethod")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("InstitutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("MaxRetries")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<int>("RetryDelaySeconds")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SecretKey")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventType", "IsActive");
+
+                    b.ToTable("IntegrationHooks");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalAttachment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Checksum")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long>("InternalMailId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("OcrStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OcrText")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InternalMailId");
+
+                    b.ToTable("InternalAttachments");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalMail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("ArchivedDocumentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<long?>("CategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Classification")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("FileNumber")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long>("InstitutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Keywords")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("MailDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("MailNumber")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("NoReplyNotifiedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("ParentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("RegistrationDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("RemindOnNoReply")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<long?>("ReplyToId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ResponseDeadline")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("ResponsePeriodDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SenderName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("SenderOrgUnitId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SenderUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("WorkflowInstanceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("WorkflowRole")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("WorkflowTaskId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("WorkflowInstanceId");
+
+                    b.HasIndex("WorkflowTaskId");
+
+                    b.HasIndex("InstitutionId", "MailDate");
+
+                    b.HasIndex("InstitutionId", "MailNumber")
+                        .IsUnique();
+
+                    b.HasIndex("InstitutionId", "Status");
+
+                    b.HasIndex("RemindOnNoReply", "ResponseDeadline");
+
+                    b.ToTable("InternalMails");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalRead", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("FirstReadAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("InternalMailId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("LastReadAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("ReadStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InternalMailId", "UserId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ReadStatus");
+
+                    b.ToTable("InternalReads");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalRecipient", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Addressing")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("InternalMailId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("TargetId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TargetKind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InternalMailId", "Addressing");
+
+                    b.ToTable("InternalRecipients");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.LegalHold", b =>
@@ -1756,29 +2899,17 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("LegalHolds");
                 });
 
-            modelBuilder.Entity("Archiving.Domain.Entities.LetterTemplate", b =>
+            modelBuilder.Entity("Archiving.Domain.Entities.MailCategory", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
-
-                    b.Property<string>("BodyTemplate")
-                        .HasMaxLength(256)
-                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<long?>("CreatedBy")
                         .HasColumnType("bigint");
-
-                    b.Property<string>("FooterHtml")
-                        .HasMaxLength(256)
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("HeaderHtml")
-                        .HasMaxLength(256)
-                        .HasColumnType("longtext");
 
                     b.Property<long>("InstitutionId")
                         .HasColumnType("bigint");
@@ -1791,73 +2922,15 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
-                    b.Property<string>("NumberingPattern")
+                    b.Property<string>("NameEn")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InstitutionId");
-
-                    b.ToTable("LetterTemplates");
-                });
-
-            modelBuilder.Entity("Archiving.Domain.Entities.MailAttachment", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Checksum")
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Direction")
+                    b.Property<int>("Scope")
                         .HasColumnType("int");
 
-                    b.Property<string>("FileExtension")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<long?>("IncomingMailId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("MailId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("OutgoingMailId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("SizeBytes")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("StorageKey")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -1867,11 +2940,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IncomingMailId");
+                    b.HasIndex("InstitutionId", "IsActive");
 
-                    b.HasIndex("OutgoingMailId");
-
-                    b.ToTable("MailAttachments");
+                    b.ToTable("MailCategories");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.Notification", b =>
@@ -1974,6 +3045,65 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("NotificationDeliveries");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.NumberingTemplate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("CurrentMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentSequence")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CurrentYear")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("DocumentTypeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("InstitutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<long?>("OrgUnitId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Pattern")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<int>("ResetFrequency")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "InstitutionId", "OrgUnitId", "DocumentTypeId", "IsActive");
+
+                    b.ToTable("NumberingTemplates");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.OrgUnit", b =>
                 {
                     b.Property<long>("Id")
@@ -2030,100 +3160,6 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("OrgUnits");
-                });
-
-            modelBuilder.Entity("Archiving.Domain.Entities.OutgoingMail", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("ApprovedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Body")
-                        .HasMaxLength(256)
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Confidentiality")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("DeletedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("InReplyToIncomingMailId")
-                        .HasColumnType("bigint");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LetterNumber")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<long?>("LetterTemplateId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RecipientEntity")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<string>("RecipientName")
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<DateTime?>("SentDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("SignatoryPositionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("WorkflowInstanceId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InReplyToIncomingMailId");
-
-                    b.HasIndex("LetterNumber")
-                        .IsUnique();
-
-                    b.HasIndex("LetterTemplateId");
-
-                    b.HasIndex("SignatoryPositionId");
-
-                    b.ToTable("OutgoingMails");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.Permission", b =>
@@ -2198,9 +3234,6 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
-                    b.Property<long?>("IncomingMailId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Notes")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
@@ -2217,8 +3250,6 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
-
-                    b.HasIndex("IncomingMailId");
 
                     b.HasIndex("PhysicalLocationId");
 
@@ -2360,6 +3391,58 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PositionAssignments");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.PositionDelegation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("FromPositionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("ToPositionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("WorkflowDefinitionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromPositionId", "IsActive");
+
+                    b.HasIndex("ToPositionId", "IsActive");
+
+                    b.ToTable("PositionDelegations");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.PreservationPolicy", b =>
@@ -2550,6 +3633,95 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ReportTemplate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("ApprovalWorkflowInstanceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DocumentTypeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("InstitutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LayoutJson")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LegacyLayoutJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LogoBase64")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<long?>("MailCategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long?>("OrgUnitId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SlotsJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Target")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex("MailCategoryId");
+
+                    b.HasIndex("OrgUnitId");
+
+                    b.HasIndex("InstitutionId", "Scope", "Target");
+
+                    b.HasIndex("InstitutionId", "Target", "Status");
+
+                    b.ToTable("ReportTemplates");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.RepresentationInfo", b =>
@@ -2899,6 +4071,10 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
                     b.Property<int>("Clearance")
                         .HasColumnType("int");
 
@@ -2906,6 +4082,12 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DefaultMailTemplateId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DefaultPrintTemplateId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("DeletedAt")
@@ -2938,6 +4120,10 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Gender")
                         .HasColumnType("int");
+
+                    b.Property<string>("HiddenNavKeys")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -2983,6 +4169,14 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
+                    b.Property<string>("SignatureUrl")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("StampUrl")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
                     b.Property<string>("ThirdName")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
@@ -3001,6 +4195,198 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrgUnitId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.UserFile", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Checksum")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<bool>("ContentDestroyed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<long?>("FolderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("varchar(400)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "FolderId");
+
+                    b.ToTable("UserFiles");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.UserFileShare", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SharedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SharedWithUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserFileId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SharedWithUserId");
+
+                    b.HasIndex("UserFileId", "SharedWithUserId")
+                        .IsUnique();
+
+                    b.ToTable("UserFileShares");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.UserOrgUnitAccess", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("GrantedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long>("OrgUnitId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrgUnitId");
+
+                    b.HasIndex("UserId", "OrgUnitId")
+                        .IsUnique();
+
+                    b.ToTable("UserOrgUnitAccess");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.UserPermissionGrant", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("GrantedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<long>("PermissionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionId");
+
+                    b.HasIndex("UserId", "PermissionId")
+                        .IsUnique();
+
+                    b.ToTable("UserPermissionGrants");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.UserRole", b =>
@@ -3060,6 +4446,69 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.ToTable("UserTablePrefs");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.WebhookDelivery", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("AttemptNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<int?>("HttpStatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<long>("IntegrationHookId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ResponseBody")
+                        .HasMaxLength(256)
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IntegrationHookId");
+
+                    b.HasIndex("Status", "NextAttemptAt");
+
+                    b.ToTable("WebhookDeliveries");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.WorkflowDefinition", b =>
                 {
                     b.Property<long>("Id")
@@ -3082,6 +4531,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<long?>("MailCategoryId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -3103,6 +4555,8 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TriggerModule", "MailCategoryId", "IsActive");
+
                     b.ToTable("WorkflowDefinitions");
                 });
 
@@ -3110,6 +4564,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("ChangesRequestedByStageId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("CompletedAt")
@@ -3141,6 +4598,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<long?>("InitiatedByUserId")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("RootInternalMailId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("datetime(6)");
 
@@ -3159,6 +4619,8 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CurrentStageId");
+
+                    b.HasIndex("RootInternalMailId");
 
                     b.HasIndex("WorkflowDefinitionId");
 
@@ -3189,6 +4651,21 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<long?>("AssigneeUserId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("AssignmentExpression")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<int>("AssignmentType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("ConditionExpression")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -3204,6 +4681,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsFinal")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("MinimumApprovals")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -3212,12 +4692,30 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ParallelGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RejectBehavior")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("RequiresAllParallelComplete")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("RequiresCorrespondence")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("ResponseHours")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReturnResume")
                         .HasColumnType("int");
 
                     b.Property<string>("TransitionCondition")
                         .HasMaxLength(256)
                         .HasColumnType("longtext");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -3268,6 +4766,9 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("EscalatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<long?>("InternalMailId")
+                        .HasColumnType("bigint");
+
                     b.Property<bool>("IsEscalated")
                         .HasColumnType("tinyint(1)");
 
@@ -3291,6 +4792,8 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("InternalMailId");
 
                     b.HasIndex("StageId");
 
@@ -3329,6 +4832,36 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("Room");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.ContactChannel", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.ExternalContact", "Contact")
+                        .WithMany("Channels")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Contact");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.CorrespondenceGroupMember", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.CorrespondenceGroup", "Group")
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.CustomFieldDefinition", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.DestructionItem", b =>
                 {
                     b.HasOne("Archiving.Domain.Entities.DestructionRequest", "Request")
@@ -3360,6 +4893,72 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Document");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanAccess", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.DiwanMail", "DiwanMail")
+                        .WithMany()
+                        .HasForeignKey("DiwanMailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Archiving.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DiwanMail");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanAttachment", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.DiwanMail", "DiwanMail")
+                        .WithMany("Attachments")
+                        .HasForeignKey("DiwanMailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DiwanMail");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanBureau", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.DiwanMail", "DiwanMail")
+                        .WithMany("ToDiwanOrgUnits")
+                        .HasForeignKey("DiwanMailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Archiving.Domain.Entities.OrgUnit", "OrgUnit")
+                        .WithMany()
+                        .HasForeignKey("OrgUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DiwanMail");
+
+                    b.Navigation("OrgUnit");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanMail", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.MailCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Archiving.Domain.Entities.ExternalOrganization", "ExternalOrg")
+                        .WithMany()
+                        .HasForeignKey("ExternalOrgId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
+
+                    b.Navigation("ExternalOrg");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.Document", b =>
@@ -3481,7 +5080,24 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Archiving.Domain.Entities.OrgUnit", "OrgUnit")
+                        .WithMany()
+                        .HasForeignKey("OrgUnitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Category");
+
+                    b.Navigation("OrgUnit");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ExternalContact", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.ExternalOrganization", "Organization")
+                        .WithMany("Contacts")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.FixityCheck", b =>
@@ -3495,42 +5111,15 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("DocumentAttachment");
                 });
 
-            modelBuilder.Entity("Archiving.Domain.Entities.IncomingMail", b =>
+            modelBuilder.Entity("Archiving.Domain.Entities.FolderShare", b =>
                 {
-                    b.HasOne("Archiving.Domain.Entities.OrgUnit", "AssignedToOrgUnit")
+                    b.HasOne("Archiving.Domain.Entities.Folder", "Folder")
                         .WithMany()
-                        .HasForeignKey("AssignedToOrgUnitId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("Archiving.Domain.Entities.Position", "AssignedToPosition")
-                        .WithMany()
-                        .HasForeignKey("AssignedToPositionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Archiving.Domain.Entities.DocumentCategory", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Archiving.Domain.Entities.DocumentType", "DocumentType")
-                        .WithMany()
-                        .HasForeignKey("DocumentTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Archiving.Domain.Entities.IncomingMail", "ParentMail")
-                        .WithMany()
-                        .HasForeignKey("ParentMailId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("AssignedToOrgUnit");
-
-                    b.Navigation("AssignedToPosition");
-
-                    b.Navigation("Category");
-
-                    b.Navigation("DocumentType");
-
-                    b.Navigation("ParentMail");
+                    b.Navigation("Folder");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.InformationPackage", b =>
@@ -3544,28 +5133,47 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("Document");
                 });
 
-            modelBuilder.Entity("Archiving.Domain.Entities.LetterTemplate", b =>
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalAttachment", b =>
                 {
-                    b.HasOne("Archiving.Domain.Entities.Institution", "Institution")
-                        .WithMany()
-                        .HasForeignKey("InstitutionId")
+                    b.HasOne("Archiving.Domain.Entities.InternalMail", "InternalMail")
+                        .WithMany("Attachments")
+                        .HasForeignKey("InternalMailId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Institution");
+                    b.Navigation("InternalMail");
                 });
 
-            modelBuilder.Entity("Archiving.Domain.Entities.MailAttachment", b =>
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalMail", b =>
                 {
-                    b.HasOne("Archiving.Domain.Entities.IncomingMail", null)
-                        .WithMany("Attachments")
-                        .HasForeignKey("IncomingMailId")
+                    b.HasOne("Archiving.Domain.Entities.MailCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Archiving.Domain.Entities.OutgoingMail", null)
-                        .WithMany("Attachments")
-                        .HasForeignKey("OutgoingMailId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalRead", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.InternalMail", "InternalMail")
+                        .WithMany("Reads")
+                        .HasForeignKey("InternalMailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("InternalMail");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalRecipient", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.InternalMail", "InternalMail")
+                        .WithMany("Recipients")
+                        .HasForeignKey("InternalMailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("InternalMail");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.Notification", b =>
@@ -3608,40 +5216,11 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("Archiving.Domain.Entities.OutgoingMail", b =>
-                {
-                    b.HasOne("Archiving.Domain.Entities.IncomingMail", "InReplyToIncomingMail")
-                        .WithMany()
-                        .HasForeignKey("InReplyToIncomingMailId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Archiving.Domain.Entities.LetterTemplate", "LetterTemplate")
-                        .WithMany()
-                        .HasForeignKey("LetterTemplateId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Archiving.Domain.Entities.Position", "SignatoryPosition")
-                        .WithMany()
-                        .HasForeignKey("SignatoryPositionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("InReplyToIncomingMail");
-
-                    b.Navigation("LetterTemplate");
-
-                    b.Navigation("SignatoryPosition");
-                });
-
             modelBuilder.Entity("Archiving.Domain.Entities.PhysicalArchiveItem", b =>
                 {
                     b.HasOne("Archiving.Domain.Entities.Document", "Document")
                         .WithMany()
                         .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Archiving.Domain.Entities.IncomingMail", "IncomingMail")
-                        .WithMany()
-                        .HasForeignKey("IncomingMailId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Archiving.Domain.Entities.PhysicalLocation", "PhysicalLocation")
@@ -3651,8 +5230,6 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Document");
-
-                    b.Navigation("IncomingMail");
 
                     b.Navigation("PhysicalLocation");
                 });
@@ -3704,6 +5281,25 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.PositionDelegation", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.Position", "FromPosition")
+                        .WithMany()
+                        .HasForeignKey("FromPositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Archiving.Domain.Entities.Position", "ToPosition")
+                        .WithMany()
+                        .HasForeignKey("ToPositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromPosition");
+
+                    b.Navigation("ToPosition");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Archiving.Domain.Entities.User", "User")
@@ -3713,6 +5309,34 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ReportTemplate", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Archiving.Domain.Entities.Institution", "Institution")
+                        .WithMany()
+                        .HasForeignKey("InstitutionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Archiving.Domain.Entities.MailCategory", null)
+                        .WithMany()
+                        .HasForeignKey("MailCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Archiving.Domain.Entities.OrgUnit", "OrgUnit")
+                        .WithMany()
+                        .HasForeignKey("OrgUnitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Institution");
+
+                    b.Navigation("OrgUnit");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.RepresentationInfo", b =>
@@ -3837,6 +5461,55 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("OrgUnit");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.UserFileShare", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.UserFile", "File")
+                        .WithMany()
+                        .HasForeignKey("UserFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("File");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.UserOrgUnitAccess", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.OrgUnit", "OrgUnit")
+                        .WithMany()
+                        .HasForeignKey("OrgUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Archiving.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OrgUnit");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.UserPermissionGrant", b =>
+                {
+                    b.HasOne("Archiving.Domain.Entities.Permission", "Permission")
+                        .WithMany()
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Archiving.Domain.Entities.User", "User")
+                        .WithMany("PermissionGrants")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.UserRole", b =>
                 {
                     b.HasOne("Archiving.Domain.Entities.Role", "Role")
@@ -3919,9 +5592,21 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("RoleClassifications");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.CorrespondenceGroup", b =>
+                {
+                    b.Navigation("Members");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.DestructionRequest", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.DiwanMail", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("ToDiwanOrgUnits");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.Document", b =>
@@ -3934,9 +5619,14 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("Children");
                 });
 
-            modelBuilder.Entity("Archiving.Domain.Entities.IncomingMail", b =>
+            modelBuilder.Entity("Archiving.Domain.Entities.ExternalContact", b =>
                 {
-                    b.Navigation("Attachments");
+                    b.Navigation("Channels");
+                });
+
+            modelBuilder.Entity("Archiving.Domain.Entities.ExternalOrganization", b =>
+                {
+                    b.Navigation("Contacts");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.Institution", b =>
@@ -3944,16 +5634,20 @@ namespace Archiving.Infrastructure.Persistence.Migrations
                     b.Navigation("OrgUnits");
                 });
 
+            modelBuilder.Entity("Archiving.Domain.Entities.InternalMail", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("Reads");
+
+                    b.Navigation("Recipients");
+                });
+
             modelBuilder.Entity("Archiving.Domain.Entities.OrgUnit", b =>
                 {
                     b.Navigation("Children");
 
                     b.Navigation("Positions");
-                });
-
-            modelBuilder.Entity("Archiving.Domain.Entities.OutgoingMail", b =>
-                {
-                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("Archiving.Domain.Entities.PhysicalLocation", b =>
@@ -3985,6 +5679,8 @@ namespace Archiving.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Archiving.Domain.Entities.User", b =>
                 {
+                    b.Navigation("PermissionGrants");
+
                     b.Navigation("PositionAssignments");
 
                     b.Navigation("RefreshTokens");

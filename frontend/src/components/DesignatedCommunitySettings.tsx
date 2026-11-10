@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { motion } from 'motion/react'
 import { designatedCommunityApi, type DesignatedCommunity } from '../lib/packages'
+import { LabeledInput, LabeledTextarea } from './ui/labeled-input'
 import { useToast } from './toast'
 
 export default function DesignatedCommunitySettings() {
@@ -27,13 +28,13 @@ export default function DesignatedCommunitySettings() {
       <h3 className="detail-h3">المجتمع المستهدف (Designated Community)</h3>
       <p className="muted">تعريف الجهة المستفيدة من الأرشيف ومتطلبات عرض الوثائق على المدى الطويل.</p>
       <form className="form-grid" onSubmit={save}>
-        <label className="field field--wide"><span>الاسم</span>
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: موظفو المؤسسة والجهات الحكومية" /></label>
-        <label className="field field--wide"><span>الوصف</span>
-          <input value={form.description ?? ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-        <label className="field field--wide"><span>متطلبات العرض</span>
-          <textarea rows={2} value={form.renderingExpectations ?? ''} onChange={(e) => setForm({ ...form, renderingExpectations: e.target.value })}
-            placeholder="مثال: قارئات PDF/A، نصوص عربية utf8mb4" /></label>
+        <LabeledInput label="الاسم" containerClassName="field--wide" value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <LabeledInput label="الوصف" containerClassName="field--wide" value={form.description ?? ''}
+          onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <LabeledTextarea label="متطلبات العرض" containerClassName="field--wide" rows={2}
+          value={form.renderingExpectations ?? ''}
+          onChange={(e) => setForm({ ...form, renderingExpectations: e.target.value })} />
         <div className="form-actions"><button className="btn btn-primary" disabled={busy}>حفظ</button></div>
       </form>
     </motion.section>

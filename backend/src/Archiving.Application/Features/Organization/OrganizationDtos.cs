@@ -26,6 +26,15 @@ public sealed record CreateOrgUnitRequest(
     OrgUnitType Type,
     int SortOrder);
 
+public sealed record UpdateOrgUnitRequest(
+    long? ParentId,
+    string Name,
+    string? NameEn,
+    string? Code,
+    OrgUnitType Type,
+    int SortOrder,
+    bool IsActive);
+
 public sealed record PositionDto(
     long Id,
     string Title,
@@ -38,6 +47,8 @@ public sealed record PositionDto(
     bool IsActive);
 
 public sealed record CreatePositionRequest(string Title, string? Code, long OrgUnitId, int Rank);
+
+public sealed record UpdatePositionRequest(string Title, string? Code, long OrgUnitId, int Rank, bool IsActive);
 
 public sealed record AssignOccupantRequest(long UserId);
 

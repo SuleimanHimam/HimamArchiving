@@ -1,0 +1,355 @@
+/* ---- filters ---- */
+.filters { display: flex; gap: .8rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+.filters__search {
+  flex: 1; min-width: 240px;
+  font-family: var(--font-body); font-size: .95rem; color: var(--text);
+  background: var(--paper); border: 1px solid var(--parchment-3);
+  border-radius: var(--radius); padding: .6rem .9rem; outline: none;
+}
+.filters__search:focus { border-color: var(--ink); }
+.filters__status {
+  font-family: var(--font-body); font-size: .9rem;
+  background: var(--paper); border: 1px solid var(--parchment-3);
+  border-radius: var(--radius); padding: .6rem .9rem; cursor: pointer;
+}
+
+/* ---- register table ---- */
+.table-card { padding: 0; overflow: hidden; }
+.reg-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.reg-table thead th {
+  text-align: start; font-family: var(--font-mono); font-size: .68rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint);
+  /* A hairline, not a 2px ink rule: the header is a label strip, and the heavy
+     bar read as a second card edge right under the real one. */
+  padding: .8rem 1rem; border-bottom: 1px solid var(--parchment-3); background: transparent;
+  white-space: nowrap;
+}
+.reg-table tbody td { padding: .8rem 1rem; border-bottom: var(--rule); vertical-align: middle; }
+/* Dividers *between* rows only — the card already draws the closing edge. */
+.reg-table tbody tr:last-child td { border-bottom: 0; }
+/* Numeric and date cells align on the digit. */
+.reg-table td { font-variant-numeric: tabular-nums; }
+.reg-row { cursor: pointer; transition: background .12s var(--ease); }
+.reg-row:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+.reg-subject { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reg-empty { text-align: center; color: var(--text-faint); padding: 2.5rem 0; }
+
+/* ── File-type card cell ──────────────────────────────────────────────────
+   components/ui/file-card-collections.tsx draws at a fixed 14×18 (rem-based,
+   so ~49×63px at this app's 14px root). That is taller than a register row
+   wants, so the card is scaled down in place: transform keeps its internal
+   proportions exact, while the wrapper reserves only the scaled footprint so
+   the row height does not jump. */
+.reg-filetype { width: 3.25rem; }
+.reg-filetype__card {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 3.25rem;
+}
+.reg-filetype__card > [aria-hidden] {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform: scale(.72);
+  transform-origin: top left;
+}
+[dir="rtl"] .reg-filetype__card > [aria-hidden] { transform-origin: top right; }
+/* Placeholder for documents with nothing attached; centred in the same box. */
+.reg-filetype__none {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-faint);
+}
+/* Attachment count for documents carrying more than one file. */
+.reg-filetype__count {
+  position: absolute;
+  inset-block-start: -.25rem;
+  inset-inline-start: -.25rem;
+  z-index: 3;
+  min-width: 1rem;
+  padding: 0 .25rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: .625rem;
+  line-height: 1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Expandable rows ──────────────────────────────────────────────────────
+   Chevron column + the inline detail panel it opens. See
+   components/ui/expandable-row.tsx for why this stays a real <table>. */
+.reg-chev-cell { width: 2.25rem; padding-inline: .5rem !important; }
+.reg-chev {
+  display: grid; place-items: center;
+  width: 1.6rem; height: 1.6rem; padding: 0;
+  border: 0; border-radius: 999px; background: none; cursor: pointer;
+  color: var(--text-faint);
+  transition: background .12s var(--ease), color .12s var(--ease);
+}
+.reg-chev:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
+.reg-chev:focus-visible { outline: 2px solid var(--m-primary, var(--ink)); outline-offset: 1px; }
+
+/* Collapsed: contributes no height and no rule of its own. */
+.reg-detail-cell { padding: 0 !important; border: 0 !important; }
+.reg-detail { overflow: hidden; }
+.reg-detail__inner {
+  padding: 1rem 1.25rem;
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  border-block-start: var(--rule);
+}
+.reg-detail__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: .8rem 1.4rem;
+}
+.reg-detail__field { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.reg-detail__field.is-wide { grid-column: 1 / -1; }
+.reg-detail__label {
+  font-family: var(--font-mono); font-size: .65rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint);
+}
+.reg-detail__value { font-size: .88rem; color: var(--text); overflow-wrap: anywhere; }
+/* For panels that list child records (e.g. the documents inside a destruction request). */
+.reg-detail__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; }
+.reg-detail__list li { font-size: .85rem; }
+.reg-detail__muted { color: var(--text-faint); }
+.reg-detail__actions {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  margin-block-start: .9rem; padding-block-start: .8rem; border-block-start: var(--rule);
+}
+/* The panel is already inside a hovered row; don't double-highlight it. */
+.reg-row:hover + .reg-detail-row .reg-detail__inner { background: color-mix(in srgb, var(--text) 4%, transparent); }
+
+/* ---- status pill ----
+   Soft tinted badge rather than an outlined box: each .s-* class sets only
+   `color`, so the fill is derived from it with currentColor and every status
+   stays a single source of truth. Matches the classification badges already
+   used in the same rows, which were the only pill shape here that read well. */
+.status-pill {
+  display: inline-block; font-family: var(--font-mono); font-size: .68rem; font-weight: 600;
+  padding: .25rem .6rem; border-radius: 999px; white-space: nowrap;
+  border: 0; background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.s-new { color: #1F4E79; } .s-assigned { color: var(--brass); }
+.s-inprogress { color: #2E6E8E; } .s-onhold { color: var(--warn); }
+.s-closed { color: var(--ok); } .s-archived { color: var(--text-muted); }
+
+/* ---- pager ---- */
+.pager { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.3rem; font-size: .82rem; color: var(--text-muted); }
+
+/* ---- create form ---- */
+.form-card { max-width: 920px; }
+/* Full-bleed form: lift the width cap and give the card roomier padding */
+.form-card--full { max-width: none; padding: clamp(1.5rem, 2vw, 2.4rem); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.4rem; }
+.form-grid .field { margin: 0; }
+.form-grid .field > span { display: block; font-size: .82rem; font-weight: 600; color: var(--text-muted); margin-bottom: .4rem; }
+.form-grid .field input, .form-grid .field select, .form-grid .field textarea {
+  width: 100%; font-family: var(--font-body); font-size: .95rem; color: var(--text);
+  background: transparent; border: 0; border-bottom: var(--rule-ink); padding: .5rem .2rem; outline: none;
+  caret-color: var(--seal);
+  transition: border-bottom-color .26s cubic-bezier(.2, .8, .2, 1), box-shadow .26s cubic-bezier(.2, .8, .2, 1);
+}
+/* Focus: the underline thickens into the accent so it reads as one moving piece
+   with the label lifting above it. */
+.form-grid .field input:focus, .form-grid .field select:focus, .form-grid .field textarea:focus {
+  border-bottom-color: var(--seal);
+  box-shadow: 0 1px 0 0 var(--seal);
+}
+.form-grid .field--wide { grid-column: 1 / -1; }
+
+/* ── Floating labels (.form-grid / .field underline system) ──────────────────
+   The field name rests over the control and floats to a small caption above it
+   when focused or filled. Text inputs/textarea use :placeholder-shown (input keeps
+   an empty " " placeholder); selects / date / search controls float always. */
+.form-grid .field { position: relative; padding-block-start: .55rem; }
+.form-grid .field > .fl {
+  position: absolute; inset-inline-start: .2rem; inset-block-start: 1.7rem;
+  transform: translateY(-50%); transform-origin: inline-start;
+  margin: 0; display: block; pointer-events: none;
+  color: var(--text-muted); font-size: .92rem; font-weight: 400; line-height: 1;
+  max-inline-size: 96%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  will-change: transform;
+  transition:
+    inset-block-start .26s cubic-bezier(.2, .8, .2, 1),
+    font-size .26s cubic-bezier(.2, .8, .2, 1),
+    color .2s ease;
+}
+.form-grid .field:focus-within > .fl,
+.form-grid .field:has(input:not(:placeholder-shown)) > .fl,
+.form-grid .field:has(textarea:not(:placeholder-shown)) > .fl,
+.form-grid .field:has(> select) > .fl,
+.form-grid .field:has(> .ss) > .fl,
+.form-grid .field:has(> .dpk) > .fl {
+  inset-block-start: .35rem; font-size: .72rem; font-weight: 600; color: var(--text);
+}
+/* Active field: the label picks up the accent in step with the underline, so the
+   caption and the input light up as a single interactive unit while focused. */
+.form-grid .field:focus-within > .fl { color: var(--seal); }
+/* Four-across variant (falls back gracefully on smaller screens). */
+.form-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.form-grid--4 .form-actions { grid-column: 1 / -1; }
+@media (max-width: 1000px) { .form-grid--4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px)  { .form-grid--4 { grid-template-columns: 1fr; } }
+
+.form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.form-grid--3 .form-actions { grid-column: 1 / -1; }
+@media (max-width: 860px) { .form-grid--3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .form-grid--3 { grid-template-columns: 1fr; } }
+
+.form-grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.5rem 1.75rem; }
+.form-grid--5 .form-actions { grid-column: 1 / -1; margin-block-start: .5rem; }
+@media (max-width: 1200px) { .form-grid--5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 860px)  { .form-grid--5 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px)  { .form-grid--5 { grid-template-columns: 1fr; } }
+
+/* Responsive auto-fitting grid: packs as many columns as fit, reflows on its own */
+.form-grid--auto { grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: .75rem 1rem; }
+/* Inline action (e.g. email auto-generate) shown above a placeholder-only field */
+.field__inline-action { display: flex; justify-content: flex-end; margin-block-end: 2px; }
+.form-grid--auto .form-actions { grid-column: 1 / -1; margin-block-start: .3rem; }
+
+/* Compact drop zone — keeps the whole form on one screen */
+.dz--compact { padding: 14px 18px; }
+.dz--compact .dz__icon { font-size: 26px; margin-bottom: 4px; }
+.dz--compact .dz__title { font-size: 14px; margin-bottom: 3px; }
+.dz--compact .dz__hint { font-size: 12px; margin-bottom: 8px; }
+.dz__actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.form-actions { display: flex; gap: .8rem; margin-top: 1.6rem; align-items: center; }
+
+/* ---- detail ---- */
+.detail-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.4rem; align-items: start; }
+.detail-badges { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.detail-list { display: grid; grid-template-columns: 130px 1fr; gap: .55rem 1rem; margin: 0; }
+.detail-list dt { color: var(--text-muted); font-size: .85rem; font-weight: 600; }
+.detail-list dd { margin: 0; color: var(--text); }
+/* ── Responsive table columns ──────────────────────────────────────────────
+   Wide registers carry more columns than a laptop can show, so the table
+   side-scrolls and rows become unreadable. Tag a column's <th> AND its <td>
+   with a priority and it drops out as room runs out — least useful first —
+   with the wrapper's horizontal scroll left as the last resort.
+   opt3 = first to go · opt1 = last. Nothing tagged here is unavailable:
+   every hidden field still shows on the record's detail page. */
+/* ── Directory split: organizations beside the selected organization's contacts ──
+   Below 1000px it stacks. Side by side, the tablet gave the table ~394px for six columns while
+   the contacts panel sat empty waiting for a selection — half the screen spent on a prompt. */
+.dir-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .dir-split { grid-template-columns: 1fr; } }
+
+@media (max-width: 1500px) { .col-opt3 { display: none; } }
+@media (max-width: 1340px) { .col-opt2 { display: none; } }
+@media (max-width: 1200px) { .col-opt1 { display: none; } }
+
+.detail-h3 { margin: 1.8rem 0 .8rem; padding-top: 1.2rem; border-top: var(--rule); }
+/* The rule above separates it from a previous section — as a card's first child there is
+   nothing to separate from, so drop the divider and the space it reserves. */
+.doc-card > .detail-h3:first-child { margin-block-start: 0; padding-block-start: 0; border-block-start: 0; }
+.action-note {
+  width: 100%; font-family: var(--font-body); font-size: .9rem; color: var(--text);
+  background: var(--parchment); border: 1px solid var(--parchment-3); border-radius: var(--radius);
+  padding: .6rem .8rem; outline: none; resize: vertical; margin-bottom: .9rem;
+}
+.action-bar { display: flex; gap: .6rem; flex-wrap: wrap; }
+.action-bar .btn { padding: .55rem 1.1rem; font-size: .9rem; }
+
+/* ---- timeline ---- */
+.timeline-card { position: sticky; top: 1.5rem; }
+.timeline { list-style: none; margin: 1rem 0 0; padding: 0; position: relative; }
+.timeline::before { content: ""; position: absolute; inset-inline-start: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--parchment-3); }
+.timeline__item { display: flex; gap: .8rem; padding-bottom: 1.2rem; position: relative; }
+.timeline__dot { width: 12px; height: 12px; border-radius: 50%; background: var(--seal); border: 2px solid var(--paper); box-shadow: 0 0 0 2px var(--seal); flex-shrink: 0; margin-top: 2px; z-index: 1; }
+.timeline__action { font-family: var(--font-display); font-weight: 600; color: var(--ink); }
+.timeline__note { font-size: .85rem; color: var(--text); margin-top: .15rem; }
+.timeline__meta { font-size: .68rem; color: var(--text-faint); margin-top: .2rem; }
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .timeline-card { position: static; }
+  /* Wide registers scroll horizontally instead of breaking the layout. */
+  .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .reg-table { min-width: 600px; }
+  .filters { flex-direction: column; align-items: stretch; }
+  .filters__search, .filters__status { width: 100%; }
+  .page__head { align-items: stretch; }
+  .page__headactions { flex-wrap: wrap; }
+  /* Any data table inside a plain card (archive, settings) scrolls too. */
+  .doc-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Phones: stack the page header and let action buttons fill the width so they
+   never clip off-screen. */
+@media (max-width: 640px) {
+  .page__head { flex-direction: column; align-items: stretch; gap: .6rem; }
+  .page__headactions { width: 100%; }
+  .page__headactions .btn,
+  .page__headactions a.btn { flex: 1 1 9rem; justify-content: center; }
+  .reg-table { min-width: 560px; }
+  .doc-card { padding: 1rem; }
+}
+
+.page__headactions { display: flex; gap: .6rem; align-items: center; }
+
+/* ---- Loading skeletons + empty states (shared) ---- */
+.reg-skel td { cursor: default; }
+.skel-bar {
+  display: block; height: 0.85rem; border-radius: 4px;
+  background: linear-gradient(90deg, rgba(20,33,61,.06) 25%, rgba(20,33,61,.12) 37%, rgba(20,33,61,.06) 63%);
+  background-size: 400% 100%;
+  animation: skel-shimmer 1.4s ease infinite;
+}
+@keyframes skel-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; gap: .6rem;
+  padding: 2.4rem 1rem; color: var(--text-muted, #6e6552);
+}
+.empty-state__icon { font-size: 2rem; opacity: .5; }
+.empty-state__text { font-size: .95rem; }
+.btn-sm { padding: .3rem .7rem; font-size: .85rem; }
+
+/* Archive page: inline row actions + editing highlight */
+.row-actions { display: flex; gap: .25rem; white-space: nowrap; justify-content: flex-end; }
+.reg-table tr.is-editing { background: color-mix(in srgb, var(--accent, #8a6d3b) 10%, transparent); }
+
+/* Document registration: the handover shown to anyone who may not file a paper original
+   themselves, in place of the physical-location picker. */
+.archive-handover {
+  display: flex; flex-direction: column; gap: .35rem;
+  padding: .7rem .85rem;
+  border: 1px dashed var(--border, rgba(20,33,61,.18));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent, #8a6d3b) 5%, transparent);
+}
+.archive-handover__opt {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .92rem; font-weight: 600; cursor: pointer;
+}
+.archive-handover__hint { margin: 0; font-size: .82rem; color: var(--text-muted, #6e6552); }
+
+/* Document registration: creating a missing type without leaving the form.
+   The "new type" button sits beside the select rather than under it, so the field keeps the same
+   height as its neighbours in the auto grid and the row does not jump when the button appears. */
+.doc-type-field { display: flex; align-items: flex-start; gap: .4rem; }
+.doc-type-field > :first-child { flex: 1; min-width: 0; }
+.doc-type-field__add { flex: 0 0 auto; margin-top: .6rem; white-space: nowrap; }
+
+.new-type {
+  display: flex; flex-direction: column; gap: .55rem;
+  padding: .7rem .85rem;
+  border: 1px dashed var(--border, rgba(20,33,61,.18));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent, #8a6d3b) 5%, transparent);
+}
+.new-type__scope {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .9rem; cursor: pointer;
+}
+.new-type__actions { display: flex; gap: .4rem; }
+.new-type__hint { margin: 0; font-size: .82rem; color: var(--text-muted, #6e6552); }

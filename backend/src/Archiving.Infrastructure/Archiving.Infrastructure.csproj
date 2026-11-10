@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Archiving.Application\Archiving.Application.csproj" />
@@ -12,12 +12,16 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
     <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.7" />
     <PackageReference Include="PdfPig" Version="0.1.14" />
     <PackageReference Include="PDFtoImage" Version="5.2.1" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="QuestPDF" Version="2026.6.0" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.4" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0" />
   </ItemGroup>
@@ -27,5 +31,19 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets the test project reach helpers that are implementation detail (HTML flattening,
+         paragraph splitting) without widening the public surface just to test them. -->
+    <InternalsVisibleTo Include="Archiving.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Arabic faces for server-side letter rendering. Embedded rather than copied to the output
+         directory so QuestPDF finds them regardless of working directory, and so the API does not
+         depend on a font being installed on the host — a Linux container has none.
+         IBM Plex Sans Arabic is SIL OFL 1.1 (licence alongside the files). -->
+    <EmbeddedResource Include="Assets\Fonts\*.ttf" />
+  </ItemGroup>
 
 </Project>

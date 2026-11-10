@@ -58,36 +58,130 @@ public sealed class PhysicalArchiveService(
         return Result<bool>.Ok(true);
     }
 
+    /// <summary>The archived-items register. Documents reach a physical place through two paths — the
+    /// legacy PhysicalArchiveItems rows and the normalized hierarchy (Document.BoxId, which is what the
+    /// Locations tree files into) — so both are listed here; otherwise anything filed into a box would
+    /// never show up. Archived correspondence is covered too: archiving a letter writes a Document,
+    /// and filing that document into a box surfaces it here.</summary>
     public async Task<IReadOnlyList<PhysicalArchiveItemDto>> ListItemsAsync(long? locationId, CancellationToken ct = default)
     {
         var q = db.PhysicalArchiveItems.Include(i => i.PhysicalLocation).AsQueryable();
         if (locationId is { } id) q = q.Where(i => i.PhysicalLocationId == id);
-        return await q.OrderByDescending(i => i.ArchivedAt)
+        var legacy = await q
             .Select(i => new PhysicalArchiveItemDto(
-                i.Id, i.DocumentId, i.IncomingMailId, i.PhysicalLocationId, i.PhysicalLocation.Name,
+                i.Id, i.DocumentId, i.PhysicalLocationId, i.PhysicalLocation.Name,
                 i.BoxNumber, i.FileNumber, i.ArchivedAt, i.Notes,
                 db.Documents.Where(d => d.Id == i.DocumentId).Select(d => d.DocumentNumber).FirstOrDefault(),
                 db.Documents.Where(d => d.Id == i.DocumentId).Select(d => d.Title).FirstOrDefault()))
             .ToListAsync(ct);
+
+        // PhysicalLocation is a parented tree — building → room → cabinet → shelf → box — but the
+        // item names only its leaf, so a legacy row read as a bare "BX-001" with no clue which room
+        // it was in, and the place filter offered thirty-odd of them side by side at the top level
+        // as if each were its own building. Give them the same "A › B › C" path the boxed rows
+        // already carry and both kinds sit in one tree.
+        var locPaths = await LocationPathsAsync(ct);
+        legacy = [.. legacy.Select(i => locPaths.TryGetValue(i.PhysicalLocationId, out var p) && p.Length > 0
+            ? i with { LocationName = p }
+            : i)];
+
+        // A legacy row already represents that document; don't list it twice.
+        var covered = legacy.Where(i => i.DocumentId is not null).Select(i => i.DocumentId!.Value).ToHashSet();
+
+        // Boxed documents carry no legacy PhysicalLocation, so they can't satisfy a legacy-location filter.
+        var boxed = new List<PhysicalArchiveItemDto>();
+        if (locationId is null)
+        {
+            var rows = await db.Documents
+                .Where(d => d.BoxId != null && !d.IsTombstone && !covered.Contains(d.Id))
+                .Select(d => new { d.Id, d.DocumentNumber, d.Title, d.BoxId, d.CreatedAt, d.UpdatedAt })
+                .ToListAsync(ct);
+
+            if (rows.Count > 0)
+            {
+                var boxIds = rows.Select(r => r.BoxId!.Value).Distinct().ToList();
+                // One flat pass per level, joined in memory — cheaper and far more portable than
+                // five nested correlated subqueries, and the tables are small.
+                var paths = await (
+                    from b in db.Boxes.Where(b => boxIds.Contains(b.Id))
+                    join s in db.Shelves on b.ShelfId equals s.Id into sj
+                    from s in sj.DefaultIfEmpty()
+                    join c in db.Cabinets on s.CabinetId equals c.Id into cj
+                    from c in cj.DefaultIfEmpty()
+                    // A box hangs off a shelf, or sits directly in a room (3-level mode).
+                    join rm in db.Rooms on (c != null ? c.RoomId : b.RoomId) equals rm.Id into rj
+                    from rm in rj.DefaultIfEmpty()
+                    join bl in db.Buildings on rm.BuildingId equals bl.Id into bj
+                    from bl in bj.DefaultIfEmpty()
+                    select new
+                    {
+                        b.Id, b.BoxCode,
+                        Building = bl != null ? bl.NameAr : null,
+                        Room = rm != null ? rm.NameAr : null,
+                        Cabinet = c != null ? c.NameAr : null,
+                        Shelf = s != null ? s.ShelfNumber : null,
+                    }).ToListAsync(ct);
+
+                var byBox = paths.ToDictionary(x => x.Id, x => new
+                {
+                    x.BoxCode,
+                    Path = string.Join(" › ", new[] { x.Building, x.Room, x.Cabinet, x.Shelf, x.BoxCode }
+                        .Where(s => !string.IsNullOrWhiteSpace(s))),
+                });
+
+                boxed.AddRange(rows.Select(r =>
+                {
+                    byBox.TryGetValue(r.BoxId!.Value, out var loc);
+                    return new PhysicalArchiveItemDto(
+                        0, r.Id, 0, loc?.Path ?? "", loc?.BoxCode, null,
+                        r.UpdatedAt ?? r.CreatedAt, null, r.DocumentNumber, r.Title, "Box");
+                }));
+            }
+        }
+
+        return [.. legacy.Concat(boxed).OrderByDescending(i => i.ArchivedAt)];
+    }
+
+    /// <summary>Location id → the readable path to it ("المبنى الرئيسي › غرفة ١ › … › BX-001").
+    /// The whole table is walked in memory: it holds one row per shelf and box in the building, which
+    /// is small, and the alternative is a self-join per level for every item on the page.</summary>
+    private async Task<Dictionary<long, string>> LocationPathsAsync(CancellationToken ct)
+    {
+        var all = await db.PhysicalLocations
+            .Select(l => new { l.Id, l.ParentId, l.Name })
+            .ToListAsync(ct);
+        var byId = all.ToDictionary(l => l.Id);
+        var cache = new Dictionary<long, string>();
+
+        string PathOf(long id, int depth)
+        {
+            if (cache.TryGetValue(id, out var hit)) return hit;
+            if (!byId.TryGetValue(id, out var node)) return string.Empty;
+            // The depth cap is what keeps a corrupt parent chain (a cycle) from recursing forever.
+            var parent = node.ParentId is { } pid && depth < 16 ? PathOf(pid, depth + 1) : string.Empty;
+            var path = parent.Length > 0 ? $"{parent} › {node.Name}" : node.Name;
+            cache[id] = path;
+            return path;
+        }
+
+        foreach (var l in all) PathOf(l.Id, 0);
+        return cache;
     }
 
     public async Task<Result<PhysicalArchiveItemDto>> CreateItemAsync(CreatePhysicalArchiveItemRequest r, CancellationToken ct = default)
     {
-        if (r.DocumentId is null && r.IncomingMailId is null)
-            return Result<PhysicalArchiveItemDto>.Fail("يجب ربط البند بوثيقة أو معاملة واردة");
+        if (r.DocumentId is null)
+            return Result<PhysicalArchiveItemDto>.Fail("يجب ربط البند بوثيقة");
 
         var location = await db.PhysicalLocations.FirstOrDefaultAsync(l => l.Id == r.PhysicalLocationId, ct);
         if (location is null) return Result<PhysicalArchiveItemDto>.Fail("الموقع الفيزيائي غير موجود");
 
         if (r.DocumentId is { } docId && !await db.Documents.AnyAsync(d => d.Id == docId, ct))
             return Result<PhysicalArchiveItemDto>.Fail("الوثيقة غير موجودة");
-        if (r.IncomingMailId is { } mailId && !await db.IncomingMails.AnyAsync(m => m.Id == mailId, ct))
-            return Result<PhysicalArchiveItemDto>.Fail("المعاملة الواردة غير موجودة");
 
         var e = new PhysicalArchiveItem
         {
             DocumentId = r.DocumentId,
-            IncomingMailId = r.IncomingMailId,
             PhysicalLocationId = r.PhysicalLocationId,
             BoxNumber = r.BoxNumber,
             FileNumber = r.FileNumber,
@@ -100,7 +194,7 @@ public sealed class PhysicalArchiveService(
         await audit.WriteAsync("Archived", "PhysicalArchiveItem", e.Id, location.Name, ct: ct);
 
         return Result<PhysicalArchiveItemDto>.Ok(new PhysicalArchiveItemDto(
-            e.Id, e.DocumentId, e.IncomingMailId, e.PhysicalLocationId, location.Name,
+            e.Id, e.DocumentId, e.PhysicalLocationId, location.Name,
             e.BoxNumber, e.FileNumber, e.ArchivedAt, e.Notes));
     }
 
@@ -118,7 +212,7 @@ public sealed class PhysicalArchiveService(
         await audit.WriteAsync(moved ? "Moved" : "Edited", "PhysicalArchiveItem", e.Id, location.Name, ct: ct);
 
         return Result<PhysicalArchiveItemDto>.Ok(new PhysicalArchiveItemDto(
-            e.Id, e.DocumentId, e.IncomingMailId, e.PhysicalLocationId, location.Name,
+            e.Id, e.DocumentId, e.PhysicalLocationId, location.Name,
             e.BoxNumber, e.FileNumber, e.ArchivedAt, e.Notes,
             await db.Documents.Where(d => d.Id == e.DocumentId).Select(d => d.DocumentNumber).FirstOrDefaultAsync(ct),
             await db.Documents.Where(d => d.Id == e.DocumentId).Select(d => d.Title).FirstOrDefaultAsync(ct)));

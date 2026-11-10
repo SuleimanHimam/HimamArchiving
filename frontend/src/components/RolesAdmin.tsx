@@ -1,12 +1,15 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Fragment } from 'react'
+import { X, Lock, RotateCcw, Check, Plus } from 'lucide-react'
 import { usersApi, type AdminRole, type RolePermissions, type PermissionInfo, ROLE_LABELS, RESOURCE_LABELS, ACTION_LABELS, ACTION_ORDER, RESOURCE_GROUPS } from '../lib/users'
 import { useToast } from './toast'
+import { useConfirmDialog } from './ui/confirm-dialog'
 import './rolesadmin.css'
 
 const label = (n: string) => ROLE_LABELS[n] ?? n
 
 export default function RolesAdmin() {
   const toast = useToast()
+  const { confirm } = useConfirmDialog()
   const [roles, setRoles] = useState<AdminRole[]>([])
   const [perms, setPerms] = useState<PermissionInfo[]>([])
   const [selected, setSelected] = useState<RolePermissions | null>(null)
@@ -30,6 +33,14 @@ export default function RolesAdmin() {
   const knownActions = new Set(perms.map((p) => p.action))
   const actions = [...ACTION_ORDER.filter((a) => knownActions.has(a)),
                    ...[...knownActions].filter((a) => !ACTION_ORDER.includes(a))]
+
+  // Anything the server sends that no group claims still has to be grantable, so it gets its own
+  // trailing section instead of vanishing from the matrix.
+  const grouped = new Set(RESOURCE_GROUPS.flatMap((g) => g.resources))
+  const ungrouped = [...new Set(perms.map((p) => p.resource))].filter((r) => !grouped.has(r))
+  const groups = ungrouped.length === 0
+    ? RESOURCE_GROUPS
+    : [...RESOURCE_GROUPS, { label: 'أخرى', resources: ungrouped, actionLabels: {} }]
 
   async function selectRole(role: AdminRole) {
     setBusy(true)
@@ -94,7 +105,7 @@ export default function RolesAdmin() {
 
   async function resetToDefaults() {
     if (!selected) return
-    if (!confirm('إعادة تعيين صلاحيات هذا الدور إلى القيم الافتراضية؟ سيتم فقدان أي تعديلات.')) return
+    if (!(await confirm({ message: 'إعادة تعيين صلاحيات هذا الدور إلى القيم الافتراضية؟ سيتم فقدان أي تعديلات.', destructive: true }))) return
     setBusy(true)
     try {
       const rp = await usersApi.resetRolePermissions(selected.id)
@@ -125,7 +136,7 @@ export default function RolesAdmin() {
   }
 
   async function deleteRole(role: AdminRole) {
-    if (!confirm(`حذف الدور «${label(role.name)}»؟`)) return
+    if (!(await confirm({ message: `حذف الدور «${label(role.name)}»؟`, destructive: true }))) return
     setBusy(true)
     try {
       await usersApi.deleteRole(role.id)
@@ -143,9 +154,8 @@ export default function RolesAdmin() {
       {/* Left: role list */}
       <aside className="roles-aside">
         <div className="roles-aside__head">
-          <span className="kicker">ROLES · الأدوار</span>
           <button className="btn btn-primary btn-sm" onClick={() => setCreating((v) => !v)}>
-            {creating ? '✕' : '+ دور جديد'}
+            {creating ? <X size={15} aria-hidden /> : <><Plus size={15} aria-hidden /> دور جديد</>}
           </button>
         </div>
 
@@ -177,7 +187,7 @@ export default function RolesAdmin() {
                   disabled={busy}
                   title="حذف الدور"
                   onClick={() => deleteRole(r)}
-                >✕</button>
+                ><X size={13} aria-hidden /></button>
               </div>
             </li>
           ))}
@@ -194,11 +204,10 @@ export default function RolesAdmin() {
           <>
             <div className="roles-matrix-head">
               <div>
-                <span className="kicker">PERMISSIONS · الصلاحيات</span>
                 <h3 className="roles-matrix-title">{label(selected.name)}</h3>
                 {selected.description && <p className="roles-matrix-desc">{selected.description}</p>}
                 {selected.isSystem && (
-                  <p className="roles-matrix-system">⚙ دور مدمج — لا يمكن حذفه</p>
+                  <p className="roles-matrix-system"><Lock size={13} aria-hidden /> دور مدمج — لا يمكن حذفه</p>
                 )}
               </div>
               <div className="roles-matrix-top-actions">
@@ -206,7 +215,7 @@ export default function RolesAdmin() {
                 <button className="btn btn-ghost btn-sm" onClick={() => toggleAll(false)}>تعطيل الكل</button>
                 {selected.isSystem && (
                   <button className="btn btn-ghost btn-sm roles-reset-btn" disabled={busy} onClick={resetToDefaults}>
-                    ↺ إعادة الافتراضي
+                    <RotateCcw size={15} aria-hidden /> إعادة الافتراضي
                   </button>
                 )}
                 <button className="btn btn-seal" disabled={!dirty || busy} onClick={save}>
@@ -234,19 +243,19 @@ export default function RolesAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {RESOURCE_GROUPS.map((group) => {
+                  {groups.map((group) => {
                     const groupResources = group.resources.filter((r) =>
                       perms.some((p) => p.resource === r)
                     )
                     if (groupResources.length === 0) return null
                     return (
-                      <>
-                        <tr key={`grp-${group.label}`} className="perm-group-row">
+                      <Fragment key={group.label}>
+                        <tr className="perm-group-row">
                           <td colSpan={actions.length + 1} className="perm-group-cell">
                             {group.label}
                           </td>
                         </tr>
-                        <tr key={`subhdr-${group.label}`} className="perm-subhdr-row">
+                        <tr className="perm-subhdr-row">
                           <th className="perm-th perm-th--resource perm-th--sub">الوحدة</th>
                           {actions.map((a) => (
                             <th key={a} className="perm-th perm-th--action perm-th--sub">
@@ -281,7 +290,7 @@ export default function RolesAdmin() {
                                         onClick={() => toggle(code)}
                                         title={on ? 'مُفعَّل — انقر للتعطيل' : 'مُعطَّل — انقر للتفعيل'}
                                       >
-                                        {on ? '✓' : '✗'}
+                                        {on ? <Check size={14} aria-hidden /> : <X size={14} aria-hidden />}
                                       </button>
                                     ) : (
                                       <span className="perm-cell perm-cell--na">—</span>
@@ -292,7 +301,7 @@ export default function RolesAdmin() {
                             </tr>
                           )
                         })}
-                      </>
+                      </Fragment>
                     )
                   })}
                 </tbody>

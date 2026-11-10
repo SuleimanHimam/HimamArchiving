@@ -1,0 +1,749 @@
+/* Correspondence module — logical properties + tokens only, RTL-safe. */
+
+/* ── Icons ──────────────────────────────────────────────────────────────────────
+   Every action icon is a lucide SVG (one glyph per meaning, app-wide) rather than an
+   emoji, whose shape and colour were whatever the OS font decided. SVGs are inline
+   boxes, not text, so the buttons that used to hold a single character have to centre
+   them explicitly. */
+.mbx__act { display: grid; place-items: center; }
+.mbx__act > svg, .mbx__new > svg, .mbx__filterbtn > svg, .mbx__search > svg { flex-shrink: 0; }
+.mbx__clip { vertical-align: -2px; color: var(--m-text-3); }
+.mbx__read { display: inline-block; vertical-align: -2px; }
+/* Directional icons (back / next) follow the reading direction, so they mirror in LTR. */
+[dir='ltr'] .icon-dir { transform: scaleX(-1); }
+.corr__head-actions { display: flex; gap: 8px; }
+
+.corr__layout {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.corr__layout:has(.corr__drawer) { grid-template-columns: 180px 1fr minmax(340px, 460px); }
+
+/* Folders */
+.corr__folders { display: flex; flex-direction: column; gap: 2px; }
+.corr__folder {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--m-text-2); cursor: pointer; font: inherit; text-align: start;
+}
+.corr__folder:hover { background: var(--m-surface-2); color: var(--m-text); }
+.corr__folder.is-active { background: var(--m-primary); color: #fff; }
+.corr__folder:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+.corr__folder-icon { font-size: 1rem; }
+
+/* List */
+.corr__list { background: var(--m-surface); border: 1px solid var(--m-border); border-radius: 12px; overflow: hidden; min-block-size: 200px; }
+.corr__rows { list-style: none; margin: 0; padding: 0; }
+.corr__row {
+  inline-size: 100%;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border: 0; border-block-end: 1px solid var(--m-border);
+  background: transparent; cursor: pointer; font: inherit; text-align: start; color: var(--m-text);
+}
+.corr__row:hover { background: var(--m-surface-2); }
+.corr__row.is-selected { background: color-mix(in srgb, var(--m-primary) 8%, transparent); }
+.corr__row.is-unread .corr__row-subject { font-weight: 700; }
+.corr__row.is-unread::before { content: ''; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--m-primary); flex-shrink: 0; }
+.corr__row-main { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; gap: 2px; }
+.corr__row-subject { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.corr__row-meta { font-size: .78rem; color: var(--m-text-3); }
+.corr__row-date { font-size: .78rem; color: var(--m-text-3); white-space: nowrap; }
+.corr__stage { font-size: .72rem; padding: 2px 8px; border-radius: 6px; background: var(--m-surface-2); color: var(--m-text-2); }
+.corr__empty { padding: 32px; text-align: center; color: var(--m-text-3); }
+
+/* Detail drawer */
+.corr__drawer {
+  background: var(--m-surface); border: 1px solid var(--m-border); border-radius: 12px;
+  padding: 16px; max-block-size: calc(100vh - 140px); overflow-y: auto;
+}
+.corr__drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.corr__drawer-num { font-size: .72rem; color: var(--m-text-3); }
+.corr__drawer h2 { font-size: 1.05rem; margin-block-start: 2px; }
+.corr__badges { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 12px; }
+.corr__meta { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: .85rem; margin-block-end: 12px; }
+.corr__meta dt { color: var(--m-text-3); }
+.corr__meta dd { margin: 0; }
+.corr__actions { display: flex; flex-wrap: wrap; gap: 6px; padding-block: 12px; border-block: 1px solid var(--m-border); }
+.corr__danger { color: var(--m-seal-fg); }
+.corr__body { padding-block: 14px; line-height: 1.7; }
+.corr__section { padding-block-start: 14px; border-block-start: 1px solid var(--m-border); margin-block-start: 14px; }
+.corr__section h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--m-text-3); margin-block-end: 8px; }
+.corr__recipients, .corr__attachments, .corr__thread { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: .85rem; }
+.corr__thread li.is-current { font-weight: 700; }
+.corr__reads { inline-size: 100%; border-collapse: collapse; font-size: .82rem; }
+.corr__reads th, .corr__reads td { text-align: start; padding: 6px 8px; border-block-end: 1px solid var(--m-border); }
+
+/* Compose — constrained width, compact grid */
+.corr-compose { max-inline-size: 860px; margin-inline: auto; }
+.corr-compose__form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; padding: 18px; }
+.corr-compose__form .field--wide { grid-column: 1 / -1; }
+/* Keep the embedded rich-text editor compact inside the compose form. */
+.corr-compose__form { --rte-canvas-max: 320px; }
+/* Page title moved inside the card: span both columns, sit flush at the top. */
+.corr-compose__head {
+  grid-column: 1 / -1;
+  margin-block: 0 4px;
+  padding-block-end: 12px;
+  border-block-end: 1px solid var(--m-border);
+}
+/* Tighter field rows inside the compose form */
+.corr-compose__form .field { gap: 4px; }
+.corr-compose__form .field > span { font-size: .82rem; color: var(--m-text-2); }
+.corr-compose__form .field input,
+.corr-compose__form .field select { padding-block: 7px; }
+.corr-compose__actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; padding-block-start: 10px; }
+.corr-recip { display: flex; flex-direction: column; gap: 6px; }
+.corr-recip__row { display: flex; gap: 6px; align-items: center; }
+.corr-recip__row select, .corr-recip__row input { min-inline-size: 0; }
+.corr-recip__hint { margin-block-start: 4px; font-size: .78rem; color: var(--m-text-3); }
+
+@media (max-width: 900px) {
+  .corr__layout, .corr__layout:has(.corr__drawer) { grid-template-columns: 1fr; }
+  .corr-compose__form { grid-template-columns: 1fr; }
+}
+
+/* ── Mail-client table layout (redesign) ─────────────────────────────────── */
+.mbx { display: grid; grid-template-columns: 1fr 210px; gap: 14px; align-items: start; }
+
+/* Folder rail (leading edge in RTL) */
+.mbx__rail { display: flex; flex-direction: column; gap: 10px; order: 2; }
+.mbx__new {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 14px; border: 0; border-radius: 10px;
+  background: var(--m-primary); color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+}
+.mbx__new:hover { background: var(--m-primary-2); }
+.mbx__new:focus-visible, .mbx__register:focus-visible, .mbx__folder:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+.mbx__folders { display: flex; flex-direction: column; gap: 2px; background: var(--m-surface); border: 1px solid var(--m-border); border-radius: 12px; padding: 6px; }
+.mbx__folder {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--m-text-2); cursor: pointer; font: inherit; text-align: start;
+}
+.mbx__folder:hover { background: var(--m-surface-2); color: var(--m-text); }
+.mbx__folder.is-active { background: var(--m-primary); color: #fff; }
+.mbx__folder-icon { font-size: 1rem; }
+.mbx__folder-label { flex: 1; min-inline-size: 0; }
+.mbx__folder-count {
+  min-inline-size: 22px; padding: 1px 7px; border-radius: 999px; text-align: center;
+  font-size: .72rem; font-weight: 700; background: var(--m-surface-2); color: var(--m-text-2);
+}
+.mbx__folder.is-active .mbx__folder-count { background: rgba(255,255,255,.25); color: #fff; }
+.mbx__register {
+  padding: 9px 12px; border: 1px solid var(--m-border); border-radius: 10px;
+  background: var(--m-surface); color: var(--m-text-2); font: inherit; cursor: pointer; text-align: start;
+}
+.mbx__register:hover { background: var(--m-surface-2); color: var(--m-text); }
+
+/* Main pane */
+.mbx__main { order: 1; background: var(--m-surface); border: 1px solid var(--m-border); border-radius: 12px; overflow: hidden; }
+.mbx__toolbar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-block-end: 1px solid var(--m-border); background: var(--m-surface-2); }
+.mbx__search { flex: 1; max-inline-size: 320px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--m-border); border-radius: 8px; background: var(--m-surface); color: var(--m-text-3); }
+.mbx__search input { flex: 1; border: 0; background: transparent; color: var(--m-text); font: inherit; outline: none; min-inline-size: 0; }
+.mbx__rows-sel { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--m-text-2); }
+.mbx__rows-sel select { padding: 4px 6px; border: 1px solid var(--m-border); border-radius: 6px; background: var(--m-surface); color: var(--m-text); font: inherit; }
+.mbx__count { margin-inline-start: auto; font-size: .78rem; color: var(--m-text-3); }
+
+/* ── Record filters ── */
+.mbx__filterbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; font: inherit; font-size: .82rem;
+  color: var(--m-text-2); background: var(--m-surface);
+  border: 1px solid var(--m-border); border-radius: 8px; cursor: pointer;
+}
+.mbx__filterbtn:hover { background: var(--m-surface-2); color: var(--m-text); }
+.mbx__filterbtn.is-open { border-color: var(--m-primary); color: var(--m-text); }
+.mbx__filterbtn.has-active { color: var(--m-primary); border-color: var(--m-primary); }
+.mbx__filterbadge {
+  min-inline-size: 17px; padding: 0 5px; border-radius: 999px;
+  font-size: .68rem; font-weight: 700; text-align: center;
+  background: var(--m-primary); color: #fff;
+}
+
+.mbx__filters {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px;
+  padding: 12px 14px;
+  border-block-end: 1px solid var(--m-border);
+  background: var(--m-surface);
+}
+.mbx__filter { display: flex; flex-direction: column; gap: 4px; flex: 1 1 8.5rem; min-inline-size: 8.5rem; }
+.mbx__filter > span { font-size: .74rem; color: var(--m-text-3); }
+.mbx__filter select {
+  inline-size: 100%;
+  padding: 6px 8px; font: inherit; font-size: .84rem;
+  color: var(--m-text); background: var(--m-surface);
+  border: 1px solid var(--m-border); border-radius: 6px;
+}
+.mbx__filter .dpk, .mbx__filter .dpk__field { inline-size: 100%; }
+.mbx__filter .dpk__input { inline-size: 100%; padding: 6px 8px; border: 1px solid var(--m-border); border-radius: 6px; }
+.mbx__filterclear {
+  padding: 6px 12px; font: inherit; font-size: .8rem;
+  color: var(--m-seal-fg); background: transparent;
+  border: 1px solid var(--m-border); border-radius: 6px; cursor: pointer;
+}
+.mbx__filterclear:hover { background: var(--m-surface-2); }
+
+/* Table */
+.mbx__tablewrap { overflow-x: auto; }
+
+/* Column priorities live in forms.css (.col-opt1/2/3) so every table uses one mechanism.
+   Here: opt3 = الإجراء · opt2 = موعد الرد · opt1 = التصنيف */
+@media (max-width: 1200px) {
+  /* The full timestamp is the widest remaining cell; letting it wrap onto a second
+     line costs a little height and buys back far more width than it loses. */
+  .mbx__table .mbx__nowrap { white-space: normal; }
+}
+.mbx__table { inline-size: 100%; border-collapse: collapse; font-size: .82rem; }
+.mbx__table thead th {
+  position: sticky; inset-block-start: 0; z-index: 1;
+  text-align: start; white-space: nowrap; padding: 9px 10px;
+  background: var(--m-surface-2); color: var(--m-text-3); font-weight: 600; border-block-end: 1px solid var(--m-border);
+}
+.mbx__row { cursor: pointer; border-block-end: 1px solid var(--m-border); }
+.mbx__row > td { padding: 9px 10px; vertical-align: middle; color: var(--m-text); }
+.mbx__row:hover { background: var(--m-surface-2); }
+.mbx__row.is-selected { background: color-mix(in srgb, var(--m-primary) 8%, transparent); }
+.mbx__row.is-unread > td { font-weight: 600; }
+.mbx__ellip { max-inline-size: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mbx__nowrap { white-space: nowrap; }
+.mbx__c-read { text-align: center; inline-size: 44px; }
+.mbx__c-actions { inline-size: 1%; white-space: nowrap; }
+.mbx__c-subject { min-inline-size: 220px; }
+.mbx__read { color: var(--m-primary-fg); font-weight: 700; }
+.mbx__unread { display: inline-block; inline-size: 8px; block-size: 8px; border-radius: 50%; border: 2px solid var(--m-primary); }
+.mbx__dot { display: inline-block; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--m-primary); margin-inline-end: 6px; vertical-align: middle; }
+.mbx__clip { margin-inline-start: 6px; }
+
+/* Direction + type chips (the reference's two "نوع البريد" columns) */
+.corr-dir { display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: .74rem; font-weight: 600; color: #fff; white-space: nowrap; }
+.corr-dir--in { background: var(--m-info-fg); }
+.corr-dir--out { background: var(--m-primary); }
+.corr-dir--int { background: var(--m-accent-fg); }
+/* "من"/"إلى" ahead of the party, in the folders that hold both directions. Muted and small: it
+   labels the name, it is not a second value competing with it. */
+.mbx__party-dir { margin-inline-end: .35rem; font-size: .72rem; font-weight: 600; color: var(--m-text-3); }
+.corr-type { display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: .74rem; font-weight: 600; background: var(--accl, color-mix(in srgb, var(--m-accent) 15%, transparent)); color: var(--m-accent-fg); white-space: nowrap; }
+
+/* Row action icons */
+.mbx__acts { display: flex; gap: 2px; }
+.mbx__act { inline-size: 26px; block-size: 26px; border: 0; border-radius: 6px; background: transparent; color: var(--m-text-3); cursor: pointer; font-size: .85rem; }
+.mbx__act:hover { background: var(--m-surface); color: var(--m-primary-fg); }
+.mbx__act:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 1px; }
+
+/* Drawer becomes an overlay in the table layout */
+.corr__scrim { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; }
+.corr__drawer { position: fixed; inset-block: 0; inset-inline-end: 0; z-index: 41; inline-size: min(460px, 94vw); box-shadow: var(--shadow-lift, 0 12px 40px rgba(0,0,0,.2)); }
+
+/* Scope title above the rail (الديوان / المراسلات) */
+.mbx__scopettl { font-weight: 700; font-size: .95rem; color: var(--m-text); padding-inline: 4px; }
+
+/* Overdue rows / deadline emphasis (no-reply past the response deadline) */
+.mbx__row.is-overdue > td { color: var(--m-seal-fg); }
+.mbx__row.is-overdue.is-selected { background: color-mix(in srgb, var(--m-seal-fg) 8%, transparent); }
+.corr__od { color: var(--m-seal-fg); font-weight: 700; }
+
+/* Inline checkbox field in the compose form */
+.corr-compose__check { flex-direction: row; align-items: center; gap: 8px; }
+.corr-compose__check input { inline-size: auto; }
+
+/* Attachments — redesigned drop-zone at the top of the compose form */
+.corr-dz {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 12px; border: 1.5px dashed var(--m-border); border-radius: 12px;
+  background: var(--m-surface-2); transition: border-color .15s, background .15s;
+}
+.corr-dz.is-drag { border-color: var(--m-primary); background: color-mix(in srgb, var(--m-primary) 8%, transparent); }
+.corr-dz__actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.corr-dz__btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border: 1px solid var(--m-border); border-radius: 10px;
+  background: var(--m-surface); color: var(--m-text); font: inherit; font-weight: 600; cursor: pointer;
+  transition: transform .1s, box-shadow .15s, border-color .15s, background .15s;
+}
+.corr-dz__btn:hover { border-color: var(--m-primary); box-shadow: 0 4px 14px rgba(0,0,0,.08); transform: translateY(-1px); }
+.corr-dz__btn:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+.corr-dz__btn--scan { background: var(--m-primary); color: #fff; border-color: transparent; }
+.corr-dz__btn--scan:hover { background: var(--m-primary-2, var(--m-primary)); }
+.corr-dz__btn-ic { font-size: 1.15rem; line-height: 1; }
+.corr-dz__hint { margin: 0; font-size: .82rem; color: var(--m-text-3); text-align: center; }
+
+.corr-att__list { list-style: none; margin: 4px 0 0; padding: 0; inline-size: 100%; display: flex; flex-direction: column; gap: 6px; }
+.corr-att__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border: 1px solid var(--m-border); border-radius: 10px; background: var(--m-surface);
+}
+.corr-att__name { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.corr-att__x {
+  inline-size: 26px; block-size: 26px; border: 0; border-radius: 6px; flex-shrink: 0;
+  background: transparent; color: var(--m-seal-fg); cursor: pointer; font-size: .9rem;
+}
+.corr-att__x:hover { background: color-mix(in srgb, var(--m-seal-fg) 12%, transparent); }
+
+@media (max-width: 900px) {
+  .mbx { grid-template-columns: 1fr; }
+  .mbx__rail { order: 1; }
+  .mbx__main { order: 2; }
+}
+
+/* ── Compose: section headings (group the form into scannable blocks) ────────── */
+.corr-compose__legend {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 8px;
+  margin-block: 8px 0; padding-block-end: 6px;
+  border-block-end: 1px solid var(--m-border);
+  font-size: .82rem; font-weight: 700; color: var(--m-text-2); letter-spacing: .01em;
+}
+.corr-compose__form > .corr-compose__legend:first-child { margin-block-start: 0; }
+
+/* ── Detail page (full-page view for a single correspondence) ────────────────── */
+.corr-detail { max-inline-size: 1120px; margin-inline: auto; }
+.corr-detail__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-block-end: 14px; }
+.corr-detail__head-main { min-inline-size: 0; }
+.corr-detail__num { font-size: .78rem; color: var(--m-text-3); }
+.corr-detail__subject { font-size: 1.4rem; line-height: 1.3; margin-block: 4px 12px; }
+.corr-detail__bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 12px; margin-block-end: 16px;
+  background: var(--m-surface-2); border: 1px solid var(--m-border); border-radius: 12px;
+}
+.corr-detail__spacer { flex: 1 1 auto; }
+.corr-detail__grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.corr-detail__main { display: flex; flex-direction: column; gap: 16px; min-inline-size: 0; }
+.corr-detail__side { display: flex; flex-direction: column; gap: 16px; position: sticky; inset-block-start: 12px; }
+.corr-detail__card { background: var(--m-surface); border: 1px solid var(--m-border); border-radius: 14px; padding: 16px 18px; }
+.corr-detail__card:hover { box-shadow: 0 6px 22px rgba(0, 0, 0, .06); }
+.corr-detail__h3 {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--m-text-3); margin-block-end: 12px;
+}
+.corr-detail__count { min-inline-size: 20px; padding: 1px 8px; border-radius: 999px; background: var(--m-surface-2); font-size: .72rem; font-weight: 700; color: var(--m-text-2); }
+.corr__thread-link { border: 0; background: transparent; color: var(--m-primary-fg); cursor: pointer; font: inherit; padding: 0; text-align: start; }
+.corr__thread-link:hover { text-decoration: underline; }
+@media (max-width: 860px) {
+  .corr-detail__grid { grid-template-columns: 1fr; }
+  .corr-detail__side { position: static; }
+}
+
+/* ── Smoother, slower interactions (match the app's easing, not the old snappy feel) ── */
+.mbx__row, .mbx__folder, .mbx__act, .mbx__new, .mbx__register,
+.mbx__folder-count, .corr-att__item, .corr-att__x, .corr-detail__card,
+.corr__thread-link, .corr-dir, .corr-type {
+  transition:
+    background-color .3s var(--ease, ease), color .3s var(--ease, ease),
+    border-color .3s var(--ease, ease), box-shadow .3s var(--ease, ease),
+    transform .3s var(--ease, ease);
+}
+.corr-dz { transition: border-color .3s var(--ease, ease), background-color .3s var(--ease, ease); }
+.corr-dz__btn {
+  transition:
+    transform .3s var(--ease, ease), box-shadow .3s var(--ease, ease),
+    border-color .3s var(--ease, ease), background-color .3s var(--ease, ease);
+}
+/* A gentle lift on hover for rows + folders, eased slowly */
+.mbx__folder:hover { transform: translateX(2px); }
+[dir="rtl"] .mbx__folder:hover { transform: translateX(-2px); }
+
+/* ── SearchSelect (searchable combobox) ─────────────────────────────────────── */
+.ss { position: relative; flex: 1; min-inline-size: 0; }
+/* The field carried only its geometry, and took its look from whatever form it sat in
+   (`.cx-field .ss__input` in compose). Used anywhere else — the audit-log user filter, the
+   disposition requester filter — it fell back to the browser's default input: a white box with
+   dark text, unreadable on a dark theme. These are the defaults; compose still overrides them. */
+.ss__input {
+  inline-size: 100%; padding: 8px 10px; padding-inline-end: 26px;
+  font: inherit; font-size: .88rem; color: var(--m-text);
+  background: var(--m-surface-2); border: 1px solid var(--m-border);
+  border-radius: 8px; outline: none;
+  transition: border-color .12s var(--ease, ease), background-color .12s var(--ease, ease);
+}
+.ss__input::placeholder { color: var(--m-text-3); }
+.ss__input:focus { border-color: var(--m-primary, var(--m-accent)); background: var(--m-surface); }
+.ss__input:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Multi-select: chosen units sit above the search box as removable chips. */
+.ss--multi .ss__caret { inset-block-start: auto; inset-block-end: 12px; transform: none; }
+.ss__chips { display: flex; flex-wrap: wrap; gap: 4px; margin-block-end: 4px; }
+.ss__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px 2px 8px;
+  font-size: .78rem;
+  color: var(--m-text);
+  background: var(--m-accent-soft);
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+}
+.ss__chip-x {
+  display: grid;
+  place-items: center;
+  inline-size: 15px;
+  block-size: 15px;
+  font-size: .8rem;
+  line-height: 1;
+  color: var(--m-text-2);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.ss__chip-x:hover { background: var(--m-border-2); color: var(--m-text); }
+.ss__caret { position: absolute; inset-inline-end: 9px; inset-block-start: 50%; transform: translateY(-50%); color: var(--m-text-3); font-size: .7rem; pointer-events: none; }
+.ss__menu {
+  position: absolute; inset-inline: 0; inset-block-start: calc(100% + 4px); z-index: 50;
+  max-block-size: 264px; overflow-y: auto; margin: 0; padding: 4px; list-style: none;
+  background: var(--m-surface); border: 1px solid var(--m-border); border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .16);
+}
+.ss__opt {
+  inline-size: 100%; display: flex; flex-direction: column; gap: 1px; align-items: flex-start;
+  padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--m-text);
+  font: inherit; cursor: pointer; text-align: start; transition: background-color .2s var(--ease, ease);
+}
+.ss__opt:hover { background: var(--m-surface-2); }
+.ss__opt-label { font-weight: 500; }
+.ss__opt-sub { font-size: .74rem; color: var(--m-text-3); }
+/* Optional avatar chip (recipient pickers) */
+.ss__opt--avatar { flex-direction: row; align-items: center; gap: 9px; }
+.ss__opt-av {
+  inline-size: 30px; block-size: 30px; flex-shrink: 0;
+  display: grid; place-items: center; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+  color: #1AA8B8; background: color-mix(in srgb, #1AA8B8 16%, transparent);
+}
+.ss__empty { padding: 12px; text-align: center; color: var(--m-text-3); font-size: .82rem; }
+
+/* ── Conversation (Gmail-style thread, internal mail) ────────────────────────── */
+.conv { display: flex; flex-direction: column; gap: 8px; }
+.conv__msg { border: 1px solid var(--m-border); border-radius: 12px; overflow: hidden; background: var(--m-surface); transition: box-shadow .3s var(--ease, ease), border-color .3s var(--ease, ease); }
+.conv__msg.is-current { border-color: color-mix(in srgb, var(--m-primary) 45%, var(--m-border)); }
+.conv__msg.is-open { box-shadow: 0 4px 16px rgba(0, 0, 0, .05); }
+.conv__head {
+  inline-size: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border: 0; background: transparent; color: var(--m-text);
+  font: inherit; cursor: pointer; text-align: start;
+}
+.conv__head:hover { background: var(--m-surface-2); }
+.conv__avatar {
+  inline-size: 30px; block-size: 30px; flex-shrink: 0; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 700; font-size: .85rem;
+  background: color-mix(in srgb, var(--m-primary) 15%, transparent); color: var(--m-primary-fg);
+}
+.conv__who { font-weight: 600; white-space: nowrap; }
+.conv__snippet { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--m-text-3); font-size: .84rem; }
+.conv__date { margin-inline-start: auto; font-size: .76rem; color: var(--m-text-3); white-space: nowrap; }
+.conv__caret { color: var(--m-text-3); font-size: .7rem; }
+.conv__body { padding: 4px 14px 14px; border-block-start: 1px solid var(--m-border); }
+.conv__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-block-start: 12px; padding-block-start: 10px; border-block-start: 1px dashed var(--m-border); }
+
+/* ── Stacked layout: header + segmented folder tabs above the table ─────────── */
+.mbx--stacked { display: block; }
+.mbx__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; margin-block-end: 12px;
+}
+.mbx__headacts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* In the stacked header the create buttons size to their content, not full width. */
+.mbx--stacked .mbx__new,
+.mbx--stacked .mbx__register { inline-size: auto; }
+.mbx--stacked .mbx__main { margin-block-start: 12px; }
+
+/* Count badge inside a folder tab */
+.mbx__tabcount {
+  min-inline-size: 20px; padding: 1px 7px; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; line-height: 1.5;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+/* ── Denser compose form so it fits one screen without scrolling ────────────── */
+.corr-compose { max-inline-size: 1000px; margin-block: 0; }
+/* Editor height tracks the viewport so the whole form stays on screen. */
+.corr-compose__form { gap: 5px 16px; padding: 14px; --rte-canvas-max: clamp(140px, 24vh, 260px); }
+.corr-compose__form .field { gap: 3px; }
+.corr-compose__form .field > span { font-size: .76rem; }
+.corr-compose__form .field input,
+.corr-compose__form .field select { padding-block: 5px; font-size: .84rem; }
+/* Compact in-card title */
+.corr-compose__head { margin-block: 0 2px; padding-block-end: 8px; }
+.corr-compose__head .kicker { font-size: .72rem; }
+.corr-compose__head h1 { font-size: 1.15rem; margin-block: 2px 0; }
+.corr-compose__legend { margin-block: 3px 0; padding-block-end: 4px; font-size: .78rem; }
+/* Attachments strip: keep it out of the way until it has files */
+.corr-dz { padding: 8px; gap: 4px; }
+.corr-dz__btn { padding: 5px 14px; font-size: .84rem; }
+.corr-dz__hint { font-size: .76rem; margin-block: 0; }
+.corr-att__item { padding: 4px 10px; font-size: .84rem; }
+/* Recipient rows */
+.corr-recip { gap: 5px; }
+.corr-recip__row select, .corr-recip__row .ss__input { font-size: .84rem; }
+.corr-recip__hint { margin-block-start: 2px; }
+.corr-compose__actions { padding-block-start: 8px; }
+
+/* ── Four fields per row to save vertical space ─────────────────────────────── */
+.corr-compose { max-inline-size: 1240px; }
+.corr-compose__form { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 16px; }
+/* Full-row blocks: attachments, recipients, body, section headings, actions. */
+.corr-compose__form .field--wide,
+.corr-compose__form .corr-compose__legend,
+.corr-compose__form .corr-compose__actions { grid-column: 1 / -1; }
+/* The subject gets half the row so a neighbour can share it. */
+.corr-compose__form .field--2 { grid-column: span 2; }
+
+@media (max-width: 1180px) {
+  .corr-compose__form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .corr-compose__form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .corr-compose__form .field--2 { grid-column: span 2; }
+}
+@media (max-width: 620px) {
+  .corr-compose__form { grid-template-columns: 1fr; }
+  .corr-compose__form .field--2 { grid-column: 1 / -1; }
+}
+
+/* ── One input look everywhere ──────────────────────────────────────────────────
+   SearchSelect and DatePicker render their own <input>, which sits one level below
+   `.field` and so misses the `.field > input` rule. Give them the identical
+   treatment (transparent, single bottom rule, same focus) so every text control on
+   the form reads as one component family. */
+.field .ss__input,
+.field .dpk__input {
+  inline-size: 100%;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-block-end: var(--rule-ink);
+  border-radius: 0;
+  outline: none;
+  transition: border-color .2s var(--ease), background .2s var(--ease);
+}
+.field .ss__input:focus,
+.field .dpk__input:focus {
+  border-block-end-color: var(--seal);
+  background: linear-gradient(to top, rgba(155, 34, 38, .05), transparent);
+}
+.field .ss__input::placeholder,
+.field .dpk__input::placeholder { color: var(--text-faint); }
+/* Trailing affordances stay centred on the rule (the caret already centres itself). */
+.field .dpk__btn,
+.field .dpk__clear { inset-block-start: 50%; transform: translateY(-50%); }
+
+/* ── External-party picker polish ───────────────────────────────────────────── */
+.ss__linked {
+  position: absolute; inset-inline-end: 24px; inset-block-start: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; inline-size: 16px; block-size: 16px; border-radius: 50%;
+  font-size: .6rem; font-weight: 700; line-height: 1; pointer-events: none;
+  background: color-mix(in srgb, var(--m-primary) 16%, transparent); color: var(--m-primary-fg);
+}
+.field .ss__input { padding-inline-end: 46px !important; }
+.ss__opt { gap: 2px; }
+.ss__opt-main { display: flex; flex-direction: column; gap: 1px; align-items: flex-start; min-inline-size: 0; inline-size: 100%; }
+.ss__opt-sub {
+  font-size: .7rem; color: var(--m-text-3);
+  padding: 0 6px; border-radius: 999px; background: var(--m-surface-2);
+}
+.ss__empty { display: flex; flex-direction: column; gap: 3px; align-items: center; padding: 12px 10px; }
+.ss__empty-title { font-size: .82rem; color: var(--m-text-3); }
+.ss__empty-hint { font-size: .72rem; color: var(--m-text-3); opacity: .85; }
+
+/* ── Convert-to-internal dialog ─────────────────────────────────────────────── */
+/* Wide, form-shaped dialog: title bar, action bar, addressing rows, then tabs.
+   DialogContent ships Tailwind `max-w-lg`/`p-6` at the same specificity, so these
+   overrides are doubled up to win regardless of stylesheet order. */
+.cti.cti {
+  max-inline-size: min(980px, 94vw);
+  width: 94vw;
+  /* Fixed shell: the dialog never grows with its content — the body scrolls instead. */
+  block-size: min(840px, 88vh);
+  max-block-size: 88vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.cti__titlebar {
+  display: flex; align-items: baseline; gap: 12px; flex: none;
+  /* DialogContent pins its close button to the physical right — keep the title clear of it. */
+  padding: 12px 16px; padding-inline-start: 46px;
+  border-block-end: 1px solid var(--m-border);
+}
+.cti__title { margin: 0; font-size: 1rem; font-weight: 700; color: var(--m-text); }
+.cti__ref { font-size: .78rem; color: var(--m-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.cti__bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: none;
+  padding: 8px 12px; background: var(--m-primary);
+}
+.cti__send, .cti__exit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; font: inherit; font-size: .85rem; font-weight: 700;
+  border: 1px solid rgb(255 255 255 / .35); border-radius: 6px;
+  color: #fff; background: rgb(255 255 255 / .14); cursor: pointer;
+}
+.cti__send { background: var(--m-success, #1a7f37); border-color: transparent; }
+.cti__send:disabled { opacity: .5; cursor: default; }
+.cti__send:not(:disabled):hover, .cti__exit:hover { filter: brightness(1.08); }
+
+/* The only scrolling region: takes whatever height the fixed shell leaves over. */
+.cti__body {
+  flex: 1;
+  min-block-size: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 14px 16px;
+  overflow-y: auto;
+}
+
+.cti__row { display: flex; align-items: flex-end; gap: 8px; }
+.cti__ico {
+  display: grid; place-items: center; flex: none;
+  inline-size: 32px; block-size: 32px; margin-block-end: 2px;
+  border: 1px solid var(--m-border); border-radius: 6px;
+  background: var(--m-surface-2); font-size: .9rem;
+}
+.cti__field { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; gap: 3px; }
+.cti__field > span { font-size: .78rem; color: var(--m-text-2); }
+
+.cti__tabs { margin-block-start: 4px; }
+.cti__count {
+  margin-inline-start: 6px; padding: 0 6px; border-radius: 999px;
+  font-size: .7rem; background: var(--m-surface-2); color: var(--m-text-2);
+}
+.cti__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-block: 12px; }
+/* Absolute cap, not a viewport unit — the editor must not re-inflate the fixed shell. */
+.cti__editor { --rte-canvas-max: 260px; }
+
+.cti__check { display: flex; align-items: center; gap: 7px; font-size: .84rem; color: var(--m-text-2); margin-block: 12px 10px; }
+.cti__body .corr-dz { padding: 10px; }
+.cti__body .corr-dz__hint { font-size: .74rem; }
+
+.cti__empty { padding: 22px; text-align: center; color: var(--m-text-3); font-size: .85rem; }
+.cti__routes { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cti__routes li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 1px solid var(--m-border); border-radius: 8px; font-size: .84rem;
+}
+.cti__route-role {
+  flex: none; min-inline-size: 46px; padding: 1px 8px; border-radius: 999px; text-align: center;
+  font-size: .72rem; font-weight: 700; background: var(--m-accent-soft); color: var(--m-text-2);
+}
+.cti__route-name { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cti__route-kind { flex: none; font-size: .74rem; color: var(--m-text-3); }
+
+@media (max-width: 700px) {
+  .cti__grid { grid-template-columns: 1fr; }
+}
+.cti__body .field { display: flex; flex-direction: column; gap: 4px; }
+.cti__body .field > span { font-size: .8rem; color: var(--m-text-2); }
+.cti__check { display: flex; align-items: center; gap: 7px; font-size: .84rem; color: var(--m-text-2); }
+
+/* ── Change-status dialog (حالة البريد) ─────────────────────────────────────── */
+.cms.cms { max-inline-size: min(560px, 94vw); padding: 0; gap: 0; display: flex; flex-direction: column; }
+.cms__head {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 14px 16px; padding-inline-start: 46px;
+  border-block-end: 1px solid var(--m-border);
+}
+.cms__title { margin: 0; font-size: 1rem; font-weight: 700; color: var(--m-text); }
+.cms__ref { font-size: .78rem; color: var(--m-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cms__body { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.cms__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.cms__field { display: flex; flex-direction: column; gap: 4px; }
+.cms__field > span { font-size: .78rem; color: var(--m-text-2); }
+.cms__ro { color: var(--m-text-3); }
+.cms__hint { margin: 0; font-size: .78rem; color: var(--m-text-3); }
+.cms__foot {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 12px 16px; border-block-start: 1px solid var(--m-border);
+}
+@media (max-width: 560px) { .cms__grid { grid-template-columns: 1fr; } }
+
+/* ── Access dialog (من يطّلع على البريد) ────────────────────────────────────── */
+/* Both lists scroll rather than growing the dialog past the viewport: a department of forty is
+   as ordinary here as a department of four. */
+.acc__inherent, .acc__list { margin: 0; padding: 0; list-style: none; max-block-size: 30vh; overflow-y: auto; }
+.acc__inherent { display: flex; flex-direction: column; gap: 2px; }
+.acc__inherent > li, .acc__row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 7px; font-size: .84rem;
+}
+.acc__inherent > li { color: var(--m-text-2); background: var(--m-accent-soft); }
+.acc__list { border: 1px solid var(--m-border); border-radius: 8px; }
+.acc__row { cursor: pointer; }
+.acc__row:hover { background: var(--m-accent-soft); }
+.acc__name { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc__why { flex: none; font-size: .74rem; color: var(--m-text-3); }
+.acc__empty { padding: 10px; font-size: .8rem; color: var(--m-text-3); text-align: center; }
+.acc__search { display: flex; align-items: center; gap: 6px; }
+.acc__search > input { flex: 1; min-inline-size: 0; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Phone + small tablet: the register stops behaving like a spreadsheet.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* The folder strip is inline-flex and never wraps, so on a narrow screen the last
+   folders (المسودات / المحذوفات) were clipped away by the pane — unreachable, not
+   merely ugly. It becomes a scrollable strip instead. */
+.mbx__tabs { max-inline-size: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.mbx__tabs::-webkit-scrollbar { display: none; }
+.mbx__tabs [role='tab'] { flex-shrink: 0; }
+
+@media (max-width: 780px) {
+  /* The toolbar was a single non-wrapping row: below ~600px the "بريد جديد" button fell
+     off the end of a pane that clips its overflow, so a phone could not compose at all. */
+  .mbx__toolbar { flex-wrap: wrap; gap: 8px 10px; padding: 10px; }
+  .mbx__search { flex: 1 1 100%; max-inline-size: none; order: -1; }
+  .mbx__count { margin-inline-start: 0; }
+  .mbx__filters { padding: 10px; gap: 10px; }
+}
+
+@media (max-width: 640px) {
+  /* Rows become cards. A 770px-wide table inside a 330px column did scroll, but the
+     subject — the only column anyone actually reads — sat off-screen behind it. */
+  .mbx__tablewrap { overflow-x: visible; padding: 10px; }
+  .mbx__table { display: block; font-size: .86rem; }
+  .mbx__table thead { display: none; }
+  .mbx__table tbody { display: flex; flex-direction: column; gap: 8px; }
+
+  .mbx__table .mbx__row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--m-border); border-radius: 12px;
+    background: var(--m-surface);
+  }
+  .mbx__table .mbx__row.is-unread { border-color: color-mix(in srgb, var(--m-primary) 45%, var(--m-border)); }
+  .mbx__table .mbx__row.is-overdue { border-color: color-mix(in srgb, var(--m-seal-fg) 45%, var(--m-border)); }
+
+  /* Only the cells worth a card slot survive; the rest (read tick, direction, action
+     type, response deadline) stay behind on the desktop table. */
+  .mbx__table .mbx__row > td { display: none; padding: 0; border: 0; }
+  /* Three lines: [status · number · date] / [subject] / [classification · party · actions].
+     Source order does not match reading order here, hence the explicit `order`. */
+  .mbx__table .mbx__row > td[data-cell='status'],
+  .mbx__table .mbx__row > td[data-cell='number'],
+  .mbx__table .mbx__row > td[data-cell='date'] { display: inline-block; order: 1; }
+  .mbx__table .mbx__row > td[data-cell='date'] { margin-inline-start: auto; font-size: .76rem; color: var(--m-text-3); white-space: nowrap; }
+  /* Classification is a security marking: the card keeps it even though the narrow
+     table drops it (.col-opt1). Higher specificity, so stylesheet order is moot. */
+  .mbx__table .mbx__row > td[data-cell='class'] { display: inline-block; order: 3; }
+
+  /* Subject owns its own line and may wrap — it is what the row is about. */
+  .mbx__table .mbx__row > td[data-cell='subject'] {
+    display: block; order: 2; flex: 1 1 100%;
+    min-inline-size: 0; max-inline-size: none;
+    white-space: normal; overflow: visible; text-overflow: clip;
+    font-weight: 600; line-height: 1.45;
+  }
+  .mbx__table .mbx__row > td[data-cell='party'] {
+    display: block; order: 3; flex: 1 1 6rem;
+    min-inline-size: 0; max-inline-size: 100%;
+    font-size: .8rem; color: var(--m-text-2);
+  }
+  .mbx__table .mbx__row > td[data-cell='acts'] { display: block; order: 4; margin-inline-start: auto; inline-size: auto; }
+  /* Touch targets: 26px icon buttons are below the comfortable minimum on a phone. */
+  .mbx__table .mbx__row > td[data-cell='acts'] .mbx__act { inline-size: 32px; block-size: 32px; font-size: .95rem; }
+}

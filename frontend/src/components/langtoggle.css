@@ -24,9 +24,8 @@
 }
 
 .langdlg__icon {
-  font-size: 2.25rem;
+  display: grid; place-items: center;
   margin-bottom: 1rem;
-  line-height: 1;
 }
 
 .langdlg__title {

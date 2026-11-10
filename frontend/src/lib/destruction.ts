@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { PagedResult } from './incomingMail'
+import type { PagedResult } from './shared'
 
 export interface EligibilityDto { documentId: number; eligible: boolean; reasons: string[] }
 

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { CheckCircle2, XCircle, Info, type LucideIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import './toast.css'
 
@@ -13,7 +14,7 @@ interface ToastApi {
 
 const ToastContext = createContext<ToastApi | null>(null)
 
-const ICONS: Record<ToastType, string> = { success: '✓', error: '✕', info: 'ℹ' }
+const ICONS: Record<ToastType, LucideIcon> = { success: CheckCircle2, error: XCircle, info: Info }
 
 let seq = 0
 
@@ -49,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               transition={{ duration: 0.22 }}
               onClick={() => remove(t.id)}
             >
-              <span className="toast__icon" aria-hidden>{ICONS[t.type]}</span>
+              <span className="toast__icon" aria-hidden>{(() => { const Ic = ICONS[t.type]; return <Ic size={16} /> })()}</span>
               <span className="toast__msg">{t.message}</span>
             </motion.div>
           ))}

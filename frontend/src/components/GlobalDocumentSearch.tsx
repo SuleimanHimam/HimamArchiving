@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { Search, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
@@ -65,11 +66,12 @@ export default function GlobalDocumentSearch() {
   return (
     <div className="gds" ref={boxRef}>
       <div className="gds__box">
-        <span className="gds__icon" aria-hidden>⌕</span>
+        <Search className="gds__icon" size={15} aria-hidden />
         <input
           className="gds__input"
           type="search"
-          placeholder={t('documents.searchPlaceholder')}
+          placeholder={t('nav.searchPlaceholder')}
+          title={t('nav.searchHint')}
           value={query}
           onFocus={() => setOpen(true)}
           onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
@@ -81,7 +83,7 @@ export default function GlobalDocumentSearch() {
             type="button"
             aria-label="clear"
             onClick={() => { setQuery(''); setResults([]); setTotal(0) }}
-          >✕</button>
+          ><X size={14} aria-hidden /></button>
         )}
       </div>
 

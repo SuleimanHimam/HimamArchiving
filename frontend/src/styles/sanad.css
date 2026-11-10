@@ -1,0 +1,247 @@
+/* ============================================================
+   SANAD — design-system re-skin layer
+   Remaps the existing Diwan design tokens onto the SANAD palette
+   (warm paper · deep teal · antique gold · near-black green rail)
+   and adds a dark theme. Imported AFTER diwan.css so it overrides
+   the tokens — the whole app re-skins through these variables.
+
+   Structural twin of marasil.css: same token vocabulary, same
+   remap order, same dark strategy (only the --m-* source tokens
+   are redefined under [data-theme="dark"]; everything cascades).
+   Swap the import in main.tsx to move between skins.
+
+   One deliberate divergence from Marasil: SANAD separates the
+   brand primary (teal) from the sidebar (near-black green), where
+   Marasil collapsed both into --m-rail. Hence --m-primary is a
+   distinct source token: --ink takes the teal, --ink-deep the rail.
+   ============================================================ */
+
+:root {
+  color-scheme: light;   /* native controls (select popups, date pickers, scrollbars) render light */
+  /* ---- SANAD source tokens (light) ---- */
+  --m-bg:        #FFFFFF;   /* app background — pure white (per request) */
+  --m-surface:   #FFFFFF;   /* card — same as page now, so cards read by their
+                              border (--m-border) + shadow, not by fill contrast */
+  --m-surface-2: #F1F0EC;   /* raised panels / inputs / muted fill. Nudged slightly
+                              lighter (#EDEAE4 → #F1F0EC) so it still reads as a soft
+                              fill on a pure-white page without looking dirty. */
+  --m-rail:      #0C2942;   /* sidebar base — Archevo ink navy */
+  --m-rail-2:    #123A5A;   /* sidebar elevated — brand navy */
+  --m-border:    #DDD9D2;
+  --m-border-2:  #C9C4BB;
+  --m-text:      #161616;
+  --m-text-2:    #6B6862;   /* AA on every light surface it lands on: 5.55:1 on #fff,
+                              4.89:1 on --m-bg, 4.63:1 on --m-surface-2. Was #7A756D. */
+  --m-text-3:    #6B6862;   /* Same: solved against the DARKEST surface it is used on
+                              (--m-surface-2 #EDEAE4), not the page bg — a token that only
+                              passes on the lightest surface is not a passing token.
+                              Was #A9A49C at 2.18:1. */
+  --m-primary:   #0E7C86;   /* أوراق teal — primary action. Darkened for AA on tinted
+                              surfaces it read 4.27:1, under AA. White-on-primary is
+                              5.56:1, so buttons still pass. */
+  --m-primary-2: #0A636B;   /* brand hover */
+  --m-accent:    #12B5C9;   /* Archevo cyan — accents / active states */
+
+  /* Foreground variants. A brand colour has two jobs and cannot do both with one
+     value: as a FILL it must be dark enough to carry white text; as TEXT on a
+     tinted surface it must contrast against that surface. --m-*-fg is the text
+     role, solved per theme against the worst surface it lands on. The fills above
+     keep the brand value, so buttons and identity are untouched. */
+  --m-primary-fg: #0C715D;
+  --m-seal-fg:    #BB2E2E;
+  --m-info-fg:    #2866A5;
+  --m-accent-fg:  #7E5F1D;
+  --m-accent-2:  #35D2E4;
+  --m-accent-soft:#E2F6F9;
+  --m-seal:      #BB2E2E;   /* darkened 5% from #C53030: 4.29:1 on the badge tint was
+                              under AA. White-on-seal is 5.93:1, so buttons still pass. */   /* danger / secret */
+  --m-info:      #2B6CB0;
+  --m-success:   #2F855A;
+  --m-warning:   #B7791F;
+  --m-danger:    #C53030;
+
+  /* ---- Remap the Diwan tokens onto SANAD ---- */
+  /* --ink is the brand primary (buttons, accents); --ink-deep paints the
+     sidebar/navbar (applayout.css: var(--rail-bg, var(--ink-deep))). */
+  --ink:        var(--m-primary);
+  --ink-deep:   var(--m-rail);
+  --ink-soft:   var(--m-primary-2);
+
+  --parchment:  var(--m-bg);
+  --parchment-2:var(--m-surface-2);
+  --parchment-3:var(--m-border);
+
+  --seal:       var(--m-seal);
+  --seal-deep:  #9B2626;
+  --brass:      var(--m-accent);
+  --brass-soft: var(--m-accent-2);   /* nav icons / active indicator on the rail */
+
+  --paper:      var(--m-surface);
+  --text:       var(--m-text);
+  --text-muted: var(--m-text-2);
+  --text-faint: var(--m-text-3);
+
+  /* Page-level copies of the text/border tokens, resolved here at :root. The top bar
+     redefines --text/--line/--parchment-2 so its widgets follow a picked bar colour;
+     reading the originals from inside it would be a var() cycle, and its popovers
+     (which are their own light surfaces) need them back. Theme-aware via --m-*.
+     See applayout.css .shell__navbar. */
+  --nav-fg-base:       var(--m-text);
+  --nav-muted-base:    var(--m-text-2);
+  --nav-faint-base:    var(--m-text-3);
+  --nav-line-base:     var(--m-border);
+  --nav-surface2-base: var(--m-surface-2);
+
+  --ok:     var(--m-success);
+  --warn:   var(--m-warning);
+  --danger: var(--m-seal);
+
+  /* Legacy/undefined tokens used across component CSS with hardcoded fallbacks that never themed.
+     Aliasing them to the theme-aware tokens fixes muted text + borders + gold accents app-wide. */
+  --muted: var(--text-muted);
+  --line:  var(--parchment-3);
+  --gold:  var(--brass);
+
+  /* Confidentiality badges — SANAD semantic map. */
+  --c-public:       var(--m-primary-fg);
+  --c-internal:     var(--m-info-fg);
+  /* Deliberately NOT var(--m-accent). Classification is a safety signal, not
+     branding: it must not shift when an org rebrands (§14.4), and the brand gold
+     (#C8962E) is only 2.35:1 on the page — well under AA for a label that tells
+     you how sensitive a record is. This gold is darkened to 4.66:1. */
+  --c-confidential: var(--m-accent-fg);  /* not var(--m-accent): classification is a
+                                            safety signal, not branding (§14.4) */
+  --c-secret:       var(--m-seal-fg);
+
+  /* ---- Type ----
+     DM Sans carries Latin; Arabic falls through to IBM Plex Sans Arabic.
+     Mirrors the prototype's 'DM Sans', 'IBM Plex Sans Arabic', sans-serif. */
+  --font-display: "IBM Plex Sans Arabic", "DM Sans", system-ui, sans-serif;
+  --font-body:    "IBM Plex Sans Arabic", "DM Sans", system-ui, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
+  --font-latin:   "DM Sans", system-ui, sans-serif;
+
+  --shadow-doc:  0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lift: 0 12px 40px rgba(0,0,0,.08);
+
+  /* ---- shadcn/Tailwind compat tokens → SANAD (light). Unlayered, so these win
+          over the @theme defaults and re-skin every shadcn component. ---- */
+  --color-ink:        var(--m-primary);
+  --color-ink-deep:   var(--m-rail);
+  --color-seal:       var(--m-seal);
+  --color-brass:      var(--m-accent);
+  --color-brass-soft: var(--m-accent-soft);
+  --color-paper:      var(--m-surface);
+  --color-parchment:  var(--m-bg);
+  --color-parchment-2:var(--m-surface-2);
+  --color-parchment-3:var(--m-border);
+
+  --color-background:           var(--m-surface);
+  --color-foreground:           var(--m-text);
+  --color-popover:              var(--m-surface);
+  --color-popover-foreground:   var(--m-text);
+  --color-accent:               var(--m-surface-2);
+  --color-accent-foreground:    var(--m-text);
+  --color-border:               var(--m-border);
+  --color-muted:                var(--m-surface-2);
+  --color-muted-foreground:     var(--m-text-2);
+  --color-destructive:          var(--m-seal);
+  --color-destructive-foreground: #ffffff;
+  --color-card:                 var(--m-surface);
+  --color-card-foreground:      var(--m-text);
+  --color-primary:              var(--m-primary);
+  --color-primary-foreground:   #ffffff;
+  --color-secondary:            var(--m-surface-2);
+  --color-secondary-foreground: var(--m-primary-fg);  /* text role, not fill */
+  --color-input:                var(--m-border-2);
+  --color-ring:                 var(--m-primary);
+
+  /* Stable brand fill for solid controls (buttons/badges) — does NOT flip to a text colour. */
+  --brand-solid: #0E7C86;
+}
+
+/* ============================================================
+   DARK THEME
+   Per the SANAD spec, brand primary and accent keep their exact
+   hex across themes — only surfaces, text and tints shift.
+   Light mode is warm/paper; dark mode is cool/slate.
+   ============================================================ */
+[data-theme="dark"] {
+  --m-bg:        #0C1017;
+  --m-surface:   #171E28;
+  --m-surface-2: #1E2632;
+  --m-rail:      #081826;
+  --m-rail-2:    #0F2740;
+  --m-border:    #252E3A;
+  --m-border-2:  #34404F;
+  --m-text:      #E8E6E3;
+  --m-text-2:    #8A9AB0;
+  --m-text-3:    #868F9D;   /* AA on every dark surface: 5.83:1 on --m-bg, 5.13:1 on
+                              --m-surface, 4.66:1 on --m-surface-2. #747E8E passed only on
+                              the page bg and failed on both panels; #556275 was 3.08:1. */
+  --m-primary:   #0D7C66;   /* fill role — unchanged across themes, by design */
+  --m-primary-2: #096A56;
+  --m-accent:    #22C9DD;   /* Archevo cyan (dark) */
+  --m-accent-2:  #4FDCEC;
+  --m-accent-soft:#0E2A30;
+  --m-seal:      #C53030;
+  --m-info:      #2B6CB0;
+
+  /* Dark-theme foreground variants — lighter, because here they sit ON dark. */
+  --m-primary-fg: #4A9D8C;
+  --m-seal-fg:    #D77070;
+  --m-info-fg:    #6091C4;
+  --m-accent-fg:  #C8962E;
+  --m-success:   #2F855A;
+  --m-warning:   #B7791F;
+  --m-danger:    #C53030;
+
+  /* --ink doubles as TEXT throughout the app — flip it (and ink-soft) to light so it reads on
+     the dark background. Solid teal controls use --brand-solid instead, so they stay teal.
+     --ink-deep is NOT flipped: it tracks --m-rail and keeps painting the sidebar. */
+  --ink:        var(--m-text);
+  --ink-soft:   var(--m-text-2);
+  --seal-deep:  #A62727;
+  --brass-soft: var(--m-accent-2);
+  --brand-solid:#14A08C;
+  --text-muted: var(--m-text-2);
+  --text-faint: var(--m-text-3);
+
+  --shadow-doc:  0 1px 2px rgba(0,0,0,.2), 0 4px 16px rgba(0,0,0,.25);
+  --shadow-lift: 0 12px 40px rgba(0,0,0,.35);
+
+  color-scheme: dark;
+}
+
+/* Smooth the theme flip. */
+body { transition: background-color .2s ease, color .2s ease; }
+
+/* Native <select> controls + their option popups follow the active theme. */
+select { background-color: var(--paper); color: var(--text); }
+option, optgroup { background-color: var(--paper); color: var(--text); }
+
+/* Headings use --text (not the brand --ink) so they read in both light AND dark. */
+h1, h2, h3, h4 { color: var(--text); }
+
+/* Solid brand controls: pin to --brand-solid (which never flips to a text colour). */
+.btn-primary { background: var(--brand-solid); color: #fff; }
+.btn-primary:hover { background: var(--brand-solid); filter: brightness(1.15); }
+.pkg-tag { background: var(--brand-solid); color: #fff; }
+
+/* Dark-mode contrast touch-ups for elements that hardcoded ink/brand text. */
+[data-theme="dark"] .kicker,
+[data-theme="dark"] .crumb { color: var(--m-text-3); }
+[data-theme="dark"] a { color: var(--m-accent-2); }
+
+/* In dark mode the rail already reads well; keep its text light. */
+[data-theme="dark"] .shell__navbar { background: var(--m-rail); }
+
+/* Theme toggle button in the topbar actions cluster. */
+.shell__themebtn {
+  display: inline-grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1px solid rgba(244,236,216,.16);
+  background: transparent; color: rgba(244,236,216,.85);
+  cursor: pointer; font-size: 1rem; line-height: 1;
+}
+.shell__themebtn:hover { background: rgba(244,236,216,.10); color: #fff; }

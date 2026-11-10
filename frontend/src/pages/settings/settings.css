@@ -23,7 +23,12 @@
   border-inline-start-color: var(--brass, #b0892d);
   font-weight: 600;
 }
-.settings-tab__icon { font-size: 1.05rem; opacity: .8; }
+/* Holds a lucide SVG: grid-centre it so tab marks share one optical axis. */
+.settings-tab__icon { display: grid; place-items: center; opacity: .8; }
+
+/* Sections reached by navigation rather than an in-place panel switch. */
+.settings-tab--link { text-decoration: none; }
+
 .settings-panel { min-width: 0; }
 
 @media (max-width: 760px) {
@@ -44,6 +49,18 @@
 .agent-help { font-size: .9rem; line-height: 1.7; }
 .agent-help p { margin: .3rem 0; }
 
+/* The browser-is-blocking-us notice: a cause, not a step, so it is set apart from the ordinary
+   install instructions that follow it rather than reading as the first of them. */
+.agent-help__block {
+  border: 1px solid color-mix(in srgb, var(--warn, #b45309) 35%, transparent);
+  background: color-mix(in srgb, var(--warn, #b45309) 7%, transparent);
+  border-radius: 10px;
+  padding: .7rem .9rem;
+  margin-bottom: .8rem;
+}
+.agent-help__block ol { margin: .3rem 1.1rem; padding: 0; }
+.agent-help__block li { margin: .25rem 0; }
+
 /* ---- User management ---- */
 .role-checks { display: flex; flex-wrap: wrap; gap: .4rem; }
 .role-chip {
@@ -55,6 +72,74 @@
 .role-chip input { accent-color: var(--brass, #b0892d); }
 
 .user-actions { white-space: nowrap; }
+
+/* The unit name in الأقسام is the row's primary action (it loads that unit's staff). */
+.ou-name {
+  background: none; border: 0; padding: 0;
+  color: var(--brass, #8a6d3b); cursor: pointer; font: inherit; text-align: start;
+}
+
+/* ── Users list: search + filters row ── */
+.users-filters { align-items: center; }
+.users-search { position: relative; flex: 1 1 260px; display: flex; }
+.users-search .filters__search { width: 100%; padding-inline-start: 2.3rem; }
+.users-search__icon {
+  position: absolute; inset-inline-start: .8rem; top: 50%; transform: translateY(-50%);
+  color: var(--text-faint); pointer-events: none;
+}
+/* Below 900px .filters turns into a stretched column — `flex: 1` would then make the search
+   wrapper grow along the *block* axis and render as a tall empty box around the input. */
+@media (max-width: 900px) {
+  .users-search { flex: 0 0 auto; width: 100%; }
+}
+/* Chrome/Safari draw their own clear "✕" inside type=search; ours is the مسح التصفية button. */
+.users-filters input[type="search"]::-webkit-search-cancel-button { display: none; }
+.users-count {
+  margin-inline-start: .5rem; font-family: var(--font-mono);
+  font-size: .72rem; font-weight: 600; color: var(--text-faint);
+}
+
+/* A name is free text — one seeded account is 190 characters long. Unclamped, that single
+   cell set the table's width and pushed every other column out of the viewport, leaving a
+   register that looked empty behind a horizontal scroll. Clamp both free-text columns and
+   let the row's expanded panel carry the untruncated value. */
+.users-table { table-layout: auto; }
+.users-table td.u-name { max-width: 20rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.users-table td.u-email { max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1200px) {
+  .users-table td.u-name { max-width: 12rem; }
+  .users-table td.u-email { max-width: 10rem; }
+}
+/* On a tablet those two clamps are what pushes the actions column past the scroll edge. Both
+   values stay reachable in full inside the row's expanded panel. */
+@media (max-width: 900px) {
+  .users-table td.u-name { max-width: 8rem; }
+  .users-table td.u-email { max-width: 7rem; }
+}
+.u-wrap { overflow-wrap: anywhere; }
+
+/* The three row buttons and a long e-mail are the widest cells here and would push
+   the table into a horizontal scroll on a laptop. Below full-desktop width let both
+   wrap onto a second line — a taller row reads far better than a sideways scroll. */
+@media (max-width: 1400px) {
+  .user-actions { white-space: normal; }
+  .users-table .mono[dir="ltr"] { word-break: break-all; }
+}
+/* On a tablet the wrap above stacks all five buttons in a single column and the row grows to
+   ~300px — 63 users became a page you scroll for a minute. Two columns, and each button still
+   spans the cell it is in rather than shrinking to its text. */
+@media (max-width: 900px) {
+  .user-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .25rem;
+    align-content: start; min-inline-size: 9.5rem;
+  }
+  /* Tight enough that both columns stay inside the table's visible width — at 11rem the second
+     column fell past the scroll edge and read as a cut-off label. */
+  .user-actions .btn {
+    inline-size: 100%; padding-inline: .25rem;
+    font-size: .72rem; line-height: 1.25; white-space: normal;
+  }
+}
 
 /* ── Gender radio group ── */
 .gender-radios {
@@ -116,8 +201,10 @@
 .pw-match--err .pw-match-bar__fill,
 .pw-match--err.pw-match-bar__fill { background: var(--seal, #9b2226); }
 .pw-match--err.pw-match-bar__label { color: var(--seal, #9b2226); }
-.status-pill.s-active { background: #e2efe4; color: #2f5d3a; }
-.status-pill.s-onhold { background: #f3dede; color: #7a2e2e; }
+/* Colour only — the base .status-pill derives its fill from currentColor, so
+   these theme correctly instead of keeping a light-mode wash in dark mode. */
+.status-pill.s-active { color: var(--ok); }
+.status-pill.s-onhold { color: var(--seal); }
 .btn-sm { padding: .25rem .6rem; font-size: .8rem; }
 
 /* ── Reset-password modal ── */
@@ -137,8 +224,38 @@
 }
 .pwdlg__sub { font-size: .82rem; color: var(--text-muted); margin: .1rem 0 1rem; }
 
+/* Extra-department picker (المستخدمون → الأقسام). Scrolls rather than growing: an institution
+   with forty units would otherwise push the dialog's buttons off the bottom of the screen. */
+.dept-grant { display: flex; flex-direction: column; gap: .3rem; max-block-size: 42vh; overflow-y: auto; margin-block-end: 1rem; }
+.dept-grant__row { display: flex; align-items: center; gap: .6rem; padding: .45rem .7rem; border: 1px solid var(--color-border, #e2d3b2); border-radius: 6px; cursor: pointer; }
+.dept-grant__row:hover { background: var(--parchment-2, rgba(0,0,0,.03)); }
+.dept-grant__row input { inline-size: 1.05rem; block-size: 1.05rem; cursor: pointer; }
+
 /* Navbar visibility toggles (Settings → القائمة الجانبية) */
 .nav-toggle-list { list-style: none; margin: .6rem 0 1rem; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
 .nav-toggle { display: flex; align-items: center; gap: .7rem; padding: .55rem .85rem; border: 1px solid var(--color-border, #e2d3b2); border-radius: 6px; cursor: pointer; }
 .nav-toggle input { width: 1.05rem; height: 1.05rem; cursor: pointer; }
 .nav-toggle > span:first-of-type { flex: 1; }
+
+/* ── Preferences: calendar choice (§14.2) ────────────────────────────────── */
+.prefs__group { border: 0; padding: 0; margin: 1rem 0 0; display: grid; gap: .5rem; max-width: 460px; }
+.prefs__option {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .7rem .9rem;
+  border: 1px solid var(--border); border-radius: 10px;
+  cursor: pointer;
+}
+.prefs__option.is-active { border-color: var(--brass); background: color-mix(in srgb, var(--brass) 7%, transparent); }
+.prefs__option:focus-within { outline: 2px solid var(--brass); outline-offset: 2px; }
+.prefs__label { font-weight: 600; }
+/* Logical, so the sample sits on the trailing edge in both directions. */
+.prefs__sample { margin-inline-start: auto; color: var(--text-muted); font-size: .82rem; }
+
+/* The design canvas is a fixed A4 width (794px) — it cannot reflow narrower. Beside a 240px list
+   on a 1024px screen it was left as a ~380px scrolling strip: readable a third at a time. While
+   the designer panel is open below this width, the list becomes a wrapped row above it instead,
+   so it stays reachable and the canvas gets the whole width back. */
+@media (max-width: 1280px) {
+  .settings-layout:has(.rd-shell) { grid-template-columns: 1fr; }
+  .settings-layout:has(.rd-shell) > .settings-tabs { flex-direction: row; flex-wrap: wrap; position: static; }
+}

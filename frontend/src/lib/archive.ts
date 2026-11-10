@@ -16,7 +16,6 @@ export interface PhysicalLocationDto {
 export interface PhysicalArchiveItemDto {
   id: number
   documentId: number | null
-  incomingMailId: number | null
   physicalLocationId: number
   locationName: string
   boxNumber: string | null
@@ -25,10 +24,13 @@ export interface PhysicalArchiveItemDto {
   notes: string | null
   documentNumber: string | null
   documentTitle: string | null
+  /** 'Legacy' = a PhysicalArchiveItem row; 'Box' = a document filed into the
+   *  normalized Building→…→Box hierarchy (no archive-item row behind it, id is 0). */
+  source: 'Legacy' | 'Box'
 }
 
 type LocationBody = { parentId?: number | null; name: string; type: LocationType; code?: string | null; rfidTag?: string | null; isActive?: boolean }
-type ItemBody = { documentId?: number | null; incomingMailId?: number | null; physicalLocationId: number; boxNumber?: string | null; fileNumber?: string | null; notes?: string | null }
+type ItemBody = { documentId?: number | null; physicalLocationId: number; boxNumber?: string | null; fileNumber?: string | null; notes?: string | null }
 
 export const archive = {
   locations: () => api.get<PhysicalLocationDto[]>('/physical-archive/locations').then((r) => r.data),

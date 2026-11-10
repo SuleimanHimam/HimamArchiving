@@ -1,167 +1,356 @@
-/* Login — Official Diwan split layout (RTL: brand on the right, panel on the left) */
+/* ============================================================
+   LOGIN — deep field with a sky/purple glow, drifting document
+   glyphs, centred glass card.
+   Colours track the app mark: deep blue field (#0E2A5C) with the mark's
+   blue (#2C6FD6) and its amber sheet (#F5A623) as the single warm accent.
+   Kept as literals so the field renders correctly even before the
+   theme stylesheet's :root vars resolve.
+   ============================================================ */
 
 .login {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-}
-
-/* ---------- Brand / masthead ---------- */
-.login__brand {
-  position: relative;
+  position: fixed; inset: 0; z-index: 999;
+  display: flex; align-items: center; justify-content: center;
   overflow: hidden;
+  /* Brand accents used across the card (mirror --m-primary / --m-accent).
+     The --brand-login-* layer is set by lib/branding.ts from the institution's saved
+     colours; the literals are the fallback, so the field still renders correctly
+     before /api/branding answers (and if it never does). */
+  --login-base: var(--brand-login-bg, #0E2A5C);
+  --login-accent: var(--brand-login-accent, #2C6FD6);
+  --login-accent-2: var(--brand-login-accent-2, #F5A623);
+  --login-glow: color-mix(in srgb, var(--login-accent) 38%, transparent);
+  /* Warm halo used behind the card and under the mark. Amber is the mark's second
+     colour and the only warm tone allowed here; it never sits behind white text. */
+  --login-warm: color-mix(in srgb, var(--login-accent-2) 45%, transparent);
+}
+
+/* ── Gradient field: base tone + a soft accent glow at each corner ──
+   Every stop is derived from --login-base and the two accents, so picking one base
+   colour re-tones the whole field instead of leaving hardcoded navy behind. */
+.login__bg {
+  position: absolute; inset: 0; overflow: hidden;
   background:
-    radial-gradient(120% 90% at 100% 0%, #1B2C4E 0%, var(--ink) 45%, var(--ink-deep) 100%);
-  color: var(--parchment);
-  padding: clamp(2rem, 5vw, 5.5rem);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+    /* Warm crown, then a warm pool low-leading and a cool one low-trailing, so the card
+       sits in light instead of on a flat slab. */
+    radial-gradient(110% 80% at 50% -14%, color-mix(in srgb, var(--login-accent-2) 34%, transparent) 0%, transparent 62%),
+    radial-gradient(60% 50% at 16% 94%, color-mix(in srgb, var(--login-accent-2) 20%, transparent) 0%, transparent 72%),
+    radial-gradient(90% 70% at 85% 100%, color-mix(in srgb, var(--login-accent) 20%, transparent) 0%, transparent 60%),
+    /* The two dark stops were 82% toward black; that crushed the corners and made the
+       centre glare by comparison. Lifted to 88% for an easier field to sit in front of. */
+    linear-gradient(160deg,
+      color-mix(in srgb, var(--login-base) 88%, #000) 0%,
+      var(--login-base) 45%,
+      color-mix(in srgb, var(--login-base) 90%, #fff) 72%,
+      color-mix(in srgb, var(--login-base) 88%, #000) 100%);
 }
 
-/* faint repeating ledger rules */
-.login__ledger {
-  position: absolute; inset: 0;
-  background-image: repeating-linear-gradient(
-    to bottom, transparent 0 38px, rgba(244,236,216,.045) 38px 39px
-  );
-  pointer-events: none;
-}
+/* ── Depth layers ──────────────────────────────────────────────────────────
+   One box per depth, holding the glyphs that share its size, opacity and blur. It carries no
+   transform of its own — the drift belongs to each glyph — and exists so the three planes stay
+   grouped in the markup as they read on screen. */
+.login__layer { position: absolute; inset: 0; }
 
-/* giant watermark word */
-.login__watermark {
+/* Drifting glyphs. They used to spin a full 360° on the way up at linear speed and pop in and
+   out at the screen edges — a fairground look on a login for a government archive. Now they
+   rise slowly, sway once, tilt a few degrees, and fade at both ends so nothing appears or
+   vanishes abruptly. --p-op / --p-sway are per-particle, set inline by LoginPage. */
+.login__particle {
   position: absolute;
-  inset-inline-start: -2%;
-  bottom: -8%;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(10rem, 30vw, 26rem);
-  line-height: .8;
-  color: rgba(244,236,216,.04);
-  letter-spacing: -.04em;
-  user-select: none;
-  pointer-events: none;
+  color: #fff;
+  opacity: 0;                       /* the keyframes own opacity from here on */
+  animation-name: login-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
 }
 
-.login__masthead { position: relative; max-width: 36rem; }
-.login__masthead .kicker { color: var(--brass-soft); }
-.login__masthead h1 { color: var(--parchment); margin-top: 1rem; }
-.login__accent {
-  color: var(--brass-soft);
-  font-family: var(--font-latin);
-  font-style: italic;
-  font-weight: 600;
+@keyframes login-drift {
+  0%   { transform: translate3d(0, 110vh, 0) rotate(-5deg); opacity: 0; }
+  12%  { opacity: var(--p-op, .04); }
+  50%  { transform: translate3d(var(--p-sway, 2vw), 50vh, 0) rotate(0deg); }
+  88%  { opacity: var(--p-op, .04); }
+  100% { transform: translate3d(0, -10vh, 0) rotate(5deg); opacity: 0; }
 }
-.login__lede { color: rgba(244,236,216,.78); line-height: 1.85; max-width: 32rem; font-size: 1.02rem; }
 
-.login__stats { display: flex; gap: 2.4rem; margin-top: 2.2rem; }
-.login__stat { display: flex; flex-direction: column; gap: .15rem; }
-.login__statnum { font-size: 2rem; font-weight: 600; color: var(--parchment); }
-.login__statnum.is-seal { color: #E8888B; }
-.login__statlabel { font-size: .78rem; color: rgba(244,236,216,.6); }
-
-/* decorative seal, parked near the seam */
-.login__seal {
-  position: absolute;
-  inset-inline-start: clamp(2rem, 5vw, 5.5rem);
-  top: clamp(2rem, 6vw, 4rem);
+/* Card entrance: one short rise, no bounce — it should feel like the page settled,
+   not like something slid in. */
+.login__card { animation: login-card-in .45s cubic-bezier(.22, .61, .36, 1) both; }
+@keyframes login-card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
 }
-.login__seal .stamp {
-  width: 116px; height: 116px;
-  border-color: var(--brass-soft);
-  color: var(--brass-soft);
-  box-shadow: inset 0 0 0 5px rgba(176,137,45,.14);
-  font-size: .8rem; text-align: center; line-height: 1.25;
-}
-.login__seal .stamp::after { border-color: var(--brass-soft); }
 
-/* ---------- Auth panel ---------- */
-.login__panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: clamp(1.5rem, 4vw, 4rem);
-  gap: 1.5rem;
+/* ── Glass card ── */
+.login__card {
+  position: relative; z-index: 1;
+  width: 400px; max-width: 92vw;
+  padding: 44px 36px;
+  background: rgba(255, 255, 255, .07);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 24px;
+  /* Lifted off the field: a deep shadow to separate it, a white inner top edge so the
+     glass reads as glass, and a warm bloom so the separation is not a black moat. */
+  box-shadow:
+    0 30px 80px -34px rgba(3, 12, 34, .8),
+    0 0 90px -40px var(--login-warm),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
 }
-.login__card { padding: clamp(1.6rem, 3vw, 2.6rem); }
-.login__cardhead h2 { margin: .5rem 0 .35rem; }
-.login__cardhead { margin-bottom: 1.6rem; }
-.login__headrow { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.login__headactions { display: flex; align-items: center; gap: .5rem; }
 
-.login__langbtn {
-  font-family: var(--font-mono); font-size: .66rem; font-weight: 700;
-  letter-spacing: .08em; color: var(--brass); background: rgba(176,137,45,.1);
-  border: 1px solid rgba(176,137,45,.4); border-radius: 2px;
-  padding: .25rem .55rem; cursor: pointer; white-space: nowrap;
-  transition: background .18s var(--ease), color .18s var(--ease);
+/* Yellow-and-white hairline along the top edge — the one warm mark on the card. */
+.login__card::before {
+  content: ''; position: absolute; top: -1px; inset-inline: 24%; height: 2px;
+  border-radius: 2px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, #fff 28%, var(--login-accent-2) 70%, transparent);
+  opacity: .95;
 }
-.login__langbtn:hover { background: rgba(176,137,45,.25); }
 
-.login__autofill {
-  font-family: var(--font-mono);
-  font-size: .66rem;
-  font-weight: 600;
-  letter-spacing: .08em;
-  color: var(--seal);
-  background: rgba(155, 34, 38, .07);
-  border: 1px dashed var(--seal);
+/* ── Head ── */
+.login__head { text-align: center; margin-bottom: 30px; }
+.login__logo,
+.login__logotile {
+  width: 46px; height: 46px; border-radius: 14px;
+  margin: 0 auto 14px; display: grid; place-items: center;
+  object-fit: contain;
+}
+.login__logotile {
+  background: linear-gradient(135deg, var(--login-accent), var(--login-accent-2));
+  color: #fff; font-weight: 900; font-size: 18px;
+}
+/* The default mark renders as a bare <svg> (BrandMark) rather than as .login__logo;
+   both get the same warm halo so the brand sits in light either way. */
+.login__head > svg {
+  display: block; margin: 0 auto 14px; border-radius: 14px;
+  box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--login-accent-2) 70%, transparent);
+}
+.login__logo { box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--login-accent-2) 70%, transparent); }
+
+.login__title {
+  color: #fff; font-size: 22px; font-weight: 800; letter-spacing: -.5px;
+  font-family: var(--font-display); margin: 0;
+}
+/* Short white-into-amber rule under the name — carries the mark's two colours without
+   putting amber anywhere it would have to hold white text. */
+.login__title::after {
+  content: ''; display: block; width: 54px; height: 2px; margin: 11px auto 0;
   border-radius: 2px;
-  padding: .25rem .55rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background .18s var(--ease), color .18s var(--ease);
+  background: linear-gradient(90deg, rgba(255, 255, 255, .9), var(--login-accent-2));
 }
-.login__autofill:hover { background: var(--seal); color: #fff; border-style: solid; }
-.login__autofill:active { transform: translateY(1px); }
+/* Was .35 — legible only if you went looking for it. Secondary text on a dark field
+   needs more than a third of white before it stops being work to read. */
+.login__sub { color: rgba(255, 255, 255, .62); font-size: 12px; margin-top: 8px; }
 
-.login__submit { width: 100%; margin-top: .4rem; }
-.login__ad { width: 100%; font-size: .9rem; }
+/* ── Form ── */
+.login__form { display: flex; flex-direction: column; gap: 14px; }
 
-.login__or {
-  display: grid; place-items: center;
-  text-align: center; margin: 1.1rem 0;
-  position: relative;
-}
-.login__or::before {
-  content: ""; position: absolute; inset-inline: 0; top: 50%;
-  border-top: var(--rule);
-}
-.login__or span {
-  position: relative; background: var(--paper);
-  padding: 0 .8rem; color: var(--text-faint);
-  font-family: var(--font-mono); font-size: .78rem;
+.login__field { position: relative; }
+.login__fieldicon {
+  position: absolute; inset-inline-start: 15px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: rgba(255, 255, 255, .45); pointer-events: none; z-index: 1;
 }
 
-.login__mfa {
-  display: flex; align-items: center; gap: .55rem;
-  margin-top: 1.4rem; font-size: .82rem; line-height: 1.5;
+/* Inputs — targets both the bare email input and the one PasswordInput renders. */
+.login__field input {
+  width: 100%;
+  padding: 13px 16px 13px 46px;
+  background: rgba(255, 255, 255, .09);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 12px;
+  color: #fff; font-size: 14px; font-family: inherit;
+  outline: none;
+  transition: border-color .2s, background .2s;
 }
+/* dir="ltr" is kept on the field itself — an address and a password are Latin data and must not be
+   reordered — but the *box* is part of an Arabic form, so the text starts at the right edge beside
+   the icon rather than stranded at the far left of an otherwise right-aligned card. */
+[dir="rtl"] .login__field input { padding: 13px 46px 13px 16px; text-align: right; }
+[dir="rtl"] .login__field--pwd .pwfield input { padding: 13px 0; text-align: right; }
+.login__field input:focus { border-color: var(--login-accent); background: rgba(255, 255, 255, .1); box-shadow: 0 0 0 3px var(--login-glow); }
+.login__field input::placeholder { color: rgba(255, 255, 255, .45); }
+
+/* Chrome paints its own pale-blue fill and near-black text on autofilled fields, which on this
+   dark card produced two opaque light boxes and, in light mode, white text on white. The fill is
+   not a background — it cannot be overridden by `background` — so it is covered with an inset
+   shadow, and the text colour is set through -webkit-text-fill-color, the only property the
+   autofill style respects. */
+.login__field input:-webkit-autofill,
+.login__field input:-webkit-autofill:hover,
+.login__field input:-webkit-autofill:focus,
+.login__field--pwd .pwfield input:-webkit-autofill {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  -webkit-box-shadow: 0 0 0 100px rgba(255, 255, 255, .07) inset;
+  box-shadow: 0 0 0 100px rgba(255, 255, 255, .07) inset;
+  /* Chrome fades its fill in over ~200ms; a long transition keeps ours on top instead. */
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+.login__field--pwd .pwfield input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px transparent inset;
+  box-shadow: 0 0 0 100px transparent inset;
+}
+
+/* PasswordInput renders <div.pwfield><input><button.pwfield__toggle></div> — a flex wrapper where
+   the wrapper, not the input, is the visual field. So the glass goes on .pwfield; styling the input
+   instead leaves the reveal button stranded outside the box. */
+.login__field--pwd .pwfield {
+  background: rgba(255, 255, 255, .09);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 12px;
+  padding-inline: 16px 12px;
+  transition: border-color .2s, background .2s;
+}
+.login__field--pwd .pwfield:focus-within {
+  border-color: var(--login-accent);
+  background: rgba(255, 255, 255, .1);
+  box-shadow: 0 0 0 3px var(--login-glow);
+}
+.login__field--pwd .pwfield input {
+  padding: 13px 0; background: transparent; border: 0; border-radius: 0;
+  color: #fff; font-size: 14px;
+}
+.login__field--pwd .pwfield input:focus { background: transparent; }
+.login__field--pwd .pwfield__toggle { color: rgba(255, 255, 255, .55); }
+.login__field--pwd .pwfield__toggle:hover { color: rgba(255, 255, 255, .85); }
 
 .login__error {
-  background: rgba(155,34,38,.08);
-  border-inline-start: 3px solid var(--seal);
-  color: var(--seal-deep);
-  padding: .65rem .8rem; border-radius: var(--radius);
-  font-size: .88rem; margin: 0 0 1rem;
+  color: #FFB4B4; font-size: 12.5px; margin: -4px 0 0;
+  background: rgba(197, 48, 48, .18);
+  border: 1px solid rgba(197, 48, 48, .35);
+  border-radius: 10px; padding: 9px 12px;
 }
 
+/* Same shape as the error, in a neutral tone: an expired session is information, not a mistake
+   the user made, and painting it red reads as a failed sign-in they never attempted. */
+.login__notice {
+  color: rgba(255, 255, 255, .88); font-size: 12.5px; margin: -4px 0 0;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 10px; padding: 9px 12px;
+}
+
+.login__submit {
+  width: 100%; padding: 14px; border: none; border-radius: 12px;
+  background: linear-gradient(135deg, var(--login-accent), color-mix(in srgb, var(--login-accent) 55%, #000));
+  /* A white top edge only — a blue-to-amber fill passes through a dead olive midpoint,
+     so the warm colour stays out of the button and lives on the card edge instead. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28);
+  color: #fff;
+  font-weight: 700; font-size: 15px; font-family: inherit;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .2s, filter .2s;
+}
+.login__submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 8px 26px var(--login-glow); }
+.login__submit:active:not(:disabled) { transform: translateY(0); }
+.login__submit:disabled { filter: saturate(.5) brightness(.85); cursor: default; }
+
+/* MFA note — the API takes no MFA code at this step, so this stays a note, not an input. */
+.login__mfa {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  color: rgba(255, 255, 255, .58); font-size: 11.5px; margin: 2px 0 0;
+}
+.login__mfabadge {
+  display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 7px;
+  background: rgba(197, 48, 48, .18); border: 1px solid rgba(197, 48, 48, .4);
+  color: #FFB4B4; font-size: 10px; font-weight: 700; letter-spacing: .05em;
+}
+
+/* ── Try-it accounts ──
+   One button per role, filling the form rather than signing in, so the tester sees which
+   account they are about to use. Rendered only when the API offers accounts (development). */
+.login__demo { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .12); }
+.login__demolabel {
+  display: block; margin-bottom: 9px;
+  color: rgba(255, 255, 255, .55); font-size: 11px; font-weight: 700; letter-spacing: .02em;
+}
+.login__demogrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.login__demobtn {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 11px; border-radius: 10px;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .14);
+  font-family: inherit; text-align: start; cursor: pointer;
+  transition: background .15s, border-color .15s, transform .12s;
+}
+.login__demobtn:hover {
+  background: rgba(255, 255, 255, .1);
+  border-color: color-mix(in srgb, var(--login-accent) 55%, transparent);
+  transform: translateY(-1px);
+}
+.login__demobtn:active { transform: translateY(0); }
+.login__demobtn:focus-visible { outline: 2px solid var(--login-accent); outline-offset: 2px; }
+.login__demorole { color: #fff; font-size: 12.5px; font-weight: 700; }
+.login__demoname { color: rgba(255, 255, 255, .58); font-size: 11px; }
+
+/* ── Card foot: lang / theme ── */
 .login__foot {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: .76rem; color: var(--text-muted);
-  padding: 0 .4rem;
+  display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  margin-top: 20px; padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+}
+.login__footactions { display: flex; align-items: center; gap: .4rem; }
+.login__autofill {
+  background: none; border: 1px dashed rgba(255, 255, 255, .18);
+  color: rgba(255, 255, 255, .45);
+  padding: 5px 12px; border-radius: 7px;
+  font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.login__autofill:hover { color: #fff; border-color: rgba(255, 255, 255, .4); }
+
+/* Toggles in the card foot render on glass, not on the app chrome. Both buttons are styled here:
+   they inherit an app-chrome background (--m-surface-2, near-white in light mode) which left a
+   white tile carrying a white icon — invisible in light mode, and wrong on the card in either. */
+.login__foot .shell__themebtn,
+.login__foot .shell__langbtn {
+  background: rgba(255, 255, 255, .09);
+  border: 1px solid rgba(255, 255, 255, .16);
+  color: rgba(255, 255, 255, .8);
+  width: 32px; height: 32px; min-width: 32px; padding: 0;
+  border-radius: 8px;
+  display: inline-grid; place-items: center;
+  box-shadow: none;
+}
+.login__foot .shell__themebtn:hover,
+.login__foot .shell__langbtn:hover {
+  background: rgba(255, 255, 255, .16);
+  border-color: rgba(255, 255, 255, .28);
+  color: #fff;
+}
+.login__foot .shell__themebtn:focus-visible,
+.login__foot .shell__langbtn:focus-visible,
+.login__autofill:focus-visible,
+.login__submit:focus-visible {
+  outline: 2px solid var(--login-accent);
+  outline-offset: 2px;
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 920px) {
-  .login { grid-template-columns: 1fr; }
-  .login__brand { min-height: 46vh; }
-  .login__seal { display: none; }
+/* ── Page meta strip ── */
+.login__meta {
+  position: absolute; z-index: 1; inset-block-end: 18px; inset-inline: 0;
+  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+  padding: 0 16px;
+  color: rgba(255, 255, 255, .5); font-size: 11px; text-align: center;
+}
+.login__agentlink { color: rgba(255, 255, 255, .62); text-decoration: none; }
+.login__agentlink:hover { color: var(--login-accent-2); }
+
+@media (max-width: 768px) {
+  .login__card { padding: 32px 22px; }
 }
 
-.login__agentlink {
-  color: var(--brass, #b89042);
-  text-decoration: none;
-  font-size: .8rem;
+/* Freeze the drift and the button lift for reduced-motion users. The glyphs keep their
+   opacity here — with the animation off they would otherwise sit at the 0 set above and the
+   field would lose its texture entirely. */
+@media (prefers-reduced-motion: reduce) {
+  /* Scattered rather than stacked at the top edge: with the drift off, the static position of
+     every glyph is y=0, and twelve of them in one row along the top reads as broken rather than
+     as a quiet background. --p-top is per-glyph, set inline by LoginPage. */
+  .login__particle {
+    animation: none;
+    opacity: var(--p-op, .04);
+    inset-block-start: var(--p-top, 0);
+  }
+  .login__card { animation: none; }
+  .login__submit:hover:not(:disabled) { transform: none; }
 }
-.login__agentlink:hover { text-decoration: underline; }

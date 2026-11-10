@@ -1,0 +1,164 @@
+/* ============================================================================
+   سند · Sanad — "The Registry" token system (authoritative).
+   Design thesis: ink · patinated verdigris · parchment · wax-seal ochre.
+   Replaces the app's color / shape / elevation / motion tokens at the source.
+   Imported AFTER sanad.css so these :root declarations win; every semantic
+   token (--ink, --paper, --seal, classification…) resolves from --m-* below,
+   so overriding the primitives re-skins the entire app — light and dark.
+   No physical direction properties; logical only. Classification stays a
+   security marking (color + label + non-color cue), never decoration.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Surfaces & ink (light · parchment) ---- */
+  --m-bg:        #F5F1E8;   /* parchment page */
+  --m-surface:   #FFFFFF;   /* cards, panels */
+  --m-surface-2: #FBF8F1;   /* subtle raised / inset warm white */
+  --m-rail:      #17211E;   /* sidebar — deep ink */
+  --m-rail-2:    #22302B;   /* sidebar elevated */
+  --m-border:    #E4DDCC;   /* hairline dividers */
+  --m-border-2:  #D2C8B2;   /* input borders / hover */
+  --m-text:      #17211E;   /* primary ink */
+  --m-text-2:    #47554F;   /* secondary */
+  --m-text-3:    #7C8A83;   /* muted / placeholder */
+
+  /* ---- Brand: verdigris primary · wax-seal ochre accent ---- */
+  --m-primary:    #1F6E5E;
+  --m-primary-2:  #185A4C;
+  --m-primary-fg: #0F3A31;  /* text role on tint (pri-ink) */
+  --m-accent:     #B9761F;
+  --m-accent-2:   #D69A45;
+  --m-accent-soft:#F6ECD9;
+  --m-accent-fg:  #8A5A17;  /* ochre text role (confidential classification) */
+  --brand-solid:  #1F6E5E;
+
+  /* Spec-named brand aliases */
+  --pri: #1F6E5E; --pri-hover: #185A4C; --pri-weak: #E4EFEA; --pri-ink: #0F3A31;
+  --accent: #B9761F; --accent-weak: #F6ECD9;
+
+  /* ---- Semantic (mapped, not hard-coded) ---- */
+  --m-success: #1F6E5E; --success: #1F6E5E; --success-weak: #E4EFEA;
+  --m-warning: #B9761F; --warning: #B9761F; --warning-weak: #F6ECD9;
+  --m-danger:  #B23A34; --danger:  #B23A34; --danger-weak:  #F4E3E1;
+  --m-info:    #2C6E8F; --info:    #2C6E8F; --info-weak:    #E4EDF1;
+  --m-seal:    #B23A34; --m-seal-fg: #B23A34;
+  --m-info-fg: #2C6E8F; --seal: #B23A34; --seal-deep: #8F2C27;
+  --ok: #1F6E5E; --warn: #B9761F;
+
+  /* ---- Classification — SECURITY MARKINGS (light) ---- */
+  --c-public:       #5B6B65;   /* slate  */
+  --c-internal:     #2C6E8F;   /* teal   */
+  --c-confidential: #B9761F;   /* ochre  */
+  --c-secret:       #B23A34;   /* red + hatch (see .badge.secret) */
+
+  /* ---- Typography (Arabic-first; mono encodes reference numbers) ---- */
+  --font-display: "IBM Plex Sans Arabic", "Cairo", "Tajawal", system-ui, sans-serif;
+  --font-body:    "IBM Plex Sans Arabic", "Cairo", system-ui, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
+  --font-latin:   "IBM Plex Sans", system-ui, sans-serif;
+
+  /* ---- Shape ---- */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-full: 999px;
+  --radius: 8px; --radius-lg: 12px;   /* legacy aliases used across component CSS */
+
+  /* ---- Elevation (flat, low-opacity ink shadows) ---- */
+  --e1: 0 1px 2px rgba(23, 33, 30, .05), 0 1px 3px rgba(23, 33, 30, .04);
+  --e2: 0 6px 18px rgba(23, 33, 30, .09);
+  --e3: 0 18px 44px rgba(23, 33, 30, .16);
+  --shadow-doc: var(--e1); --shadow-lift: var(--e2);
+
+  /* ---- Motion tokens ---- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout:  cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --t-fast: 120ms; --t-base: 220ms; --t-slow: 360ms; --t-page: 300ms;
+  --ease: var(--ease-out);   /* legacy alias */
+
+  /* ---- Re-tune the Archevo-scoped brand tokens (.brand-*, .av-*, .rd-*) to the
+          Registry palette so those screens belong to the same system ---- */
+  --brand-primary: #1F6E5E; --brand-primary-600: #185A4C; --brand-primary-050: #E4EFEA;
+  --brand-secondary: #2C6E8F; --brand-secondary-050: #E4EDF1;
+  --brand-accent: #B9761F; --brand-accent-text: #8A5A17;
+  --brand-success: #1F6E5E; --brand-warning: #B9761F; --brand-danger: #B23A34; --brand-info: #2C6E8F;
+  --brand-bg: #F5F1E8; --brand-surface: #FFFFFF; --brand-surface-2: #FBF8F1; --brand-line: #E4DDCC;
+  --brand-text: #17211E; --brand-text-muted: #47554F; --brand-text-soft: #7C8A83; --brand-on-primary: #F5F1E8;
+  --brand-font-heading: var(--font-display); --brand-font-body: var(--font-body); --brand-font-mono: var(--font-mono);
+  --brand-r-sm: 8px; --brand-r-md: 12px; --brand-r-lg: 16px;
+  --brand-shadow-sm: var(--e1); --brand-shadow-md: var(--e2); --brand-shadow-lg: var(--e3);
+  --brand-focus-ring: 0 0 0 3px rgba(31, 110, 94, .30);
+  --brand-transition: var(--t-base) var(--ease-out);
+}
+
+/* ============================================================
+   DARK — cool slate ink; verdigris + ochre keep their identity.
+   ============================================================ */
+:root[data-theme="dark"], [data-theme="dark"] {
+  color-scheme: dark;
+
+  --m-bg:        #0E1613;
+  --m-surface:   #16211E;
+  --m-surface-2: #1D2B27;
+  --m-rail:      #0B120F;
+  --m-rail-2:    #12201B;
+  --m-border:    #2A3A34;
+  --m-border-2:  #38493F;
+  --m-text:      #E9EDE9;
+  --m-text-2:    #A6B3AD;
+  --m-text-3:    #6F7E77;
+
+  --m-primary:    #3EA98E;
+  --m-primary-2:  #52BB9F;
+  --m-primary-fg: #C9EADE;
+  --m-accent:     #D69A45;
+  --m-accent-2:   #E4B064;
+  --m-accent-soft:#2E2413;
+  --m-accent-fg:  #D69A45;
+  --brand-solid:  #3EA98E;
+
+  --pri: #3EA98E; --pri-hover: #52BB9F; --pri-weak: #14352D; --pri-ink: #C9EADE;
+  --accent: #D69A45; --accent-weak: #2E2413;
+
+  --m-success: #3EA98E; --success: #3EA98E; --success-weak: #14352D;
+  --m-warning: #D69A45; --warning: #D69A45; --warning-weak: #2E2413;
+  --m-danger:  #D9635B; --danger:  #D9635B; --danger-weak:  #3A1F1C;
+  --m-info:    #5FA8C9; --info:    #5FA8C9; --info-weak:    #16323C;
+  --m-seal:    #D9635B; --m-seal-fg: #D9635B;
+  --m-info-fg: #5FA8C9; --seal: #D9635B; --seal-deep: #B23A34;
+  --ok: #3EA98E; --warn: #D69A45;
+
+  --c-public:       #8DA39A;
+  --c-internal:     #5FA8C9;
+  --c-confidential: #D69A45;
+  --c-secret:       #D9635B;
+
+  --e1: 0 0 0 1px rgba(255, 255, 255, .03), 0 2px 6px rgba(0, 0, 0, .35);
+  --e2: 0 8px 22px rgba(0, 0, 0, .45);
+  --e3: 0 18px 46px rgba(0, 0, 0, .55);
+  --shadow-doc: var(--e1); --shadow-lift: var(--e2);
+
+  --brand-primary: #3EA98E; --brand-primary-600: #52BB9F; --brand-primary-050: #14352D;
+  --brand-secondary: #5FA8C9; --brand-secondary-050: #16323C;
+  --brand-accent: #D69A45; --brand-accent-text: #E4B064;
+  --brand-success: #3EA98E; --brand-warning: #D69A45; --brand-danger: #D9635B; --brand-info: #5FA8C9;
+  --brand-bg: #0E1613; --brand-surface: #16211E; --brand-surface-2: #1D2B27; --brand-line: #2A3A34;
+  --brand-text: #E9EDE9; --brand-text-muted: #A6B3AD; --brand-text-soft: #6F7E77; --brand-on-primary: #06110D;
+  --brand-focus-ring: 0 0 0 3px rgba(62, 169, 142, .40);
+}
+
+/* Highest classification carries a non-color cue: a hatched border. */
+.badge.secret, .brand-badge--secret, [data-classification="secret"] {
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, color-mix(in srgb, var(--c-secret) 22%, transparent) 5px, color-mix(in srgb, var(--c-secret) 22%, transparent) 7px);
+  border: 1px solid color-mix(in srgb, var(--c-secret) 55%, transparent);
+}
+
+/* ---- Motion: honour the user's reduced-motion preference everywhere ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

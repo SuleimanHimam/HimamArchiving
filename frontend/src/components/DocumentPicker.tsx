@@ -68,7 +68,7 @@ export default function DocumentPicker({
             <li key={d.id}
               onClick={() => pick(d)}
               style={{ padding: '.45rem .6rem', borderRadius: 6, cursor: 'pointer', fontSize: '.85rem' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(176,137,45,.14)')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(46,150,204,.14)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
               <span className="mono">{d.documentNumber}</span> — {d.title}
             </li>

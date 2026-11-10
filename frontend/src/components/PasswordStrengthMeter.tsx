@@ -1,4 +1,5 @@
 import { checkPassword, PASSWORD_RULES } from '../lib/passwordStrength'
+import { Check, Circle } from 'lucide-react'
 import './passwordstrength.css'
 
 const LEVEL_LABEL = ['ضعيفة جدًا', 'ضعيفة', 'متوسطة', 'جيدة', 'قوية']
@@ -20,7 +21,7 @@ export default function PasswordStrengthMeter({ password }: { password: string }
       <ul className="pwsm__rules">
         {PASSWORD_RULES.map((r) => (
           <li key={r.key} className={c[r.key] ? 'is-met' : ''}>
-            {c[r.key] ? '✓' : '○'} {r.label}
+            {c[r.key] ? <Check size={12} aria-hidden /> : <Circle size={12} aria-hidden />} {r.label}
           </li>
         ))}
       </ul>

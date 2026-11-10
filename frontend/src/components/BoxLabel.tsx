@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Printer } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { locations, type Box, type Breadcrumb } from '../lib/locations'
 
 /** A printable card for a box: code, barcode, full breadcrumb path + location code. */
 export default function BoxLabel({ box, onClose }: { box: Box; onClose: () => void }) {
+  const { i18n } = useTranslation()
   const [bc, setBc] = useState<Breadcrumb | null>(null)
   useEffect(() => { locations.breadcrumb(box.id).then(setBc).catch(() => {}) }, [box.id])
 
@@ -14,7 +17,10 @@ export default function BoxLabel({ box, onClose }: { box: Box; onClose: () => vo
     const w = window.open('', '_blank', 'width=420,height=320')
     if (!w) return
     const barsHtml = bars.map((b) => `<span style="display:inline-block;width:${b}px;height:46px;background:#000;margin-inline-end:1px"></span>`).join('')
-    w.document.write(`<html dir="rtl"><head><meta charset="utf-8"><title>${box.boxCode}</title></head>
+    // Direction follows the session, not a baked-in default — the breadcrumb path
+    // reads wrong-way-round otherwise. The barcode strip stays LTR regardless.
+    const lang = i18n.language.startsWith('ar') ? 'ar' : 'en'
+    w.document.write(`<html dir="${lang === 'ar' ? 'rtl' : 'ltr'}" lang="${lang}"><head><meta charset="utf-8"><title>${box.boxCode}</title></head>
       <body style="font-family:Arial;padding:18px;text-align:center">
         <div style="border:2px solid #14213D;border-radius:10px;padding:14px">
           <div style="font-size:22px;font-weight:bold">${box.boxCode}</div>
@@ -40,7 +46,7 @@ export default function BoxLabel({ box, onClose }: { box: Box; onClose: () => vo
           <div className="muted" style={{ fontSize: '.82rem', marginTop: '.6rem' }}>{bc?.path ?? ''}</div>
         </div>
         <div className="form-actions" style={{ justifyContent: 'center', marginTop: '1rem' }}>
-          <button className="btn btn-primary" onClick={print}>🖨 طباعة البطاقة</button>
+          <button className="btn btn-primary" onClick={print}><Printer size={16} aria-hidden /> طباعة البطاقة</button>
           <button className="btn btn-ghost" onClick={onClose}>إغلاق</button>
         </div>
       </div>

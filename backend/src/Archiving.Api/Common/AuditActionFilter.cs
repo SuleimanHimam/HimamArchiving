@@ -18,8 +18,8 @@ public sealed class AuditActionFilter(IAuditWriter audit, AppDbContext db) : IAs
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        // Skip reads — execute the action but don't log it.
-        if (context.HttpContext.Request.Method == HttpMethods.Get) { await next(); return; }
+        var method = context.HttpContext.Request.Method;
+        var isGet = method == HttpMethods.Get;
 
         // Require a [HasPermission] attribute.
         var permAttr = context.ActionDescriptor.EndpointMetadata
@@ -31,15 +31,23 @@ public sealed class AuditActionFilter(IAuditWriter audit, AppDbContext db) : IAs
         var dot = permCode.IndexOf('.');
         if (dot < 0) { await next(); return; }
 
-        var entityType = permCode[..dot]; // "IncomingMail"
+        var entityType = permCode[..dot];          // "IncomingMail"
+        var suffix = permCode[(dot + 1)..];        // "View" | "Edit" | "Approve" | …
+
+        // Reads: only log opening a single record (GET /api/{resource}/{id}) as a "View" — skip lists,
+        // sub-resources (…/{id}/timeline) and polling so the audit log isn't flooded with navigation noise.
+        if (isGet && !IsRecordView(context, suffix)) { await next(); return; }
+
         // Derive action from HTTP method for standard CRUD; keep permission suffix for semantic actions
         // (Approve, Close, Archive, Forward, …) which come through PUT with distinct permission codes.
-        var action = context.HttpContext.Request.Method switch
-        {
-            "POST"   => "Create",
-            "DELETE" => "Delete",
-            _        => permCode[(dot + 1)..], // "Edit", "Approve", "Close", "Archive", …
-        };
+        var action = isGet
+            ? "View"
+            : method switch
+            {
+                "POST"   => "Create",
+                "DELETE" => "Delete",
+                _        => suffix, // "Edit", "Approve", "Close", "Archive", …
+            };
 
         // Entity ID from route, e.g. /api/incoming-mail/{id}
         long? entityId = null;
@@ -97,6 +105,18 @@ public sealed class AuditActionFilter(IAuditWriter audit, AppDbContext db) : IAs
         }
     }
 
+    /// <summary>True only for a single-record detail read: a <c>.View</c> permission whose route ends with
+    /// the <c>{id}</c> parameter (e.g. <c>api/documents/{id}</c>) — not a list or a sub-resource.</summary>
+    private static bool IsRecordView(ActionExecutingContext ctx, string suffix)
+    {
+        if (!string.Equals(suffix, "View", StringComparison.OrdinalIgnoreCase)) return false;
+        if (!ctx.RouteData.Values.ContainsKey("id")) return false;
+
+        var template = ctx.ActionDescriptor.AttributeRouteInfo?.Template ?? "";
+        var lastSegment = template.TrimEnd('/').Split('/').LastOrDefault() ?? "";
+        return lastSegment.StartsWith("{id", StringComparison.OrdinalIgnoreCase);
+    }
+
     // ── Lookup entity display name by resource type ─────────────────────────────
     private async Task<string?> SnapshotTitleAsync(string entityType, long id, CancellationToken ct)
     {
@@ -106,12 +126,6 @@ public sealed class AuditActionFilter(IAuditWriter audit, AppDbContext db) : IAs
             {
                 "Documents"    => await db.Documents.IgnoreQueryFilters()
                                     .Where(d => d.Id == id).Select(d => d.Title).FirstOrDefaultAsync(ct),
-
-                "IncomingMail" => await db.IncomingMails.IgnoreQueryFilters()
-                                    .Where(m => m.Id == id).Select(m => m.Subject).FirstOrDefaultAsync(ct),
-
-                "OutgoingMail" => await db.OutgoingMails.IgnoreQueryFilters()
-                                    .Where(m => m.Id == id).Select(m => m.Subject).FirstOrDefaultAsync(ct),
 
                 "Users"        => await db.Users.IgnoreQueryFilters()
                                     .Where(u => u.Id == id).Select(u => u.FullName).FirstOrDefaultAsync(ct),

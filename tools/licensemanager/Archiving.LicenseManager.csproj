@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Archiving.LicenseManager</RootNamespace>
+    <AssemblyName>archiving-licenses</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The same two files the product and licensegen share, included by link rather than copied:
+         issuer and verifier can never drift apart. A project reference is avoided deliberately —
+         this tool must not drag EF Core and the rest of the server onto a vendor machine. -->
+    <Compile Include="..\..\backend\src\Archiving.Infrastructure\Licensing\LicenseToken.cs"
+             Link="LicenseToken.cs" />
+    <Compile Include="..\..\backend\src\Archiving.Infrastructure\Licensing\MachineFingerprint.cs"
+             Link="MachineFingerprint.cs" />
+  </ItemGroup>
+
+</Project>

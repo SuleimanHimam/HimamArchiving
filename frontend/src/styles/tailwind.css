@@ -8,6 +8,10 @@
 /* enter/exit animation utilities (animate-in / fade-in / slide-in-from-*, data-[state] variants) */
 @import 'tw-animate-css';
 
+/* Make Tailwind's dark: variant respond to our theme toggle (.dark class on <html>),
+   instead of the default prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-ink: #14213d;
   --color-ink-deep: #0e1a30;
@@ -16,13 +20,13 @@
   --color-seal-deep: #7a171b;
   --color-brass: #ebe9e6;
   --color-brass-soft: #f3f1ef;
-  --color-paper: #fbf7ec;
-  --color-parchment: #e6e6e6;
-  --color-parchment-2: #d9d9d9;
-  --color-parchment-3: #cccccc;
+  --color-paper: #ffffff;
+  --color-parchment: #f7f8fa;    /* light, airy page background */
+  --color-parchment-2: #eef0f3;
+  --color-parchment-3: #e3e5e9;
   --color-ink-text: #211d17;
-  --color-muted: #ebdfc4;   /* light surface (shadcn bg-muted); muted TEXT is --color-muted-foreground */
-  --color-faint: #9a8f78;
+  --color-muted: #ededed;   /* light surface (shadcn bg-muted); muted TEXT is --color-muted-foreground */
+  --color-faint: #8a8a8a;
   --color-ok: #2f5d3a;
   --color-warn: #9a6312;
 
@@ -33,23 +37,123 @@
   --radius-doc: 4px;
   --radius-doc-lg: 8px;
 
-  /* shadcn/ui compat — mapped to Diwan design tokens */
-  --color-background:          #fbf7ec;   /* paper */
+  /* shadcn/ui compat — neutral palette suited to the #e6e6e6 background */
+  --color-background:          #ffffff;   /* white surface */
   --color-foreground:          #211d17;   /* ink-text */
-  --color-popover:             #fbf7ec;   /* paper */
+  --color-popover:             #ffffff;   /* white surface */
   --color-popover-foreground:  #211d17;   /* ink-text */
-  --color-accent:              #f4ecd8;   /* parchment */
-  --color-accent-foreground:   #14213d;   /* ink */
-  --color-border:              #e2d3b2;   /* parchment-3 */
-  --color-muted-foreground:    #6e6552;   /* muted */
+  --color-accent:              #f1f3f6;   /* light grey hover surface */
+  --color-accent-foreground:   #1B4C9E;   /* brand blue */
+  --color-border:              #e6e8ec;   /* soft thin divider (airy) */
+  --color-muted-foreground:    #717784;   /* soft slate muted text */
   --color-destructive:         #9b2226;   /* seal */
-  --color-destructive-foreground: #fbf7ec;
-  --color-card:                #fffdf6;   /* near-paper surface */
+  --color-destructive-foreground: #ffffff;
+  --color-card:                #ffffff;   /* white card surface */
   --color-card-foreground:     #211d17;   /* ink-text */
-  --color-primary:             #14213d;   /* ink */
-  --color-primary-foreground:  #fbf7ec;   /* paper */
-  --color-secondary:           #ebdfc4;   /* parchment-2 */
-  --color-secondary-foreground: #14213d;  /* ink */
-  --color-input:               #e2d3b2;   /* parchment-3 */
-  --color-ring:                #b0892d;   /* brass */
+  --color-primary:             #1B4C9E;   /* brand blue, from the app mark */
+  --color-primary-foreground:  #ffffff;   /* white */
+  --color-secondary:           #f1f3f6;   /* light grey */
+  --color-secondary-foreground: #1B4C9E;  /* brand blue */
+  --color-input:               #e3e5e9;   /* soft input border */
+  --color-ring:                #1B4C9E;   /* brand blue focus ring */
+}
+
+/* ─── Floating label ─────────────────────────────────────────────────────────
+   GPU-accelerated: animate ONLY transform + color (never top/font-size/left) so
+   the caption glides instead of reflowing each frame. Shared by the LabeledInput
+   family (input / textarea / select / password) in components/ui/labeled-input.tsx.
+   Tokens are this repo's `--color-*` (hex), so opacity uses color-mix, not hsl(). */
+.floating-label {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 0.5rem;
+  transform: translateY(-50%) scale(1);
+  transform-origin: left center;                 /* start edge; flipped for RTL below */
+  padding-inline: 0;
+  cursor: text;
+  font-size: 0.875rem;                           /* 14px — same as the input text */
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-muted-foreground) 70%, transparent);
+  pointer-events: auto;
+  max-inline-size: calc(100% - 1.25rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* The lift overshoots slightly (spring-ish curve) so the caption settles onto the
+     border instead of stopping dead. */
+  transition:
+    transform 380ms cubic-bezier(0.34, 1.4, 0.64, 1),
+    color     300ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, color;
+}
+[dir="rtl"] .floating-label { transform-origin: right center; }
+
+.floating-label__text {
+  display: inline-flex;
+  background-color: var(--color-background);     /* masks the border for the notch cutout */
+  padding-inline: 0.25rem;
+  border-radius: 6px;
+  /* Rides the same timing as the lift, so the pill fades in with the motion. */
+  transition:
+    background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow       300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Floated — on focus, a filled input/textarea, or any select (always has a value).
+   scale(0.8) replaces the font-size shrink; translateY lifts the caption to the border. */
+.group:focus-within .floating-label,
+.group:has(input:not(:placeholder-shown)) .floating-label,
+.group:has(textarea:not(:placeholder-shown)) .floating-label,
+.group:has(select) .floating-label {
+  transform: translateY(calc(-50% - 1.5rem)) scale(0.8);
+  color: var(--color-foreground);
+  pointer-events: none;
+  cursor: default;
+  letter-spacing: 0.01em;
+}
+/* Caption reads as a chip seated on the border, not floating text over it. */
+.group:focus-within .floating-label .floating-label__text,
+.group:has(input:not(:placeholder-shown)) .floating-label .floating-label__text,
+.group:has(textarea:not(:placeholder-shown)) .floating-label .floating-label__text,
+.group:has(select) .floating-label .floating-label__text {
+  box-shadow: 0 0 0 3px var(--color-background);
+}
+/* Active field: the pill tints to match the caption, so label and focus ring light up
+   as one unit. currentColor means it follows the caption automatically — primary on
+   focus, destructive on an error field — and the mix stays opaque, so it still masks
+   the border it sits on. */
+.group:focus-within .floating-label .floating-label__text {
+  background-color: color-mix(in srgb, currentColor 9%, var(--color-background));
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 9%, var(--color-background));
+}
+
+/* Textarea rests near the first line, not the vertical middle of the tall box. */
+.floating-label--area { inset-block-start: 1.5rem; }
+
+/* Accent while actually focused (later source order → wins over the filled foreground). */
+.group:focus-within .floating-label { color: var(--color-primary); }
+
+/* Error (last → wins over accent/foreground). */
+.floating-label--error { color: color-mix(in srgb, var(--color-destructive) 80%, transparent); }
+.group:focus-within .floating-label--error,
+.group:has(input:not(:placeholder-shown)) .floating-label--error,
+.group:has(textarea:not(:placeholder-shown)) .floating-label--error { color: var(--color-destructive); }
+
+/* Reduced motion: the floating label is a micro-interaction (a caption sliding a few
+   px), so it stays animated even here — but shortened. !important is required to beat
+   the app-wide `* { transition-duration: .001ms !important }` reduced-motion blankets
+   in diwan.css / sanad-registry.css, which would otherwise freeze it (this is why the
+   label animated on a phone but not on a desktop with Windows "Animation effects" off). */
+@media (prefers-reduced-motion: reduce) {
+  .floating-label {
+    /* Overshoot dropped here — that is the part that reads as "motion". */
+    transition:
+      transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+      color     200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  .floating-label__text {
+    transition:
+      background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow       200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
 }

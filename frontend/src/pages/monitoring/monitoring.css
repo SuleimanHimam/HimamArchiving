@@ -21,10 +21,10 @@
 .mon-active-filter {
   display: inline-flex; align-items: center; gap: .45rem;
   padding: .35rem .75rem;
-  background: rgba(176,137,45,.1);
-  border: 1px solid rgba(176,137,45,.3);
+  background: rgba(46,150,204,.1);
+  border: 1px solid rgba(46,150,204,.3);
   border-radius: 99px;
-  font-size: .8rem; color: var(--ink);
+  font-size: .8rem; color: var(--text);
 }
 .mon-active-filter__email { color: var(--text-muted); font-size: .73rem; }
 .mon-active-filter__clear {
@@ -41,7 +41,7 @@
 }
 .mon-filter-field {
   display: flex; flex-direction: column; gap: .2rem;
-  font-size: .8rem; font-weight: 600; color: var(--ink-soft);
+  font-size: .8rem; font-weight: 600; color: var(--text-muted);
   min-width: 140px;
 }
 .mon-filter-field select,
@@ -60,6 +60,95 @@
 }
 .mon-total { font-size: .8rem; color: var(--text-muted); margin-right: auto; }
 
+/* Body copy uses --text / --text-muted, not --ink / --ink-soft: those two are brand *blues*
+   in light mode (#24759F / #1B5776), so the log's names, cells and field labels rendered blue
+   on white. They stay correct in dark mode only by coincidence.
+   Surfaces here use --parchment-2 (the raised-panel token, which flips with the theme).
+   --parchment-1 was used originally but is defined by no stylesheet, so those declarations
+   were invalid and the controls fell back to transparent in both themes. */
+
+/* ── Filter bar ─────────────────────────────────────────────────────────────
+   Always visible. Replaces the icon-only toggle + slide-out chip panel: the
+   panel rendered one chip per audited user (120 of them in a scrolling column),
+   and hid the whole thing behind a button with no label. */
+.mon-filterbar {
+  margin-top: 1rem;
+  padding: .9rem 1rem .95rem;
+  background: var(--paper);
+  border: 1px solid var(--parchment-3);
+  border-radius: var(--radius-lg, 10px);
+  display: flex; flex-direction: column; gap: .7rem;
+}
+.mon-filterbar__top { display: flex; align-items: center; gap: .6rem; }
+.mon-search { position: relative; flex: 1; display: flex; min-width: 0; }
+.mon-search input {
+  width: 100%; font: inherit; font-size: .9rem; color: var(--text);
+  background: var(--parchment-2); border: 1px solid var(--parchment-3);
+  border-radius: var(--radius); padding: .5rem .8rem; padding-inline-start: 2.2rem;
+  outline: none; transition: border-color .12s;
+}
+.mon-search input:focus { border-color: var(--brass); background: var(--paper); }
+.mon-search__icon {
+  position: absolute; inset-inline-start: .7rem; top: 50%; transform: translateY(-50%);
+  color: var(--text-faint); pointer-events: none;
+}
+.mon-scope { margin: -.35rem 0 0; font-size: .72rem; color: var(--text-faint); }
+.mon-clearall { flex-shrink: 0; }
+
+.mon-fgroup { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.mon-fgroup__label {
+  flex-shrink: 0; min-width: 4.5rem;
+  font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+  color: var(--text-muted); text-transform: uppercase;
+}
+.mon-chips { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+
+.mon-chip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .28rem .65rem; border-radius: 99px;
+  border: 1px solid var(--parchment-3); background: var(--parchment-2);
+  font: inherit; font-size: .78rem; color: var(--text-muted);
+  cursor: pointer; transition: background .12s, border-color .12s, color .12s;
+}
+.mon-chip:hover { border-color: var(--brass); color: var(--text); }
+.mon-chip.is-on {
+  background: color-mix(in srgb, var(--action-color, var(--brass)) 14%, transparent);
+  border-color: color-mix(in srgb, var(--action-color, var(--brass)) 45%, transparent);
+  color: var(--action-color, var(--brass)); font-weight: 700;
+}
+.mon-chip:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+/* The dot carries the action's colour even when the chip is off, so the legend in the
+   filter bar and the badges in the table read as one vocabulary. */
+.mon-chip__dot {
+  inline-size: 7px; block-size: 7px; border-radius: 99px;
+  background: var(--action-color, var(--ink-soft)); flex-shrink: 0;
+}
+
+.mon-dates { display: inline-flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.mon-dates label {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .74rem; color: var(--text-muted);
+}
+.mon-dates input {
+  font: inherit; font-size: .78rem; color: var(--text);
+  background: var(--parchment-2); border: 1px solid var(--parchment-3);
+  border-radius: var(--radius); padding: .25rem .45rem;
+}
+.mon-dates input:focus { border-color: var(--brass); outline: none; }
+
+.mon-fgroup--selects { gap: 1.2rem; align-items: center; }
+.mon-field { display: inline-flex; align-items: center; gap: .5rem; min-width: 0; }
+.mon-field select {
+  font: inherit; font-size: .82rem; color: var(--text);
+  background: var(--parchment-2); border: 1px solid var(--parchment-3);
+  border-radius: var(--radius); padding: .35rem .55rem; cursor: pointer;
+}
+.mon-field select:focus { border-color: var(--brass); outline: none; }
+.mon-field--user { flex: 1 1 260px; max-inline-size: 340px; }
+.mon-field--user .ss { flex: 1; min-width: 0; }
+
+.mon-resultline { margin: .7rem 0 0; font-size: .78rem; color: var(--text-muted); }
+
 /* ── Table wrapper ── */
 .mon-table-wrap { padding: 0; overflow-x: auto; }
 
@@ -71,31 +160,51 @@
   padding: .6rem .85rem;
   text-align: right;
   font-size: .72rem; font-weight: 700; letter-spacing: .02em;
-  color: var(--ink-soft); text-transform: uppercase;
-  background: var(--parchment-1);
-  border-bottom: 1.5px solid var(--parchment-3);
+  color: var(--text-muted); text-transform: uppercase;
+  background: transparent;
+  border-bottom: 1px solid var(--parchment-3);
   white-space: nowrap;
 }
 .mon-row td { border-bottom: 1px solid var(--parchment-3); }
 .mon-row.is-expandable { cursor: pointer; }
-.mon-row.is-expandable:hover td { background: var(--parchment-1); }
-.mon-row.is-open td { background: rgba(176,137,45,.04); }
+.mon-row.is-expandable:hover td { background: var(--parchment-2); }
+.mon-row.is-open td { background: rgba(46,150,204,.04); }
 
 .mon-cell {
   padding: .55rem .85rem;
-  color: var(--ink);
+  color: var(--text);
   vertical-align: middle;
 }
 .mon-cell--time {
   font-size: .75rem; color: var(--text-muted);
   white-space: nowrap; font-family: var(--font-mono);
 }
-.mon-cell--title { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Free-text columns are clamped so no single long value can set the table's width. Before
+   this, one 190-character user name stretched the table to 2100px inside a 1130px card and
+   every column after المستخدم sat off-screen behind a horizontal scroll — the log read as
+   two columns of names and nothing else. Full values live in the title tooltips. */
+.mon-cell--user { max-width: 240px; }
+.mon-user__name, .mon-user__email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mon-cell--title { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mon-cell--ip   { font-family: var(--font-mono); font-size: .73rem; color: var(--text-muted); }
-.mon-cell--expand { width: 28px; text-align: center; color: var(--text-muted); }
+/* The shared .col-opt3 rule drops this column below a 1500px viewport, which was written for
+   wide registers. With the free-text columns clamped the audit table fits comfortably, and
+   "from which address" is core evidence in an audit log — keep it down to 1200px. */
+@media (min-width: 1200px) {
+  .mon-table th.col-opt3, .mon-table td.col-opt3 { display: table-cell; }
+}
+.mon-cell--expand { width: 56px; text-align: center; color: var(--text-muted); white-space: nowrap; }
+.mon-del {
+  background: none; border: 0; cursor: pointer; color: var(--text-faint);
+  padding: 4px; border-radius: 6px; display: inline-flex; align-items: center;
+  margin-inline-end: 4px; vertical-align: middle; transition: color .15s, background .15s;
+}
+.mon-del:hover { color: var(--seal); background: color-mix(in srgb, var(--seal) 12%, transparent); }
+.mon-delall { color: var(--seal); }
+.mon-delall:hover:not(:disabled) { background: color-mix(in srgb, var(--seal) 12%, transparent); }
 
-.mon-user { display: flex; flex-direction: column; gap: 1px; }
-.mon-user__name  { font-size: .83rem; font-weight: 600; color: var(--ink); }
+.mon-user { display: flex; flex-direction: column; gap: 1px; min-width: 0; max-width: 100%; }
+.mon-user__name  { font-size: .83rem; font-weight: 600; color: var(--text); }
 .mon-user__email { font-size: .72rem; color: var(--text-muted); font-family: var(--font-mono); }
 
 .mon-action-badge {
@@ -108,7 +217,7 @@
   border: 1px solid color-mix(in srgb, var(--action-color) 25%, transparent);
 }
 
-.mon-entity { font-size: .8rem; color: var(--ink-soft); font-weight: 600; }
+.mon-entity { font-size: .8rem; color: var(--text-muted); font-weight: 600; }
 .mon-entity-id {
   margin-right: .3rem;
   font-size: .7rem; color: var(--text-faint);
@@ -116,7 +225,7 @@
 }
 
 /* ── Expandable detail row ── */
-.mon-detail-row td { padding: 0; background: var(--parchment-1); }
+.mon-detail-row td { padding: 0; background: var(--parchment-2); }
 .mon-detail {
   overflow: hidden;
   display: flex; gap: 1rem; flex-wrap: wrap;
@@ -126,13 +235,13 @@
 .mon-diff { flex: 1; min-width: 220px; }
 .mon-diff__label {
   display: block; font-size: .73rem; font-weight: 700;
-  color: var(--ink-soft); margin-bottom: .3rem; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: .3rem; text-transform: uppercase;
 }
 .mon-diff__body {
   font-size: .73rem; line-height: 1.5;
   background: var(--paper); padding: .5rem .7rem;
   border-radius: var(--radius); border: 1px solid var(--parchment-3);
-  color: var(--ink); overflow-x: auto; max-height: 220px; overflow-y: auto;
+  color: var(--text); overflow-x: auto; max-height: 220px; overflow-y: auto;
   margin: 0; direction: ltr; text-align: left;
 }
 .mon-machine {
@@ -164,3 +273,27 @@
 /* Spin animation for refresh icon */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin .7s linear infinite; }
+
+/* ── Chain-integrity badge (§8.2, §29.5) ───────────────────────────────────
+   State is carried by icon + text as well as colour: a red/green pill alone
+   fails for colour-blind users, and "is the archive intact" is not a question
+   to answer with hue only. */
+.mon-chain {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .6rem;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mon-chain:disabled { cursor: default; opacity: .7; }
+.mon-chain.is-valid   { color: #1a6b3c; border-color: #1a6b3c40; background: #1a6b3c0f; }
+.mon-chain.is-broken  { color: #a3231f; border-color: #a3231f59; background: #a3231f14; }
+.mon-chain.is-unknown { color: var(--text-muted); }
+.mon-chain:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }

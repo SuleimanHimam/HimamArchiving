@@ -5,6 +5,9 @@ export type CustomFieldType = 0 | 1 | 2 | 3 // Text | Number | Date | Choice
 export interface CustomFieldDef {
   id: number
   entityType: string
+  /** Narrowed to one document type, or null when shared by every type of this record. */
+  documentTypeId: number | null
+  documentTypeName: string | null
   fieldKey: string
   label: string
   fieldType: CustomFieldType
@@ -29,11 +32,22 @@ export const CF_ENTITIES: { key: string; label: string }[] = [
 ]
 
 export const customFields = {
-  list: (entityType: string) =>
-    api.get<CustomFieldDef[]>('/custom-fields', { params: { entityType } }).then((r) => r.data),
-  create: (b: { entityType: string; label: string; fieldType: number; options?: string | null; searchable: boolean }) =>
+  /**
+   * Field definitions for a record type. Pass `documentTypeId` to get what a record of that type
+   * actually carries — the type's own fields plus the shared ones — or `sharedOnly` for just the
+   * shared ones. With neither, every field defined for the record type.
+   */
+  list: (entityType: string, opts?: { documentTypeId?: number | null; sharedOnly?: boolean }) =>
+    api.get<CustomFieldDef[]>('/custom-fields', {
+      params: {
+        entityType,
+        documentTypeId: opts?.documentTypeId ?? undefined,
+        sharedOnly: opts?.sharedOnly ? true : undefined,
+      },
+    }).then((r) => r.data),
+  create: (b: { entityType: string; label: string; fieldType: number; options?: string | null; searchable: boolean; documentTypeId?: number | null }) =>
     api.post<CustomFieldDef>('/custom-fields', b).then((r) => r.data),
-  update: (id: number, b: { label: string; fieldType: number; options?: string | null; searchable: boolean; sortOrder: number; isActive: boolean }) =>
+  update: (id: number, b: { label: string; fieldType: number; options?: string | null; searchable: boolean; sortOrder: number; isActive: boolean; documentTypeId?: number | null }) =>
     api.put<CustomFieldDef>(`/custom-fields/${id}`, b).then((r) => r.data),
   remove: (id: number) => api.delete(`/custom-fields/${id}`),
 

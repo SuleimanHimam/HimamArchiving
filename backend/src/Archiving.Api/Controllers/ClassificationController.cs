@@ -23,6 +23,21 @@ public sealed record SetClassificationRolesRequest(IReadOnlyList<long> RoleIds);
 [Authorize]
 public sealed class ClassificationController(AppDbContext db) : ControllerBase
 {
+    /// <summary>Just the display names and colours of the levels, for any signed-in user.
+    /// Every screen paints a classification badge, so every user needs the current names —
+    /// but administering the catalogue (roles, active flags, ids) stays behind
+    /// Classification.View on the endpoint below.</summary>
+    [HttpGet("labels")]
+    public async Task<IActionResult> Labels(CancellationToken ct)
+    {
+        var list = await db.ClassificationTypes
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.SortOrder)
+            .Select(c => new { c.NameAr, c.NameEn, c.Color, c.SortOrder })
+            .ToListAsync(ct);
+        return Ok(list);
+    }
+
     [HttpGet]
     [HasPermission("Classification.View")]
     public async Task<IActionResult> List(CancellationToken ct)

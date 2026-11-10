@@ -17,11 +17,10 @@ public class PhysicalLocation : BaseEntity
     public ICollection<PhysicalLocation> Children { get; set; } = new List<PhysicalLocation>();
 }
 
-/// <summary>Maps a digital record (document or incoming mail) to its paper location.</summary>
+/// <summary>Maps a digital document to its paper location.</summary>
 public class PhysicalArchiveItem : BaseEntity
 {
     public long? DocumentId { get; set; }
-    public long? IncomingMailId { get; set; }
     public long PhysicalLocationId { get; set; }
     public string? BoxNumber { get; set; }
     public string? FileNumber { get; set; }
@@ -30,6 +29,5 @@ public class PhysicalArchiveItem : BaseEntity
     public string? Notes { get; set; }
 
     public Document? Document { get; set; }
-    public IncomingMail? IncomingMail { get; set; }
     public PhysicalLocation PhysicalLocation { get; set; } = null!;
 }

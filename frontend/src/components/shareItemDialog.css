@@ -1,0 +1,105 @@
+/* مشاركة مجلد أو ملف أو وثيقة — one narrow column: who, at what level, and a way to stop. */
+
+.shr {
+  inline-size: min(480px, calc(100vw - 2rem));
+  max-inline-size: 480px;
+  /* The list grows with the institution; the dialog does not grow past the window. */
+  max-block-size: min(86vh, 720px);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+/* The close button sits in the corner; the header keeps clear of it. */
+.shr__head { gap: .15rem; padding-inline-end: 1.75rem; text-align: start; }
+.shr__title { display: flex; align-items: center; gap: .4rem; font-size: .95rem; }
+.shr__name {
+  margin: 0;
+  font-size: .82rem;
+  color: var(--color-muted-foreground, var(--text-muted));
+  unicode-bidi: plaintext;
+  overflow-wrap: anywhere;
+}
+
+.shr__add {
+  display: grid;
+  gap: .5rem;
+  padding-block-end: .6rem;
+  border-block-end: 1px solid var(--color-border, var(--parchment-3));
+}
+/* The level and the button share a line; the picker gets the one above it to itself, because a
+   full name in a third of 480px is an ellipsis. */
+.shr__addrow { display: grid; grid-template-columns: 1fr auto; gap: .5rem; align-items: center; }
+.shr__addrow .btn { block-size: 3rem; }
+.shr__level { min-inline-size: 0; }
+
+.shr__bulk { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.shr__bulk .btn { display: inline-flex; align-items: center; gap: .3rem; }
+.shr__warn {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  flex: 1 1 12rem;
+  font-size: .74rem;
+  line-height: 1.6;
+  color: var(--color-destructive, #b3261e);
+}
+.shr__warn svg { flex: none; }
+
+.shr__listhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  font-size: .76rem;
+  color: var(--color-muted-foreground, var(--text-muted));
+}
+.shr__clear { display: inline-flex; gap: .3rem; }
+
+.shr__list {
+  margin: 0;
+  padding: 0 .15rem 0 0;
+  list-style: none;
+  display: grid;
+  gap: .3rem;
+  overflow-y: auto;
+  /* Enough to read, never enough to push the note off the screen. */
+  max-block-size: 15rem;
+  min-block-size: 2rem;
+}
+.shr__empty { font-size: .8rem; color: var(--color-muted-foreground, var(--text-muted)); }
+
+.shr__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: .4rem;
+  align-items: center;
+  padding: .3rem .4rem;
+  border: 1px solid var(--color-border, var(--parchment-3));
+  border-radius: 8px;
+}
+.shr__row select {
+  min-inline-size: 0;
+  padding: .25rem .35rem;
+  border: 1px solid var(--color-input, var(--parchment-3));
+  border-radius: 6px;
+  background: var(--color-background, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: .78rem;
+}
+.shr__who { font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shr__drop { color: var(--color-destructive, #b3261e); }
+
+.shr__note {
+  display: flex;
+  align-items: flex-start;
+  gap: .35rem;
+  margin: 0;
+  padding-block-start: .5rem;
+  border-block-start: 1px solid var(--color-border, var(--parchment-3));
+  font-size: .74rem;
+  line-height: 1.7;
+  color: var(--color-muted-foreground, var(--text-muted));
+}
+.shr__note svg { flex: none; margin-block-start: .2em; }

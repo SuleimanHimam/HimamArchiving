@@ -34,26 +34,34 @@ public sealed class DispositionRequestsController(IDispositionService svc) : Con
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
     }
 
-    /// <summary>Step 1 — Records Officer. Body decision: "Verify" | "Reject".</summary>
+    /// <summary>Step 1 — the requester's own department head. Body decision: "Verify" | "Reject".
+    ///
+    /// The permission here is only a coarse gate: authority for each step is the *seat* the request
+    /// is waiting on, which DispositionService checks per request. Gating this on Disposition.Edit
+    /// would lock out department heads (who hold Approve, not Edit) and the archive manager (whose
+    /// role may hold neither), while granting nothing a seat check does not already decide.</summary>
     [HttpPost("{id:long}/verify")]
-    [HasPermission("Disposition.Edit")]
+    [HasPermission("Disposition.View")]
     public async Task<IActionResult> Verify(long id, [FromBody] VerifyDispositionRequest req, CancellationToken ct)
     {
         var r = await svc.VerifyAsync(id, req, ct);
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
     }
 
-    /// <summary>Step 2 — Legal / Department Head. Body decision: "Approve" | "Reject".</summary>
+    /// <summary>Step 2 — مدير قسم الأرشيف ratifies. Body decision: "Approve" | "Reject".
+    /// Coarse gate; the seat check is in the service (see Verify above).</summary>
     [HttpPost("{id:long}/final-approve")]
-    [HasPermission("Disposition.Approve")]
+    [HasPermission("Disposition.View")]
     public async Task<IActionResult> FinalApprove(long id, [FromBody] FinalApproveDispositionRequest req, CancellationToken ct)
     {
         var r = await svc.FinalApproveAsync(id, req, ct);
         return r.Succeeded ? Ok(r.Value) : BadRequest(new { error = r.Error });
     }
 
+    /// <summary>Refuse the request outright. Same coarse gate: the service allows only the seat the
+    /// request is currently waiting on.</summary>
     [HttpPost("{id:long}/reject")]
-    [HasPermission("Disposition.Edit")]
+    [HasPermission("Disposition.View")]
     public async Task<IActionResult> Reject(long id, [FromBody] RejectDispositionRequest req, CancellationToken ct)
     {
         var r = await svc.RejectAsync(id, req, ct);

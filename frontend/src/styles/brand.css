@@ -1,0 +1,182 @@
+/* ============================================================================
+   أوراق · Archevo — Brand token layer (Step 1)
+   A single source of truth for color, type, spacing, radius and elevation.
+   Theme-aware: aligns with the app's existing `data-theme="dark"` on <html>
+   and Tailwind's `.dark` class, plus a prefers-color-scheme fallback.
+   Non-destructive: only defines --brand-* tokens and .brand-* components.
+   ========================================================================== */
+
+:root {
+  /* ---- Brand palette (light) ---- */
+  --brand-primary:        #123A5A;   /* Ink Navy — trust, headers, primary */
+  --brand-primary-600:    #0E2E48;
+  --brand-primary-050:    #EAF1F7;
+  --brand-secondary:      #0E7C86;   /* Teal — secondary actions, links */
+  --brand-secondary-050:  #E4F3F4;
+  --brand-accent:         #12B5C9;   /* Cyan-teal — active states, focus glow */
+  --brand-accent-text:    #0A7D8C;   /* accent tuned for AA text on light */
+
+  --brand-success:        #12864F;
+  --brand-warning:        #B7791F;
+  --brand-danger:         #C43D3D;
+  --brand-info:           #2563A8;
+
+  /* ---- Surfaces & text (light) ---- */
+  --brand-bg:             #F6F8FB;
+  --brand-surface:        #FFFFFF;
+  --brand-surface-2:      #EEF2F7;
+  --brand-line:           #E1E7EF;
+  --brand-text:           #0F1D2B;
+  --brand-text-muted:     #5A6675;
+  --brand-text-soft:      #8A94A3;
+  --brand-on-primary:     #F4FAFF;
+
+  /* ---- Type ---- */
+  --brand-font-heading: 'IBM Plex Sans Arabic', 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  --brand-font-body:    'IBM Plex Sans Arabic', 'Noto Sans Arabic', system-ui, sans-serif;
+  --brand-font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+
+  /* ---- Radius ---- */
+  --brand-r-sm: 8px;
+  --brand-r-md: 12px;
+  --brand-r-lg: 16px;
+  --brand-r-full: 999px;
+
+  /* ---- Spacing scale (4px base) ---- */
+  --brand-sp-1: 4px;  --brand-sp-2: 8px;  --brand-sp-3: 12px;
+  --brand-sp-4: 16px; --brand-sp-5: 24px; --brand-sp-6: 32px; --brand-sp-8: 48px;
+
+  /* ---- Elevation (soft, layered) ---- */
+  --brand-shadow-sm: 0 1px 2px rgba(15, 29, 43, .06), 0 1px 3px rgba(15, 29, 43, .04);
+  --brand-shadow-md: 0 6px 16px rgba(15, 29, 43, .08);
+  --brand-shadow-lg: 0 16px 40px rgba(15, 29, 43, .12);
+  --brand-focus-ring: 0 0 0 3px rgba(18, 181, 201, .35);
+
+  --brand-transition: 160ms cubic-bezier(.2, .6, .2, 1);
+}
+
+/* ---- Dark theme (explicit toggle + Tailwind .dark) ---- */
+:root[data-theme='dark'], .dark {
+  --brand-primary:       #4FA8C4;
+  --brand-primary-600:   #6FBFD6;
+  --brand-primary-050:   #14263A;
+  --brand-secondary:     #34B3BD;
+  --brand-secondary-050: #12303A;
+  --brand-accent:        #22C9DD;
+  --brand-accent-text:   #35D2E4;
+
+  --brand-success:       #34C77E;
+  --brand-warning:       #E0A83B;
+  --brand-danger:        #E36565;
+  --brand-info:          #5AA1E6;
+
+  --brand-bg:            #0A1220;
+  --brand-surface:       #101B2D;
+  --brand-surface-2:     #16233A;
+  --brand-line:          #223046;
+  --brand-text:          #E9EEF6;
+  --brand-text-muted:    #9AA6BA;
+  --brand-text-soft:     #6C7A90;
+  --brand-on-primary:    #06121C;
+
+  --brand-shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --brand-shadow-md: 0 8px 22px rgba(0, 0, 0, .45);
+  --brand-shadow-lg: 0 18px 46px rgba(0, 0, 0, .55);
+}
+
+/* Fallback for users whose OS is dark but no explicit app toggle is set. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --brand-primary: #4FA8C4; --brand-accent: #22C9DD; --brand-accent-text: #35D2E4;
+    --brand-bg: #0A1220; --brand-surface: #101B2D; --brand-surface-2: #16233A;
+    --brand-line: #223046; --brand-text: #E9EEF6; --brand-text-muted: #9AA6BA; --brand-text-soft: #6C7A90;
+    --brand-on-primary: #06121C;
+  }
+}
+
+/* ============================================================================
+   Foundational components (BEM-ish, .brand-* namespace, RTL-safe)
+   ========================================================================== */
+
+/* ---- Button ---- */
+.brand-btn {
+  --_bg: var(--brand-primary); --_fg: var(--brand-on-primary); --_bd: transparent;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--brand-sp-2);
+  font-family: var(--brand-font-body); font-weight: 600; font-size: 14px; line-height: 1;
+  padding: 10px 18px; border-radius: var(--brand-r-md); border: 1px solid var(--_bd);
+  background: var(--_bg); color: var(--_fg); cursor: pointer; text-decoration: none;
+  transition: transform var(--brand-transition), box-shadow var(--brand-transition), background var(--brand-transition), border-color var(--brand-transition);
+  box-shadow: var(--brand-shadow-sm);
+}
+.brand-btn:hover { transform: translateY(-1px); box-shadow: var(--brand-shadow-md); }
+.brand-btn:active { transform: translateY(0); }
+.brand-btn:focus-visible { outline: none; box-shadow: var(--brand-focus-ring); }
+.brand-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+.brand-btn--secondary { --_bg: var(--brand-secondary); }
+.brand-btn--accent    { --_bg: var(--brand-accent); --_fg: #04222A; }
+.brand-btn--danger    { --_bg: var(--brand-danger); }
+.brand-btn--ghost     { --_bg: transparent; --_fg: var(--brand-text); --_bd: var(--brand-line); box-shadow: none; }
+.brand-btn--ghost:hover { background: var(--brand-surface-2); }
+.brand-btn--sm { padding: 7px 12px; font-size: 13px; }
+.brand-btn--lg { padding: 13px 24px; font-size: 15px; }
+.brand-btn--block { width: 100%; }
+.brand-btn__spinner { width: 15px; height: 15px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; animation: brand-spin .7s linear infinite; }
+@keyframes brand-spin { to { transform: rotate(360deg); } }
+
+/* ---- Text field ---- */
+.brand-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--brand-font-body); }
+.brand-field__label { font-size: 13px; font-weight: 600; color: var(--brand-text); }
+.brand-field__req { color: var(--brand-danger); margin-inline-start: 2px; }
+.brand-field__control {
+  display: flex; align-items: center; gap: 8px; background: var(--brand-surface);
+  border: 1px solid var(--brand-line); border-radius: var(--brand-r-md); padding: 0 12px;
+  transition: border-color var(--brand-transition), box-shadow var(--brand-transition);
+}
+.brand-field__control:focus-within { border-color: var(--brand-accent); box-shadow: var(--brand-focus-ring); }
+.brand-field__input {
+  flex: 1; border: none; outline: none; background: transparent; color: var(--brand-text);
+  font: inherit; font-size: 14px; padding: 11px 0; min-width: 0;
+}
+.brand-field__input::placeholder { color: var(--brand-text-soft); }
+.brand-field__icon { color: var(--brand-text-soft); display: inline-grid; place-items: center; }
+.brand-field__msg { font-size: 12px; color: var(--brand-text-muted); }
+.brand-field--error .brand-field__control { border-color: var(--brand-danger); }
+.brand-field--error .brand-field__control:focus-within { box-shadow: 0 0 0 3px rgba(196, 61, 61, .28); }
+.brand-field--error .brand-field__msg { color: var(--brand-danger); }
+.brand-field--success .brand-field__control { border-color: var(--brand-success); }
+.brand-field--success .brand-field__msg { color: var(--brand-success); }
+
+/* ---- Card ---- */
+.brand-card {
+  background: var(--brand-surface); border: 1px solid var(--brand-line);
+  border-radius: var(--brand-r-lg); box-shadow: var(--brand-shadow-sm); overflow: hidden;
+  transition: box-shadow var(--brand-transition), transform var(--brand-transition);
+}
+.brand-card--hover:hover { box-shadow: var(--brand-shadow-md); transform: translateY(-2px); }
+.brand-card__head { padding: 16px 18px; border-bottom: 1px solid var(--brand-line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand-card__title { font-family: var(--brand-font-heading); font-weight: 700; font-size: 15px; color: var(--brand-text); margin: 0; }
+.brand-card__sub { color: var(--brand-text-muted); font-size: 12.5px; margin-top: 2px; }
+.brand-card__body { padding: 18px; color: var(--brand-text); }
+.brand-card__foot { padding: 14px 18px; border-top: 1px solid var(--brand-line); background: var(--brand-surface-2); }
+
+/* ---- Navbar (reusable topbar primitive) ---- */
+.brand-nav {
+  display: flex; align-items: center; gap: 14px; padding: 12px 18px;
+  background: color-mix(in srgb, var(--brand-surface) 88%, transparent);
+  backdrop-filter: saturate(140%) blur(8px);
+  border: 1px solid var(--brand-line); border-radius: var(--brand-r-lg); box-shadow: var(--brand-shadow-sm);
+}
+.brand-nav__brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--brand-font-heading); font-weight: 800; color: var(--brand-text); }
+.brand-nav__logo { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent)); font-weight: 800; }
+.brand-nav__links { display: flex; gap: 4px; margin-inline-start: 8px; }
+.brand-nav__link { padding: 8px 12px; border-radius: var(--brand-r-md); color: var(--brand-text-muted); font-size: 13.5px; font-weight: 600; text-decoration: none; transition: background var(--brand-transition), color var(--brand-transition); }
+.brand-nav__link:hover { background: var(--brand-surface-2); color: var(--brand-text); }
+.brand-nav__link.is-active { color: var(--brand-primary); background: var(--brand-primary-050); }
+.brand-nav__spacer { flex: 1; }
+
+/* ---- Badge ---- */
+.brand-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--brand-r-full); font-size: 12px; font-weight: 700; }
+.brand-badge--primary { background: var(--brand-primary-050); color: var(--brand-primary); }
+.brand-badge--success { background: color-mix(in srgb, var(--brand-success) 14%, transparent); color: var(--brand-success); }
+.brand-badge--warning { background: color-mix(in srgb, var(--brand-warning) 16%, transparent); color: var(--brand-warning); }
+.brand-badge--danger  { background: color-mix(in srgb, var(--brand-danger) 14%, transparent); color: var(--brand-danger); }

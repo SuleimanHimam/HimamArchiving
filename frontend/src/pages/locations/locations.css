@@ -1,0 +1,179 @@
+/* Physical-locations browser — card grid (replaces the per-level tables). */
+.loc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.loc-empty { padding: 16px 4px; color: var(--text-muted); }
+
+.loc-card {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+  padding: 14px 14px 10px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+}
+.loc-card.is-clickable { cursor: pointer; }
+.loc-card.is-clickable:hover {
+  border-color: var(--brass);
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-2px);
+}
+.loc-card.is-selected {
+  border-color: var(--brass);
+  box-shadow: inset 0 0 0 1px var(--brass);
+  background: color-mix(in srgb, var(--brass) 7%, var(--paper));
+}
+.loc-card__body { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.loc-card__text { font-weight: 600; font-size: .95rem; color: var(--text); line-height: 1.35; }
+.loc-card__actions { display: flex; gap: 4px; justify-content: flex-end; }
+
+/* ── البنود المؤرشفة: documents stored in the selected box ── */
+.box-contents { margin-block-start: 16px; }
+.box-contents__head {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px;
+  margin-block-end: 10px;
+}
+/* Search and the show/hide switch sit together at the far end, away from the place's name. */
+.box-contents__tools { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
+.box-contents__search {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper); color: var(--text-muted);
+}
+.box-contents__search input {
+  border: 0; background: transparent; outline: none;
+  color: var(--text); font: inherit; inline-size: 200px; max-inline-size: 40vw;
+}
+.box-contents__tablewrap { overflow-x: auto; }
+.loc-table { inline-size: 100%; border-collapse: collapse; font-size: .88rem; }
+.loc-table th {
+  text-align: start; padding: 8px 12px; white-space: nowrap;
+  font-weight: 600; color: var(--text-muted);
+  border-block-end: 1px solid var(--line);
+}
+.loc-table td {
+  padding: 9px 12px; color: var(--text);
+  border-block-end: 1px solid var(--line); vertical-align: middle;
+}
+.loc-table tbody tr:hover { background: color-mix(in srgb, var(--brass) 6%, var(--paper)); }
+
+/* ── Tree view (file-explorer style) ── */
+.tree-card { padding: 8px 6px; }
+.tree, .tree__children { list-style: none; margin: 0; padding: 0; }
+.tree__item { position: relative; }
+
+.tree__row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: 8px; cursor: pointer;
+  transition: background .12s;
+}
+.tree__row:hover { background: color-mix(in srgb, var(--brass) 8%, var(--paper)); }
+.tree__row.is-selected { background: color-mix(in srgb, var(--brass) 16%, var(--paper)); box-shadow: inset 0 0 0 1px var(--brass); }
+
+.tree__chev {
+  inline-size: 18px; block-size: 18px; flex: none;
+  display: grid; place-items: center;
+  border: 0; background: transparent; color: var(--text-muted);
+  font-size: .8rem; cursor: pointer; border-radius: 4px;
+}
+.tree__chev.is-leaf { cursor: default; }
+.tree__chev:hover:not(.is-leaf) { background: color-mix(in srgb, var(--brass) 14%, transparent); }
+
+.tree__icon { font-size: 1rem; flex: none; }
+.tree__name { font-weight: 600; font-size: .9rem; color: var(--text); white-space: nowrap; }
+.tree__code {
+  font-size: .74rem; color: var(--text-muted);
+  padding: 1px 6px; border-radius: 5px;
+  background: color-mix(in srgb, var(--brass) 10%, transparent);
+}
+
+.tree__actions {
+  display: flex; align-items: center; gap: 2px;
+  margin-inline-start: auto; opacity: 0; transition: opacity .12s;
+}
+.tree__row:hover .tree__actions, .tree__row.is-selected .tree__actions { opacity: 1; }
+.tree__act {
+  inline-size: 26px; block-size: 26px; flex: none;
+  display: grid; place-items: center;
+  border: 0; background: transparent; border-radius: 6px;
+  font-size: .82rem; cursor: pointer; color: var(--text-muted);
+}
+.tree__act:hover { background: color-mix(in srgb, var(--brass) 16%, transparent); color: var(--text); }
+.tree__act--danger:hover { background: color-mix(in srgb, #d33 14%, transparent); color: #d33; }
+
+.tree__empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px; }
+
+/* ── Compact add/edit dialog ── */
+.loc-editor.loc-editor { max-inline-size: min(420px, 92vw); }
+.loc-editor__body { display: flex; flex-direction: column; gap: 10px; padding-block: 4px; }
+.loc-editor__field { display: flex; flex-direction: column; gap: 4px; }
+.loc-editor__field > span { font-size: .78rem; color: var(--text-muted); }
+.loc-editor__field input, .loc-editor__field select {
+  padding: 8px 10px; font: inherit; font-size: .9rem;
+  color: var(--text); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 8px;
+}
+
+/* Row action button inside the Ark tree rows */
+.tree-actbtn {
+  display: inline-grid; place-items: center;
+  inline-size: 24px; block-size: 24px;
+  border: 0; border-radius: 6px; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+}
+.tree-actbtn:hover { background: color-mix(in srgb, var(--brass) 18%, transparent); color: var(--text); }
+.tree-card { padding: 10px 8px; }
+
+/* ── Chart-of-accounts style toolbar above the tree ── */
+.tree-toolbar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  padding: 6px 8px; margin-block-end: 10px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+}
+.tree-toolbar__grp {
+  display: flex; align-items: center; gap: 4px;
+  padding-inline-end: 6px; margin-inline-end: 2px;
+  border-inline-end: 1px solid var(--line);
+}
+.tree-toolbar__grp:last-of-type { border-inline-end: 0; }
+.tree-toolbar__grp--levels { gap: 3px; }
+.tree-toolbar__lbl { font-size: .74rem; color: var(--text-muted); margin-inline-end: 2px; }
+
+.tree-toolbar__btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 9px; font: inherit; font-size: .82rem; font-weight: 600;
+  color: var(--text); background: transparent;
+  border: 1px solid transparent; border-radius: 7px; cursor: pointer;
+  white-space: nowrap; transition: background .12s, border-color .12s, color .12s;
+}
+.tree-toolbar__btn:hover:not(:disabled) { background: color-mix(in srgb, var(--brass) 12%, transparent); }
+.tree-toolbar__btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.tree-toolbar__btn--add { color: var(--brass); }
+.tree-toolbar__btn--add:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brass) 14%, transparent);
+  border-color: color-mix(in srgb, var(--brass) 45%, transparent);
+}
+.tree-toolbar__plus { margin-inline-start: -3px; opacity: .8; }
+
+.tree-toolbar__btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, #d33 12%, transparent); color: #d33;
+  border-color: color-mix(in srgb, #d33 40%, transparent);
+}
+
+.tree-toolbar__lvl {
+  inline-size: 26px; block-size: 26px; flex: none;
+  display: grid; place-items: center;
+  font: inherit; font-size: .8rem; font-weight: 700;
+  color: var(--text-muted); background: transparent;
+  border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.tree-toolbar__lvl:hover {
+  color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, transparent);
+  background: color-mix(in srgb, var(--brass) 10%, transparent);
+}
+
+.tree-toolbar__refresh { margin-inline-start: auto; font-size: 1rem; padding: 5px 10px; }

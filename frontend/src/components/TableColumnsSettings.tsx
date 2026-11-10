@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { RotateCcw } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { TABLE_DEFS, TABLE_LABELS, tableDefs, getTablePrefs, saveTablePref, defaultLabel as colDefaultLabel, type ColPref } from '../lib/tableColumns'
@@ -78,8 +79,7 @@ export default function TableColumnsSettings() {
       <p className="muted">خصّص أعمدة كل جدول: غيّر الاسم، أظهر/أخفِ العمود، وأعد ترتيبها. الإعدادات خاصة بك وحدك.</p>
 
       <label className="field" style={{ maxWidth: 360 }}>
-        <span>الجدول</span>
-        <select value={table} onChange={(e) => setTable(e.target.value)}>
+        <select value={table} onChange={(e) => setTable(e.target.value)} aria-label="الجدول">
           {tableKeys.map((k) => <option key={k} value={k}>{TABLE_LABELS[k] ?? k}</option>)}
         </select>
       </label>
@@ -110,7 +110,7 @@ export default function TableColumnsSettings() {
 
       <div className="form-actions" style={{ marginTop: '1rem' }}>
         <button className="btn btn-primary" disabled={busy} onClick={save}>حفظ</button>
-        <button className="btn btn-ghost" disabled={busy} onClick={reset}>↺ إعادة الافتراضي</button>
+        <button className="btn btn-ghost" disabled={busy} onClick={reset}><RotateCcw size={15} aria-hidden /> إعادة الافتراضي</button>
       </div>
     </motion.section>
   )

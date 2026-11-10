@@ -12,12 +12,15 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// On 401/403, clear the session so a stale or permission-less token doesn't block the user.
+/* Only 401 ends the session. 403 means "you are signed in and this particular call is not
+   yours" — it says nothing about the token. Treating it as a logout meant any optional,
+   permission-gated fetch on a shared screen threw the user back to the login page: an
+   Employee opening the app fetched the classification catalogue, got a 403, and was signed
+   out before the dashboard finished rendering. Callers handle their own 403s. */
 api.interceptors.response.use(
   (r) => r,
   (error) => {
-    const status = error.response?.status
-    if ((status === 401 || status === 403) && auth.isAuthenticated()) {
+    if (error.response?.status === 401 && auth.isAuthenticated()) {
       auth.clear()
       window.location.replace('/login')
     }
@@ -34,6 +37,6 @@ export interface AuthResponse {
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/auth/login', { email, password })
-  auth.setSession(data.accessToken, data.refreshToken, data.user)
+  auth.setSession(data.accessToken, data.refreshToken, data.user, data.expiresAt)
   return data
 }

@@ -11,19 +11,19 @@
   --ink-deep:   #0E1A30;   /* deeper ink — sidebar, headers */
   --ink-soft:   #2B3A5B;
 
-  --parchment:  #e6e6e6;   /* page background — default */
-  --parchment-2:#d9d9d9;   /* raised panels */
-  --parchment-3:#cccccc;   /* rules, dividers */
+  --parchment:  #f7f8fa;   /* page background — light & airy */
+  --parchment-2:#eef0f3;   /* raised panels */
+  --parchment-3:#e3e5e9;   /* rules, dividers — soft & thin */
 
   --seal:       #9B2226;   /* seal red — primary accent, alerts, stamps */
   --seal-deep:  #7A171B;
   --brass:      #ebe9e6;   /* accent / highlight (لون التمييز) — default */
   --brass-soft: #f3f1ef;
 
-  --paper:      #FBF7EC;   /* near-white card */
-  --text:       #211D17;   /* main reading ink on parchment */
-  --text-muted: #6E6552;
-  --text-faint: #9A8F78;
+  --paper:      #ffffff;   /* white card on the light page background */
+  --text:       #1f242e;   /* main reading ink (soft, less navy) */
+  --text-muted: #717784;   /* soft slate — overridden by sanad.css --m-text-2 */
+  --text-faint: #989ea9;   /* overridden by sanad.css --m-text-3 */
 
   --ok:    #2F5D3A;
   --warn:  #9A6312;
@@ -32,7 +32,7 @@
   /* confidentiality badges */
   --c-public:       #2F5D3A;
   --c-internal:     #1F4E79;
-  --c-confidential: #9A6312;
+  --c-confidential: #956011;
   --c-secret:       var(--seal);
 
   /* — Type — */
@@ -42,12 +42,12 @@
   --font-latin:   "Fraunces", "IBM Plex Sans Arabic", serif;
 
   /* — Space / form — */
-  --radius: 4px;            /* official documents are squarish, not rounded */
-  --radius-lg: 8px;
+  --radius: 8px;            /* airy, softly rounded */
+  --radius-lg: 12px;
   --rule: 1px solid var(--parchment-3);
   --rule-ink: 1.5px solid var(--ink);
-  --shadow-doc: 0 1px 0 rgba(20,33,61,.04), 0 18px 40px -24px rgba(20,33,61,.45);
-  --shadow-lift: 0 24px 60px -28px rgba(20,33,61,.55);
+  --shadow-doc: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px -6px rgba(16,24,40,.10);
+  --shadow-lift: 0 12px 32px -12px rgba(16,24,40,.18);
 
   --ease: cubic-bezier(.2, .7, .2, 1);
 }
@@ -60,13 +60,9 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--text);
-  background-color: var(--parchment);
-  /* parchment grain + ledger atmosphere */
-  background-image:
-    radial-gradient(circle at 18% -10%, rgba(176,137,45,.10), transparent 42%),
-    radial-gradient(circle at 105% 8%, rgba(155,34,38,.07), transparent 38%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
-  background-attachment: fixed;
+  background-color: var(--app-bg, var(--parchment));
+  /* clean, flat light surface (airy shadcn aesthetic) */
+  background-image: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -110,6 +106,12 @@ a { color: var(--seal); text-decoration: none; }
   font-family: var(--font-body);
   font-weight: 600;
   font-size: .95rem;
+  /* Buttons now carry an SVG icon beside their label; inline-flex keeps the two on one
+     optical line (a text glyph sat on the baseline, an SVG box does not). */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
   padding: .72rem 1.4rem;
   border-radius: var(--radius);
   border: 1.5px solid transparent;
@@ -158,14 +160,13 @@ a { color: var(--seal); text-decoration: none; }
 }
 .field > input::placeholder { color: var(--text-faint); }
 
-/* Document card */
+/* Document card — light, airy, soft-bordered (shadcn aesthetic) */
 .doc-card {
   background: var(--paper);
-  border: var(--rule);
-  border-top: 3px solid var(--ink);
+  border: 1px solid var(--parchment-3);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-doc);
-  padding: 1.5rem;
+  padding: 1.75rem;
 }
 
 /* Confidentiality badge */

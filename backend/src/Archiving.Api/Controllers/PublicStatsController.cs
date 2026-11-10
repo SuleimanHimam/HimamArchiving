@@ -20,11 +20,12 @@ public sealed class PublicStatsController(AppDbContext db) : ControllerBase
         var todayStart = DateTime.UtcNow.Date;
         var tomorrowStart = todayStart.AddDays(1);
 
-        var todayIncoming  = await db.IncomingMails.CountAsync(m => m.CreatedAt >= todayStart && m.CreatedAt < tomorrowStart, ct);
-        var todayOutgoing  = await db.OutgoingMails.CountAsync(m => m.CreatedAt >= todayStart && m.CreatedAt < tomorrowStart, ct);
+        // Correspondence-mail was removed; mail counters are retained as zero for DTO stability.
+        var todayIncoming  = 0;
+        var todayOutgoing  = 0;
         var todayDocuments = await db.Documents.CountAsync(d => d.CreatedAt >= todayStart && d.CreatedAt < tomorrowStart, ct);
 
-        var pendingApproval = await db.OutgoingMails.CountAsync(m => m.Status == OutgoingMailStatus.PendingApproval, ct);
+        var pendingApproval = 0;
 
         var openTaskStatuses = new[] { WorkflowTaskStatus.Pending, WorkflowTaskStatus.InProgress, WorkflowTaskStatus.Escalated };
         var overdue = await db.WorkflowTasks.CountAsync(t => openTaskStatuses.Contains(t.Status) && t.DueAt < DateTime.UtcNow, ct);

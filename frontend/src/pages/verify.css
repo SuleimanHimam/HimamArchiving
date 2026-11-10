@@ -1,0 +1,87 @@
+/* The public verification page: one card, no shell, readable on the phone that scanned the QR. */
+
+.vfy {
+  min-block-size: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  background: var(--color-muted, #f4f5f7);
+}
+
+.vfy__card {
+  inline-size: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  padding: 2rem 1.4rem 1.6rem;
+  border: 1px solid var(--color-border, #e3e3e8);
+  border-block-start: 4px solid var(--color-border, #e3e3e8);
+  border-radius: 16px;
+  background: var(--color-card, #fff);
+  text-align: center;
+  box-shadow: 0 12px 32px rgb(0 0 0 / .07);
+}
+
+/* The verdict is carried by the top rule and the icon together — never colour alone. */
+.vfy__card.is-ok   { border-block-start-color: #16a34a; color: #14532d; }
+.vfy__card.is-warn { border-block-start-color: #d97706; color: #7c2d12; }
+.vfy__card.is-bad  { border-block-start-color: #dc2626; color: #7f1d1d; }
+.vfy__card.is-ok   svg:first-of-type { color: #16a34a; }
+.vfy__card.is-warn svg:first-of-type { color: #d97706; }
+.vfy__card.is-bad  svg:first-of-type { color: #dc2626; }
+
+.vfy__card h1 { margin: .2rem 0 0; font-size: 1.15rem; }
+.vfy__sub {
+  margin: 0;
+  font-size: .85rem;
+  line-height: 1.7;
+  color: var(--color-muted-foreground, #666);
+}
+.vfy__wait { display: flex; align-items: center; gap: .5rem; margin: 1rem 0; color: var(--color-muted-foreground, #666); }
+.spin { animation: vfy-spin 1s linear infinite; }
+@keyframes vfy-spin { to { transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none } }
+
+.vfy__facts {
+  inline-size: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+  margin: 1rem 0 .4rem;
+  text-align: start;
+  color: var(--color-foreground, #1c1c22);
+}
+.vfy__facts > div {
+  padding: .5rem .6rem;
+  border: 1px solid var(--color-border, #e3e3e8);
+  border-radius: 10px;
+  background: var(--color-muted, #f7f7f9);
+}
+.vfy__facts dt {
+  display: flex; align-items: center; gap: .3rem;
+  font-size: .72rem;
+  color: var(--color-muted-foreground, #666);
+}
+.vfy__facts dd { margin: .15rem 0 0; font-size: .85rem; font-weight: 600; unicode-bidi: plaintext; }
+.vfy__wide { grid-column: 1 / -1; }
+
+.vfy__code {
+  margin: .6rem 0 0;
+  padding: .3rem .7rem;
+  border: 1px dashed var(--color-border, #e3e3e8);
+  border-radius: 8px;
+  font-size: .8rem;
+  letter-spacing: .12em;
+  color: var(--color-muted-foreground, #666);
+}
+.vfy__note {
+  margin: .6rem 0 0;
+  font-size: .74rem;
+  line-height: 1.7;
+  color: var(--color-muted-foreground, #888);
+}
+
+@media (max-width: 460px) {
+  .vfy__facts { grid-template-columns: 1fr; }
+}

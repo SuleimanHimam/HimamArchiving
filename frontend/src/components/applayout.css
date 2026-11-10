@@ -1,59 +1,294 @@
-/* ── Shell / layout ── */
-/* overflow-x: clip keeps the off-screen mobile drawer from creating a phantom
-   horizontal scroll, without establishing a scroll container (so the sticky
-   navbar keeps working — unlike overflow: hidden). */
-.shell { min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip; }
+/* ── Shell / layout ──
+   Full-height rail on the inline-start edge; the header sits over the content only
+   (prototype #sb + #mw), not as a full-width bar above both. */
+.shell {
+  height: 100vh; display: flex; flex-direction: row; overflow: hidden;
+  /* Short opacity settle only. The prototype's fadeUp slides the whole surface 10px, which reads as
+     jank on a real app shell (fixed rail + sticky header shifting together), so no translate here. */
+  animation: shell-fadein .2s ease-out;
+}
+@keyframes shell-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shell { animation: none; }
+}
 
-/* ── Top navbar ── */
+
+/* ── Sidebar rail ──
+   204px, not 252px: the widest nav label ("الاجتماعات والقرارات") measures 106px,
+   and the box around it costs 75px (20 nav padding + 24 item padding + 20 icon +
+   11 gap). 181px is the true minimum, so this keeps ~23px of headroom for a
+   longer label while handing 48px back to the content area.
+   One variable so the desktop rail and the mobile drawer can never disagree. */
+.shell {
+  --rail-w: 204px;
+  /* How much horizontal space the rail actually steals from the viewport at this
+     width. Equals --rail-w normally, 68px as an icon rail, and 0 once it becomes
+     an overlay drawer. Anything centring against the screen needs this, not --rail-w. */
+  --rail-occupied: var(--rail-w);
+}
+/* ── Chrome colour resolution ──
+   Three layers, most specific first:
+     --rail-*        per-browser choice (lib/appearance.ts, localStorage)
+     --brand-rail-*  institution default (lib/branding.ts, server)
+     token/literal   the design system's own value
+   Keeping them in separate variables is what lets a personal override win: both
+   writers set inline styles on <html>, so sharing one variable would make the
+   last one to run the winner instead of the more specific one. */
+.shell__rail {
+  width: var(--rail-w); flex: 0 0 auto; height: 100vh; z-index: 50;
+  background: var(--rail-bg, var(--brand-rail-bg, var(--ink-deep, #0E1A30)));
+  color: var(--rail-fg);
+  /* Resolved once here; every descendant inherits these rather than repeating the
+     three-layer fallback chain (and drifting from it). */
+  --rail-fg: var(--rail-text, var(--brand-rail-text, rgba(244,236,216,.78)));
+  --rail-fg-active: var(--rail-text-active, var(--brand-rail-text, #fff));
+  --rail-mark: var(--rail-accent, var(--brand-rail-accent, var(--brass-soft, #C8A24B)));
+  display: flex; flex-direction: column;
+  border-inline-end: 1px solid rgba(0,0,0,.22);
+  transition: width .3s cubic-bezier(.4,0,.2,1);
+  /* Must be positioned: the user dropdown anchors to the rail. Without this it falls back to
+     <body> and lands off-screen. Overflow stays visible for the same reason — each collapsing
+     label clips itself, so the rail does not need to clip too. */
+  position: relative;
+  overflow: visible;
+}
+/* ── Responsive rail ───────────────────────────────────────────────────────
+   Three states, driven by width alone now that the manual collapse toggle is
+   gone: full 204px on a wide screen → 68px icon rail on a narrow desktop or
+   tablet → off-canvas drawer on a phone (see the ≤768px block).
+
+   The middle state exists because a full-width rail is what pushes the wide
+   registers (documents, users) into a horizontal scroll around 1024–1152px.
+   Collapsing to icons hands ~184px back to the table instead. */
+@media (max-width: 1150px) and (min-width: 769px) {
+  .shell { --rail-occupied: 68px; }
+  .shell__rail { width: 68px; }
+  /* Animated away rather than display:none so the width transition reads. */
+  .rail__label,
+  .rail__group { opacity: 0; width: 0; overflow: hidden; }
+  .rail__item { justify-content: center; padding: 11px; }
+  /* Every item keeps a title attribute, so the icon still names itself on hover. */
+}
+
+/* ── Header brand (moved out of the rail) ──
+   Token colours, not the rail's white-on-navy literals: the header is a light
+   --paper surface, where #fff text would be invisible. */
+.nav__brand {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  padding: .25rem .4rem; margin-inline-end: .3rem;
+  border-radius: 10px; text-decoration: none; color: inherit;
+  transition: background .14s var(--ease);
+}
+.nav__brand:hover { background: var(--parchment-2); }
+.nav__brand:focus-visible { outline: 2px solid var(--m-primary); outline-offset: 1px; }
+.nav__logo { width: 34px; height: 34px; object-fit: contain; border-radius: 10px; flex-shrink: 0; }
+.nav__logotile {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--brand-solid, #1B4C9E), var(--hds-purple, #2C6FD6));
+  color: #fff; font-weight: 900; font-size: 15px;
+}
+.nav__brandtext { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.nav__brandname {
+  font-family: var(--font-display); font-size: 15px; font-weight: 800;
+  color: var(--text); letter-spacing: -.3px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 13rem;
+}
+.nav__brandsub {
+  font-size: 9.5px; color: var(--text-muted); letter-spacing: .8px;
+  text-transform: uppercase; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 13rem;
+}
+/* Narrow headers: the mark alone carries the brand; the wordmark would crowd out
+   the search field. */
+@media (max-width: 1100px) { .nav__brandtext { display: none; } }
+
+/* Rail nav */
+/* Extra top padding now that the brand block no longer occupies the rail head —
+   without it the first group label sits hard against the top edge. */
+.rail__nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 26px 10px 12px; }
+.rail__section { display: flex; flex-direction: column; }
+.rail__group {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .18em;
+  /* 62% — at 45% this computes to ~3.8:1 on the rail, under the 4.5:1 AA floor.
+     9.5px uppercase is "normal text" for WCAG, not large text. */
+  text-transform: uppercase; color: color-mix(in srgb, var(--rail-fg) 62%, transparent);
+  padding: 10px 10px 6px; white-space: nowrap;
+  transition: opacity .3s, width .3s;
+}
+
+
+/* The rail's standalone logout button is gone — signing out is an item in the
+   account menu on the user chip above (see AccountMenu). */
+
+/* ── Main wrap: header + content ── */
+.shell__mw { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Header: sits over the content, card-coloured (prototype #hdr) ── */
 .shell__navbar {
-  position: sticky; top: 0; z-index: 80;
-  display: flex; align-items: center; gap: .5rem;
-  padding: 0 1.2rem;
-  height: 56px;
-  background: var(--ink-deep, #0E1A30);
-  color: var(--parchment, #F4ECD8);
-  box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 4px 24px -8px rgba(14,26,48,.45);
+  flex: 0 0 auto; z-index: 30;
+  /* Three columns so the search has a track of its own, centred between the lead
+     cluster and the actions. Side tracks keep a min-content floor: with a plain
+     1fr they squeezed below the actions cluster, which does not shrink, so it
+     overflowed its track and ran under the search. The middle gives way first. */
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr) minmax(0, 26rem) minmax(min-content, 1fr);
+  align-items: center; gap: .75rem;
+  padding: 0 20px;
+  height: 60px;
+  background: var(--nav-bg, var(--brand-nav-bg, var(--paper)));
+  color: var(--nav-fg);
+  border-bottom: 1px solid var(--nav-line);
+  transition: background .35s, border-color .35s;
+
+  /* When the institution picks a top-bar colour, the bar's own text/border/hover tones
+     have to follow it — the widgets inside were toned for a light --paper surface and
+     would go invisible on a dark bar. They are re-derived from --nav-fg below.
+     --nav-fg-base is resolved at :root (see the token block in styles/hds.css), so
+     reading it here cannot form a var() cycle with the --text we redefine. */
+  --nav-fg: var(--nav-text, var(--brand-nav-text, var(--nav-fg-base)));
+  --nav-line: color-mix(in srgb, var(--nav-fg) 16%, transparent);
+  --text: var(--nav-fg);
+  --text-muted: color-mix(in srgb, var(--nav-fg) 70%, transparent);
+  --text-faint: color-mix(in srgb, var(--nav-fg) 48%, transparent);
+  --line: var(--nav-line);
+  --parchment-2: color-mix(in srgb, var(--nav-fg) 9%, transparent);
+}
+/* The search dropdown and the notification panel render inside the bar but are their
+   own --paper surfaces, so they must not inherit the bar's re-toned text/border tokens
+   — on a dark top bar their light text would land on a light panel. (The account menu
+   is a Radix portal and never sees these.) */
+.shell__navbar .gds__dropdown,
+.shell__navbar .bell__panel {
+  --text: var(--nav-fg-base);
+  --text-muted: var(--nav-muted-base);
+  --text-faint: var(--nav-faint-base);
+  --line: var(--nav-line-base);
+  --parchment-2: var(--nav-surface2-base);
+  color: var(--text);
 }
 
-/* Brand */
-.shell__brand {
-  display: flex; align-items: center; gap: .55rem; flex-shrink: 0;
-  padding-inline-end: .9rem;
-  border-inline-end: 1px solid rgba(244,236,216,.12);
-  margin-inline-end: .4rem;
+.shell__lead {
+  display: flex; align-items: center; gap: .5rem; min-width: 0;
+  justify-self: start;
 }
-.shell__logo { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; }
-.shell__seal-icon { font-size: 1.3rem; color: var(--brass-soft, #C8A24B); }
-.shell__brandname {
-  font-family: var(--font-display); font-weight: 600; font-size: .98rem;
-  color: #fff; white-space: nowrap; letter-spacing: .01em;
+/* Centred on the *viewport*, not on the header.
+   The header does not span the screen — the rail occupies one edge — so a plain
+   centred grid track lands half a rail away from the true screen centre. Shifting
+   by half the rail's current width corrects for that. The sign is direction-aware
+   (the rail sits on the trailing edge in LTR, the leading edge in RTL), and
+   --rail-occupied tracks how much space the rail actually takes at this width:
+   full, icon-width, or nothing at all once it becomes an overlay drawer. */
+.shell__searchslot {
+  display: flex; justify-content: center; min-width: 0;
+  transform: translateX(calc(var(--rail-occupied) / -2));
 }
+[dir="rtl"] .shell__searchslot { transform: translateX(calc(var(--rail-occupied) / 2)); }
+.shell__searchslot .gds { max-width: none; width: 100%; margin-inline: 0; }
+/* Hidden on desktop by request. It survives only as the phone/tablet drawer
+   opener — see the matching rule in the ≤768px block. */
+.shell__toggle {
+  display: none;
+  width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+  border: 1px solid var(--line); background: transparent; color: var(--text-muted);
+  cursor: pointer; place-items: center; font-size: 13px;
+  transition: background .12s, color .12s;
+}
+.shell__toggle:hover { background: var(--parchment-2); color: var(--text); }
 
-/* Nav links */
-.shell__nav {
-  display: flex; align-items: center; gap: .1rem; flex: 0 1 auto; overflow: hidden;
+/* Header widgets were built for the old dark full-width bar (cream-on-navy). The header is now
+   card-coloured, so re-tone them. Scoped to .shell__navbar so any other usage stays as-is. */
+.shell__navbar .gds__box {
+  background: var(--parchment-2); border: 1px solid var(--line);
 }
-.shell__navitem {
-  display: flex; align-items: center; gap: .35rem;
-  color: rgba(244,236,216,.75); text-decoration: none;
-  font-family: var(--font-body); font-size: .85rem; font-weight: 500;
-  padding: .38rem .6rem; border-radius: var(--radius);
-  white-space: nowrap;
+.shell__navbar .gds__box:focus-within { border-color: var(--ink); background: var(--parchment-2); }
+.shell__navbar .gds__icon { color: var(--text-faint); }
+.shell__navbar .gds__input { color: var(--text); }
+.shell__navbar .gds__input::placeholder { color: var(--text-faint); }
+/* The bell was the only bare glyph in the actions cluster — no box, 29px wide and
+   not square, next to a 32px bordered theme toggle, a tinted EN pill and a filled
+   avatar. It read as smaller and weaker than its neighbours even though its icon
+   is a normal size. Given the same 32px bordered square so the row is one family. */
+.shell__navbar .bell__btn {
+  width: 32px; height: 32px; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 8px;
+  color: var(--text-muted);
+}
+.shell__navbar .bell__icon { color: var(--text-muted); }
+.shell__navbar .bell__btn:hover { background: var(--parchment-2); }
+.shell__navbar .bell__btn:hover .bell__icon { color: var(--text); }
+/* Sits on the corner of the new box rather than clipping into its border. */
+.shell__navbar .bell__badge { top: -6px; inset-inline-end: -6px; }
+.shell__navbar .shell__themebtn {
+  border: 1px solid var(--line); color: var(--text-muted); background: transparent;
+  width: 32px; height: 32px; border-radius: 8px;
+}
+.shell__navbar .shell__themebtn:hover { background: var(--parchment-2); color: var(--text); }
+
+/* One rhythm for the whole cluster: every control is 32px tall on an 8px radius,
+   so the row reads as a set rather than five unrelated widgets. The search keeps
+   its pill shape — it is an input, not a button — and the avatar stays round. */
+.shell__navbar .shell__actions > * { flex-shrink: 0; }
+
+.rail__item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 12px; border-radius: 8px;
+  color: var(--rail-fg); text-decoration: none;
+  font-family: var(--rail-font, var(--brand-rail-font, var(--font-body))); font-size: .9rem; font-weight: 500;
+  position: relative; white-space: nowrap;
   transition: background .14s var(--ease), color .14s var(--ease);
 }
-.shell__navitem:hover { background: rgba(244,236,216,.09); color: #fff; }
-.shell__navitem.is-active {
-  background: rgba(176,137,45,.22); color: #fff;
-  box-shadow: inset 0 -2px 0 var(--brass-soft, #C8A24B);
+.rail__item:hover { background: color-mix(in srgb, var(--rail-fg) 8%, transparent); color: var(--rail-fg-active); }
+.rail__item.is-active { background: color-mix(in srgb, var(--rail-mark) 18%, transparent); color: var(--rail-fg-active); }
+.rail__item.is-active::before {
+  content: ""; position: absolute; inset-inline-start: 0; top: 8px; bottom: 8px;
+  width: 3px; border-radius: 3px; background: var(--rail-mark);
 }
-.shell__navicon { font-size: .95rem; color: var(--brass-soft, #C8A24B); }
-.shell__navlabel { }
+/* Holds a lucide SVG now, not a character — grid-centre it so every rail row's mark
+   sits on the same optical axis regardless of the icon's own bounding box. */
+.rail__icon { display: grid; place-items: center; color: var(--rail-mark); width: 20px; flex: 0 0 auto; }
+.rail__item.is-active .rail__icon { color: var(--rail-fg-active); }
 
 /* Right actions cluster */
 .shell__actions {
   display: flex; align-items: center; gap: .4rem; flex-shrink: 0;
-  margin-inline-start: auto; position: relative;
+  /* Grid places this in the trailing column; margin-auto is no longer what pushes it. */
+  justify-self: end; position: relative;
 }
+
+/* "+ إنشاء" quick-create menu */
+.shell__createwrap { position: relative; display: inline-flex; }
+.shell__create {
+  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+  /* Was var(--brass-soft, #C8A24B) — the retired gold theme. This is the one
+     primary action in the header, so it takes the brand fill and a white label. */
+  background: var(--brand-solid); color: #fff;
+  border: 1px solid transparent; border-radius: 8px;
+  height: 32px; padding: 0 .75rem;
+  font-family: var(--font-body); font-weight: 700; font-size: .85rem;
+  cursor: pointer; white-space: nowrap; transition: filter .14s, transform .1s;
+}
+.shell__create:hover { filter: brightness(1.06); }
+.shell__create:active { transform: translateY(1px); }
+.shell__create-plus { font-size: 1rem; line-height: 1; }
+.shell__createdrop {
+  position: absolute; top: calc(100% + 8px); inset-inline-start: 0;
+  min-width: 190px; z-index: 200;   /* above .shell__backdrop (190) so item clicks register */
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: var(--shadow-lift);
+  padding: 6px; display: flex; flex-direction: column;
+}
+.shell__createdrop-btn {
+  text-align: start; background: none; border: 0;
+  padding: .55rem .6rem; border-radius: 7px; cursor: pointer;
+  color: var(--text); font-family: var(--font-body); font-size: .86rem;
+}
+.shell__createdrop-btn:hover { background: var(--parchment-2); }
+@media (max-width: 640px) { .shell__create-label { display: none; } }
 
 /* User chip */
 .shell__user {
@@ -72,88 +307,75 @@
 .shell__username { font-size: .83rem; font-weight: 600; color: rgba(244,236,216,.9); }
 .shell__caret { font-size: .6rem; color: rgba(244,236,216,.5); }
 
-/* User dropdown */
-.shell__userdrop {
-  position: absolute; top: calc(100% + 6px); inset-inline-end: 0;
-  min-width: 180px;
-  background: var(--paper, #FBF7EC); border: 1px solid var(--parchment-3);
-  border-radius: var(--radius-lg); box-shadow: 0 8px 28px -6px rgba(14,26,48,.35);
-  padding: .65rem .75rem .55rem;
-  z-index: 200;
-}
-.shell__userdrop-name { font-weight: 700; font-size: .88rem; color: var(--ink); }
-.shell__userdrop-role { font-size: .7rem; color: var(--text-muted); margin-top: 2px; }
-.shell__userdrop-sep { border: none; border-top: 1px solid var(--parchment-3); margin: .5rem 0; }
-.shell__userdrop-btn { width: 100%; }
 
-/* Logout button */
-.shell__logout {
-  background: rgba(155,34,38,.12); color: var(--seal, #9B2226);
-  border: 1px solid rgba(155,34,38,.3); border-radius: var(--radius);
-  padding: .42rem .75rem; font-family: var(--font-body); font-weight: 600; font-size: .82rem;
-  cursor: pointer; transition: background .18s var(--ease);
-}
-.shell__logout:hover { background: var(--seal, #9B2226); color: #fff; }
 
 /* Backdrop */
 .shell__backdrop { position: fixed; inset: 0; z-index: 190; }
 .shell__backdrop--drawer { background: rgba(14,26,48,.5); z-index: 110; }
 
 /* Lang toggle button (used inside navbar) */
+/* EN and the theme toggle are the same class of control — a small secondary
+   switch — so they share one treatment instead of one being tinted blue and the
+   other a plain outline. */
 .shell__langbtn {
-  background: rgba(176,137,45,.15); color: var(--brass-soft, #C8A24B);
-  border: 1px solid rgba(176,137,45,.35); border-radius: var(--radius);
-  padding: .32rem .7rem; font-family: var(--font-body); font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 32px; padding: 0 .6rem;
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--line); border-radius: 8px;
+  font-family: var(--font-body); font-weight: 700;
   font-size: .8rem; letter-spacing: .05em; cursor: pointer;
   transition: background .18s var(--ease), color .18s var(--ease);
 }
-.shell__langbtn:hover { background: rgba(176,137,45,.3); color: #fff; }
+.shell__langbtn:hover { background: var(--parchment-2); color: var(--text); }
 
-/* ── Main content ── */
-.shell__main { flex: 1; padding: clamp(1.2rem, 2.5vw, 2.2rem); min-width: 0; }
+/* ── Main content (scrolls independently of the rail) ── */
+.shell__main { flex: 1; overflow-y: auto; padding: clamp(1.2rem, 2.5vw, 2.2rem); min-width: 0; display: flex; flex-direction: column; }
+/* The route wrapper fills the content frame so a page can choose to fit the
+   viewport (flex:1) instead of growing it. Pages taller than the frame still
+   scroll inside .shell__main; they just no longer stretch the window. */
+.shell__main > .page-enter { flex: 1 1 auto; min-block-size: 0; display: flex; flex-direction: column; }
 
 /* shared page header */
 .page__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
 .page__head h1 { margin: .5rem 0 0; }
 
-/* ── Mobile drawer ── */
+/* ── Mobile: the rail becomes an off-canvas drawer ── */
 .shell__burger { display: none; }
 
-.shell__drawer {
-  display: none;
-  position: fixed; top: 0; bottom: 0; right: 0;
-  width: min(280px, 84vw);
-  background: var(--ink-deep, #0E1A30);
-  padding: 1.2rem .9rem;
-  flex-direction: column; gap: .2rem;
-  z-index: 120; overflow-y: auto;
-  transform: translateX(100%);
-  transition: transform .25s var(--ease);
-}
-.shell.is-menu-open .shell__drawer { transform: translateX(0); }
+/* Breakpoint must stay 768px: AppLayout's toggle switches from collapse to off-canvas at the same
+   width. If they disagree, the button collapses a rail that is already off-canvas. */
+@media (max-width: 768px) {
+  /* Off-canvas overlay — it steals no layout width, so nothing offsets against it. */
+  .shell { --rail-occupied: 0px; }
+  /* The rail is off-canvas here; this button is the only way to open it. */
+  .shell__toggle { display: grid; }
 
-.shell__drawer-item {
-  display: flex; align-items: center; gap: .7rem;
-  color: rgba(244,236,216,.82); text-decoration: none;
-  font-size: .95rem; font-weight: 500; padding: .65rem .75rem;
-  border-radius: var(--radius); border-inline-start: 3px solid transparent;
-  transition: background .14s;
-}
-.shell__drawer-item:hover { background: rgba(244,236,216,.07); color: #fff; }
-.shell__drawer-item.is-active {
-  background: rgba(176,137,45,.16); color: #fff;
-  border-inline-start-color: var(--brass-soft, #C8A24B);
-}
-
-@media (max-width: 820px) {
-  .shell__nav { display: none; }
-  .shell__username, .shell__caret { display: none; }
-  .shell__burger {
-    display: flex; align-items: center; justify-content: center;
-    background: none; border: none; color: var(--parchment);
-    font-size: 1.4rem; padding: .3rem .5rem; cursor: pointer;
-    border-radius: var(--radius); margin-inline-start: auto;
+  .shell__rail {
+    position: fixed; inset-block: 0; inset-inline-start: 0;
+    width: var(--rail-w); z-index: 120;
+    transform: translateX(-110%);
+    transition: transform .25s var(--ease);
+    box-shadow: var(--shadow-lift, 0 12px 32px rgba(0,0,0,.4));
   }
-  .shell__drawer { display: flex; }
+  [dir="rtl"] .shell__rail { transform: translateX(110%); }
+  .shell.is-menu-open .shell__rail { transform: none; }
+
   .shell__main { padding: 1rem; }
 }
+
+/* Per-page "back to previous page" button (history.back), shown at the top of each page's content */
+.page-back {
+  display: inline-flex; align-items: center; gap: .45rem;
+  margin-bottom: 1rem;
+  padding: .4rem .8rem;
+  border: 1px solid var(--parchment-3, #cccccc);
+  border-radius: 9px;
+  background: var(--paper, #fff);
+  color: var(--ink, #14213d);
+  font-family: var(--font-body, inherit); font-size: .82rem; font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .15s, border-color .15s;
+}
+.page-back:hover { background: var(--parchment-2, #e9e9e9); border-color: var(--ink-soft, #2b3a5b); transform: translateX(3px); }
+.page-back:active { transform: translateX(0); }
+.page-back__icon { font-size: 1rem; line-height: 1; }

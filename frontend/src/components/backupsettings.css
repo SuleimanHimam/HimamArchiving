@@ -41,7 +41,7 @@
   color: var(--seal);
   border: 1px solid rgba(155, 35, 38, .2);
 }
-.bk__statusicon { font-size: 1rem; }
+.bk__statusicon { display: inline-grid; place-items: center; }
 .bk__missing {
   font-size: .78rem;
   font-weight: 400;
@@ -71,8 +71,7 @@
   gap: .6rem;
 }
 .bk__cardicon {
-  font-size: 2rem;
-  line-height: 1;
+  display: grid; place-items: center;
   color: var(--brass);
 }
 .bk__cardtitle {

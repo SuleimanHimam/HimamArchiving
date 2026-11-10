@@ -1,11 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { ArrowRight } from 'lucide-react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
 import { documents } from '../../lib/documents'
-import { type Confidentiality } from '../../lib/incomingMail'
+import { auth } from '../../lib/auth'
+import { type Confidentiality } from '../../lib/shared'
 import LocationPicker from '../../components/LocationPicker'
-import '../incoming/incoming.css'
+import { LabeledInput, LabeledSelect, LabeledTextarea } from '../../components/ui/labeled-input'
+import '../../styles/forms.css'
 
 const CONF_LEVEL: Record<string, number> = { Public: 0, Internal: 1, Confidential: 2, HighlyConfidential: 3 }
 
@@ -75,32 +78,28 @@ export default function DocumentEditPage() {
     <div>
       <header className="page__head">
         <div>
-          <span className="kicker mono">EDIT · {docNumber}</span>
+          <span className="mono">EDIT · {docNumber}</span>
           <h1>تعديل الوثيقة</h1>
         </div>
-        <Link to={`/app/documents/${docId}`} className="btn btn-ghost">← رجوع للوثيقة</Link>
+        <Link to={`/app/documents/${docId}`} className="btn btn-ghost"><ArrowRight size={16} className="icon-dir" aria-hidden /> رجوع للوثيقة</Link>
       </header>
 
       <motion.form className="doc-card form-card" onSubmit={submit}
         initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
         <div className="form-grid">
-          <label className="field field--wide"><span>العنوان *</span>
-            <input value={form.title} onChange={set('title')} /></label>
-          <label className="field"><span>السرية</span>
-            <select value={form.confidentiality} onChange={set('confidentiality')}>
-              <option value={0}>عام</option><option value={1}>داخلي</option>
-              <option value={2}>سري</option><option value={3}>سري للغاية</option>
-            </select></label>
-          <label className="field"><span>تاريخ الوثيقة</span>
-            <input type="date" value={form.documentDate} onChange={set('documentDate')} dir="ltr" /></label>
-          <label className="field"><span>تاريخ انتهاء الحفظ</span>
-            <input type="date" value={form.expiryDate} onChange={set('expiryDate')} dir="ltr" />
-            <span className="muted" style={{ fontSize: '.75rem' }}>اتركه فارغًا ليُحتسب تلقائيًا من مدة الحفظ</span></label>
-          <label className="field field--wide"><span>الكلمات المفتاحية</span>
-            <input value={form.keywords} onChange={set('keywords')} placeholder="مفصولة بمسافات" /></label>
-          <label className="field field--wide"><span>الوصف</span>
-            <textarea rows={4} value={form.description} onChange={set('description')} /></label>
-          <LocationPicker value={boxId} onChange={setBoxId} />
+          <LabeledInput label="العنوان *" containerClassName="field--wide" value={form.title} onChange={set('title')} />
+          <LabeledSelect label="السرية" value={form.confidentiality} onChange={set('confidentiality')}>
+            <option value={0}>عام</option><option value={1}>داخلي</option>
+            <option value={2}>سري</option><option value={3}>سري للغاية</option>
+          </LabeledSelect>
+          <LabeledInput label="تاريخ الوثيقة" type="date" dir="ltr" value={form.documentDate} onChange={set('documentDate')} />
+          <LabeledInput label="تاريخ انتهاء الحفظ" type="date" dir="ltr" value={form.expiryDate} onChange={set('expiryDate')}
+            hint="اتركه فارغًا ليُحتسب تلقائيًا من مدة الحفظ" />
+          <LabeledInput label="الكلمات المفتاحية" containerClassName="field--wide" value={form.keywords} onChange={set('keywords')} />
+          <LabeledTextarea label="الوصف" containerClassName="field--wide" rows={4} value={form.description} onChange={set('description')} />
+          {/* Only the archive may move a paper original between places; everyone else edits the
+              metadata and leaves the location as it stands (the API refuses a change either way). */}
+          {auth.hasPermission('Archive.Archive') && <LocationPicker value={boxId} onChange={setBoxId} />}
         </div>
 
         {error && <p className="login__error">{error}</p>}

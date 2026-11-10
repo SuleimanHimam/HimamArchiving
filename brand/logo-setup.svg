@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="تنصيب الديوان الإلكتروني">
+  <!-- The installer's icon: the app mark with an install badge. Deliberately NOT identical to
+       app-icon.ico — Setup.exe and the desktop shortcut end up in the same folders, and two files
+       with one icon means the wrong one gets double-clicked. The badge is the only difference. -->
+  <defs>
+    <linearGradient id="setuptile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1E56AD"/><stop offset="1" stop-color="#123C86"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#setuptile)"/>
+
+  <!-- The sheets, lifted and shrunk from the app mark so the badge sits on the tile rather than
+       on top of the artwork. -->
+  <g transform="translate(30 25) scale(.92) translate(-32 -33)">
+  <path d="M32 40.5 55 51 32 61.5 9 51Z" fill="#C9D8EE"/>
+  <path d="M32 38 55 48.5 32 59 9 48.5Z" fill="#FFFFFF"/>
+  <path d="M32 31 55 41.5 32 52 9 41.5Z" fill="#C8820F"/>
+  <path d="M32 28.5 55 39 32 49.5 9 39Z" fill="#F5A623"/>
+  <path d="M32 21.5 55 32 32 42.5 9 32Z" fill="#C9D8EE"/>
+  <path d="M32 19 55 29.5 32 40 9 29.5Z" fill="#FFFFFF"/>
+  <path d="M44.5 25.2 55 29.5 47.5 33Z" fill="#2C6FD6"/>
+  <g stroke="#1E56AD" stroke-width="2.6" stroke-linecap="round">
+    <path d="M23.5 29.6 30.5 33"/><path d="M27.5 27.7 34.5 31.1"/><path d="M31.5 25.8 38.5 29.2"/>
+  </g>
+  </g>
+
+  <!-- Install badge: arrow down into a tray. Amber on a white ring — the ring is what keeps it
+       from dissolving into the blue tile at 16px, where the badge is barely 7px across. -->
+  <circle cx="47" cy="47" r="15.5" fill="#FFFFFF"/>
+  <circle cx="47" cy="47" r="13" fill="#F5A623"/>
+  <g stroke="#5A3703" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M47 40.5V49.5"/>
+    <path d="M42.6 45.4 47 49.8 51.4 45.4"/>
+    <path d="M41.5 54.2H52.5"/>
+  </g>
+</svg>

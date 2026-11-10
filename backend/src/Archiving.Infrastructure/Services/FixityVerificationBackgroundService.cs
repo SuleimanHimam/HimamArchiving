@@ -13,6 +13,9 @@ public sealed class FixityVerificationBackgroundService(
     IConfiguration config,
     ILogger<FixityVerificationBackgroundService> logger) : BackgroundService
 {
+    /// <summary>Longest single wait handed to <see cref="Task.Delay(TimeSpan, CancellationToken)"/>.</summary>
+    private static readonly TimeSpan MaxDelaySlice = TimeSpan.FromHours(1);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var batch = config.GetValue<int?>("Fixity:BatchSize") ?? 50;
@@ -45,7 +48,20 @@ public sealed class FixityVerificationBackgroundService(
             catch (OperationCanceledException) { break; }
             catch (Exception ex) { logger.LogError(ex, "Fixity sweep failed"); interval = TimeSpan.FromMinutes(5); }
 
-            try { await Task.Delay(interval, stoppingToken); } catch (OperationCanceledException) { break; }
+            // Task.Delay refuses anything over ~24.85 days (int.MaxValue ms), and a fixity cadence
+            // of 30/90/365 days is an ordinary policy value — passing it straight in threw
+            // ArgumentOutOfRangeException, which stopped the whole host (BackgroundServiceExceptionBehavior
+            // defaults to StopHost). Long waits are therefore served in bounded slices.
+            var due = DateTime.UtcNow + interval;
+            var cancelled = false;
+            while (!cancelled && DateTime.UtcNow < due)
+            {
+                var slice = due - DateTime.UtcNow;
+                if (slice > MaxDelaySlice) slice = MaxDelaySlice;
+                try { await Task.Delay(slice, stoppingToken); }
+                catch (OperationCanceledException) { cancelled = true; }
+            }
+            if (cancelled) break;
         }
     }
 }

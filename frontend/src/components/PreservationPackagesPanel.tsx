@@ -1,8 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { Download } from 'lucide-react'
 import { motion } from 'motion/react'
 import { packagesApi, type DocumentPackages } from '../lib/packages'
 import { formatBytes } from '../lib/documents'
+import { useExcelTable, type ColumnDef } from './ui/use-excel-table'
+import { ColumnHeaderMenu } from './ui/column-filter'
 import { useToast } from './toast'
+
+type RepRow = DocumentPackages['representation'][number]
 import '../pages/documents/documents.css'
 
 export default function PreservationPackagesPanel({ docId, documentNumber }: { docId: number; documentNumber: string }) {
@@ -25,13 +30,20 @@ export default function PreservationPackagesPanel({ docId, documentNumber }: { d
     finally { setBusy(false) }
   }
 
+  const columns = useMemo<ColumnDef<RepRow>[]>(() => [
+    { key: 'file',   accessor: (r) => r.fileName },
+    { key: 'type',   accessor: (r) => r.mimeType ?? '—' },
+    { key: 'format', accessor: (r) => r.formatName ?? '—' },
+    { key: 'pronom', accessor: (r) => r.pronomPuid ?? '—' },
+  ], [])
+  const { viewRows, getColumnProps } = useExcelTable(data?.representation ?? [], columns)
+
   return (
     <motion.section className="doc-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
       <div className="attach-header">
-        <span className="kicker">PRESERVATION · حزم الحفظ</span>
         {!open
           ? <button className="btn btn-ghost btn-sm" onClick={load} disabled={busy}>{busy ? '…' : 'عرض'}</button>
-          : <button className="btn btn-seal btn-sm" onClick={exportAip} disabled={busy}>⬇ تنزيل حزمة الأرشفة (AIP)</button>}
+          : <button className="btn btn-seal btn-sm" onClick={exportAip} disabled={busy}><Download size={15} aria-hidden /> تنزيل حزمة الأرشفة (AIP)</button>}
       </div>
 
       {open && data && (
@@ -54,9 +66,9 @@ export default function PreservationPackagesPanel({ docId, documentNumber }: { d
           <h4 className="detail-h3" style={{ marginTop: '1rem' }}>معلومات التمثيل (Representation Information)</h4>
           <div className="table-scroll">
             <table className="reg-table">
-              <thead><tr><th>الملف</th><th>النوع</th><th>الصيغة</th><th>PRONOM</th></tr></thead>
+              <thead><tr><th><ColumnHeaderMenu label="الملف" {...getColumnProps('file')} /></th><th><ColumnHeaderMenu label="النوع" {...getColumnProps('type')} /></th><th><ColumnHeaderMenu label="الصيغة" {...getColumnProps('format')} /></th><th><ColumnHeaderMenu label="PRONOM" {...getColumnProps('pronom')} /></th></tr></thead>
               <tbody>
-                {data.representation.map((r) => (
+                {viewRows.map((r) => (
                   <tr key={r.attachmentId}>
                     <td>{r.fileName}</td>
                     <td>{r.mimeType ?? '—'}</td>

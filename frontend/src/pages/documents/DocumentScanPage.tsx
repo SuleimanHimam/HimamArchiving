@@ -1,13 +1,15 @@
 import { useEffect, useState, useRef } from 'react'
+import { ArrowRight, Scan } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
 import { documents, type DocumentTypeDto, type OrgUnitDto } from '../../lib/documents'
 import { scanAgent } from '../../lib/scanAgent'
 import { scannerSettings } from '../../lib/scannerSettings'
-import { type Confidentiality } from '../../lib/incomingMail'
+import { type Confidentiality } from '../../lib/shared'
 import { useToast } from '../../components/toast'
-import '../incoming/incoming.css'
+import { LabeledInput, LabeledSelect } from '../../components/ui/labeled-input'
+import '../../styles/forms.css'
 import './documents.css'
 
 export default function DocumentScanPage() {
@@ -112,43 +114,37 @@ export default function DocumentScanPage() {
     <div>
       <header className="page__head">
         <div>
-          <span className="kicker">SCAN · مسح وثيقة جديدة</span>
           <h1>مسح وثيقة جديدة</h1>
         </div>
-        <Link to="/app/documents" className="btn btn-ghost">← رجوع للقائمة</Link>
+        <Link to="/app/documents" className="btn btn-ghost"><ArrowRight size={16} className="icon-dir" aria-hidden /> رجوع للقائمة</Link>
       </header>
 
       <motion.div className="doc-card form-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
         <div className="form-grid">
-          <label className="field field--wide"><span>اسم الوثيقة *</span>
-            <input value={form.title} onChange={set('title')} placeholder="مثال: محضر اجتماع مجلس الإدارة" /></label>
-          <label className="field"><span>نوع الوثيقة *</span>
-            <select value={form.documentTypeId} onChange={set('documentTypeId')}>
-              {types.length === 0 && <option value="">— لا توجد أنواع —</option>}
-              {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select></label>
-          <label className="field"><span>الوحدة المالكة *</span>
-            <select value={form.owningOrgUnitId} onChange={set('owningOrgUnitId')}>
-              {units.length === 0 && <option value="">— لا توجد وحدات —</option>}
-              {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </select></label>
-          <label className="field"><span>السرية</span>
-            <select value={form.confidentiality} onChange={set('confidentiality')}>
-              <option value={0}>عام</option><option value={1}>داخلي</option>
-              <option value={2}>سري</option><option value={3}>سري للغاية</option>
-            </select></label>
-          <label className="field field--wide"><span>الكلمات المفتاحية</span>
-            <input value={form.keywords} onChange={set('keywords')} placeholder="مفصولة بمسافات" /></label>
+          <LabeledInput label="اسم الوثيقة *" containerClassName="field--wide" value={form.title} onChange={set('title')} />
+          <LabeledSelect label="نوع الوثيقة *" value={form.documentTypeId} onChange={set('documentTypeId')}>
+            {types.length === 0 && <option value="">— لا توجد أنواع —</option>}
+            {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </LabeledSelect>
+          <LabeledSelect label="الوحدة المالكة *" value={form.owningOrgUnitId} onChange={set('owningOrgUnitId')}>
+            {units.length === 0 && <option value="">— لا توجد وحدات —</option>}
+            {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+          </LabeledSelect>
+          <LabeledSelect label="السرية" value={form.confidentiality} onChange={set('confidentiality')}>
+            <option value={0}>عام</option><option value={1}>داخلي</option>
+            <option value={2}>سري</option><option value={3}>سري للغاية</option>
+          </LabeledSelect>
+          <LabeledInput label="الكلمات المفتاحية" containerClassName="field--wide" value={form.keywords} onChange={set('keywords')} />
         </div>
 
         {error && <p className="login__error">{error}</p>}
         {msg && <p className="muted scan-msg">{msg}</p>}
 
         <input ref={fallbackInput} type="file" style={{ display: 'none' }} onChange={onFallbackFile}
-          accept=".pdf,.jpg,.jpeg,.png" />
+          accept=".pdf" />
         <div className="form-actions">
           <button className="btn btn-seal" disabled={busy} onClick={startScan}>
-            {busy ? '…جارٍ التنفيذ' : '⎙ مسح وإنشاء الوثيقة'}
+            {busy ? '…جارٍ التنفيذ' : <><Scan size={16} aria-hidden /> مسح وإنشاء الوثيقة</>}
           </button>
           <Link to="/app/documents" className="btn btn-ghost">إلغاء</Link>
         </div>

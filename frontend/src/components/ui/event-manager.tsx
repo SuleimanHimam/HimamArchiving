@@ -261,33 +261,35 @@ export function EventManager({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <h2 className="text-xl font-semibold sm:text-2xl">
             {view === "month" &&
-              currentDate.toLocaleDateString("en-US", {
+              currentDate.toLocaleDateString("ar-u-nu-latn", {
                 month: "long",
                 year: "numeric",
               })}
             {view === "week" &&
-              `Week of ${currentDate.toLocaleDateString("en-US", {
+              `أسبوع ${currentDate.toLocaleDateString("ar-u-nu-latn", {
                 month: "short",
                 day: "numeric",
               })}`}
             {view === "day" &&
-              currentDate.toLocaleDateString("en-US", {
+              currentDate.toLocaleDateString("ar-u-nu-latn", {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
                 year: "numeric",
               })}
-            {view === "list" && "All Events"}
+            {view === "list" && "كل الأحداث"}
           </h2>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => navigateDate("prev")} className="h-8 w-8">
-              <ChevronLeft className="h-4 w-4" />
+            {/* Icon-only: the SVG is decorative, so the name has to come from
+                aria-label or a screen reader announces nothing (WCAG 4.1.2). */}
+            <Button variant="outline" size="icon" onClick={() => navigateDate("prev")} className="h-8 w-8" aria-label="السابق">
+              <ChevronLeft className="h-4 w-4" aria-hidden />
             </Button>
             <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-              Today
+              اليوم
             </Button>
-            <Button variant="outline" size="icon" onClick={() => navigateDate("next")} className="h-8 w-8">
-              <ChevronRight className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={() => navigateDate("next")} className="h-8 w-8" aria-label="التالي">
+              <ChevronRight className="h-4 w-4" aria-hidden />
             </Button>
           </div>
         </div>
@@ -303,25 +305,25 @@ export function EventManager({
                 <SelectItem value="month">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Month View
+                    عرض شهري
                   </div>
                 </SelectItem>
                 <SelectItem value="week">
                   <div className="flex items-center gap-2">
                     <Grid3x3 className="h-4 w-4" />
-                    Week View
+                    عرض أسبوعي
                   </div>
                 </SelectItem>
                 <SelectItem value="day">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Day View
+                    عرض يومي
                   </div>
                 </SelectItem>
                 <SelectItem value="list">
                   <div className="flex items-center gap-2">
                     <List className="h-4 w-4" />
-                    List View
+                    قائمة
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -337,7 +339,7 @@ export function EventManager({
               className="h-8"
             >
               <Calendar className="h-4 w-4" />
-              <span className="ml-1">Month</span>
+              <span className="mr-1">شهر</span>
             </Button>
             <Button
               variant={view === "week" ? "secondary" : "ghost"}
@@ -346,7 +348,7 @@ export function EventManager({
               className="h-8"
             >
               <Grid3x3 className="h-4 w-4" />
-              <span className="ml-1">Week</span>
+              <span className="mr-1">أسبوع</span>
             </Button>
             <Button
               variant={view === "day" ? "secondary" : "ghost"}
@@ -355,7 +357,7 @@ export function EventManager({
               className="h-8"
             >
               <Clock className="h-4 w-4" />
-              <span className="ml-1">Day</span>
+              <span className="mr-1">يوم</span>
             </Button>
             <Button
               variant={view === "list" ? "secondary" : "ghost"}
@@ -364,7 +366,7 @@ export function EventManager({
               className="h-8"
             >
               <List className="h-4 w-4" />
-              <span className="ml-1">List</span>
+              <span className="mr-1">قائمة</span>
             </Button>
           </div>
 
@@ -375,26 +377,26 @@ export function EventManager({
             }}
             className="w-full sm:w-auto"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            New Event
+            <Plus className="ml-2 h-4 w-4" />
+            حدث جديد
           </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search events..."
+            placeholder="ابحث في الأحداث…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pr-9"
           />
           {searchQuery && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              className="absolute left-1 top-1/2 h-7 w-7 -translate-y-1/2"
               onClick={() => setSearchQuery("")}
             >
               <X className="h-4 w-4" />
@@ -419,7 +421,7 @@ export function EventManager({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuLabel>Filter by Color</DropdownMenuLabel>
+                <DropdownMenuLabel>تصفية حسب اللون</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {colors.map((color) => (
                   <DropdownMenuCheckboxItem
@@ -445,7 +447,7 @@ export function EventManager({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0 bg-transparent">
                   <Filter className="h-4 w-4" />
-                  Tags
+                  الوسوم
                   {selectedTags.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                       {selectedTags.length}
@@ -454,7 +456,7 @@ export function EventManager({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuLabel>Filter by Tag</DropdownMenuLabel>
+                <DropdownMenuLabel>تصفية حسب الوسم</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {availableTags.map((tag) => (
                   <DropdownMenuCheckboxItem
@@ -475,7 +477,7 @@ export function EventManager({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0 bg-transparent">
                   <Filter className="h-4 w-4" />
-                  Categories
+                  التصنيفات
                   {selectedCategories.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                       {selectedCategories.length}
@@ -484,7 +486,7 @@ export function EventManager({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                <DropdownMenuLabel>تصفية حسب التصنيف</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {categories.map((category) => (
                   <DropdownMenuCheckboxItem
@@ -510,7 +512,7 @@ export function EventManager({
                 className="gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <X className="h-4 w-4" />
-                Clear Filters
+                مسح التصفية
               </Button>
             )}
           </div>
@@ -523,7 +525,7 @@ export function EventManager({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                 <Filter className="h-4 w-4" />
-                Colors
+                الألوان
                 {selectedColors.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 px-1">
                     {selectedColors.length}
@@ -532,7 +534,7 @@ export function EventManager({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Filter by Color</DropdownMenuLabel>
+              <DropdownMenuLabel>تصفية حسب اللون</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {colors.map((color) => (
                 <DropdownMenuCheckboxItem
@@ -558,7 +560,7 @@ export function EventManager({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                 <Filter className="h-4 w-4" />
-                Tags
+                الوسوم
                 {selectedTags.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 px-1">
                     {selectedTags.length}
@@ -567,7 +569,7 @@ export function EventManager({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Filter by Tag</DropdownMenuLabel>
+              <DropdownMenuLabel>تصفية حسب الوسم</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {availableTags.map((tag) => (
                 <DropdownMenuCheckboxItem
@@ -588,7 +590,7 @@ export function EventManager({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                 <Filter className="h-4 w-4" />
-                Categories
+                التصنيفات
                 {selectedCategories.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 px-1">
                     {selectedCategories.length}
@@ -597,7 +599,7 @@ export function EventManager({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+              <DropdownMenuLabel>تصفية حسب التصنيف</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {categories.map((category) => (
                 <DropdownMenuCheckboxItem
@@ -618,7 +620,7 @@ export function EventManager({
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2">
               <X className="h-4 w-4" />
-              Clear
+              مسح
             </Button>
           )}
         </div>
@@ -626,7 +628,7 @@ export function EventManager({
 
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
+          <span className="text-sm text-muted-foreground">عوامل التصفية النشطة:</span>
           {selectedColors.map((colorValue) => {
             const color = getColorClasses(colorValue)
             return (
@@ -728,15 +730,15 @@ export function EventManager({
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{isCreating ? "Create Event" : "Event Details"}</DialogTitle>
+            <DialogTitle>{isCreating ? "إنشاء حدث" : "تفاصيل الحدث"}</DialogTitle>
             <DialogDescription>
-              {isCreating ? "Add a new event to your calendar" : "View and edit event details"}
+              {isCreating ? "أضِف حدثًا جديدًا إلى التقويم" : "عرض وتعديل تفاصيل الحدث"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">العنوان</Label>
               <Input
                 id="title"
                 value={isCreating ? newEvent.title ?? "" : selectedEvent?.title ?? ""}
@@ -745,12 +747,12 @@ export function EventManager({
                     ? setNewEvent((prev) => ({ ...prev, title: e.target.value }))
                     : setSelectedEvent((prev) => (prev ? { ...prev, title: e.target.value } : null))
                 }
-                placeholder="Event title"
+                placeholder="عنوان الحدث"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">الوصف</Label>
               <Textarea
                 id="description"
                 value={isCreating ? newEvent.description ?? "" : selectedEvent?.description ?? ""}
@@ -762,14 +764,14 @@ export function EventManager({
                       }))
                     : setSelectedEvent((prev) => (prev ? { ...prev, description: e.target.value } : null))
                 }
-                placeholder="Event description"
+                placeholder="وصف الحدث"
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startTime">Start Time</Label>
+                <Label htmlFor="startTime">وقت البدء</Label>
                 <Input
                   id="startTime"
                   type="datetime-local"
@@ -798,7 +800,7 @@ export function EventManager({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="endTime">End Time</Label>
+                <Label htmlFor="endTime">وقت الانتهاء</Label>
                 <Input
                   id="endTime"
                   type="datetime-local"
@@ -827,7 +829,7 @@ export function EventManager({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">التصنيف</Label>
                 <Select
                   value={isCreating ? newEvent.category : selectedEvent?.category}
                   onValueChange={(value) =>
@@ -837,7 +839,7 @@ export function EventManager({
                   }
                 >
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="اختر التصنيف" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -850,7 +852,7 @@ export function EventManager({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="color">Color</Label>
+                <Label htmlFor="color">اللون</Label>
                 <Select
                   value={isCreating ? newEvent.color : selectedEvent?.color}
                   onValueChange={(value) =>
@@ -860,7 +862,7 @@ export function EventManager({
                   }
                 >
                   <SelectTrigger id="color">
-                    <SelectValue placeholder="Select color" />
+                    <SelectValue placeholder="اختر اللون" />
                   </SelectTrigger>
                   <SelectContent>
                     {colors.map((color) => (
@@ -877,7 +879,7 @@ export function EventManager({
             </div>
 
             <div className="space-y-2">
-              <Label>Tags</Label>
+              <Label>الوسوم</Label>
               <div className="flex flex-wrap gap-2">
                 {availableTags.map((tag) => {
                   const isSelected = isCreating ? newEvent.tags?.includes(tag) : selectedEvent?.tags?.includes(tag)
@@ -899,7 +901,7 @@ export function EventManager({
           <DialogFooter>
             {!isCreating && (
               <Button variant="destructive" onClick={() => selectedEvent && handleDeleteEvent(selectedEvent.id)}>
-                Delete
+                حذف
               </Button>
             )}
             <Button
@@ -910,10 +912,10 @@ export function EventManager({
                 setSelectedEvent(null)
               }}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button onClick={isCreating ? handleCreateEvent : handleUpdateEvent}>
-              {isCreating ? "Create" : "Save"}
+              {isCreating ? "إنشاء" : "حفظ"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -942,7 +944,7 @@ function EventCard({
   const colorClasses = getColorClasses(event.color)
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString("ar-u-nu-latn", {
       hour: "2-digit",
       minute: "2-digit",
     })
@@ -953,9 +955,9 @@ function EventCard({
     const hours = Math.floor(diff / (1000 * 60 * 60))
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
     if (hours > 0) {
-      return `${hours}h ${minutes}m`
+      return `${hours} س ${minutes} د`
     }
-    return `${minutes}m`
+    return `${minutes} د`
   }
 
   if (variant === "compact") {
@@ -1157,8 +1159,12 @@ function MonthView({
   return (
     <Card className="overflow-hidden">
       <div className="grid grid-cols-7 border-b">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="border-r p-2 text-center text-xs font-medium last:border-r-0 sm:text-sm">
+        {["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"].map((day) => (
+          // border-s, not border-r: the divider has to sit at each column's *start*, which is the
+          // right in this RTL calendar. With border-r + last:border-r-0 the exception fell on
+          // السبت — the leftmost column — deleting the divider between it and الجمعة in the header
+          // while the body below still drew it, so one line stopped short of the top.
+          <div key={day} className="border-s p-2 text-center text-xs font-medium first:border-s-0 sm:text-sm">
             <span className="hidden sm:inline">{day}</span>
             <span className="sm:hidden">{day.charAt(0)}</span>
           </div>
@@ -1174,7 +1180,13 @@ function MonthView({
             <div
               key={index}
               className={cn(
-                "min-h-20 border-b border-r p-1 transition-colors last:border-r-0 sm:min-h-24 sm:p-2",
+                // Matches the header: divider at the column start, none on the outer edge — the
+                // first cell of every row (nth-child(7n+1)), not merely the first cell of the grid.
+                "min-h-20 border-b border-s p-1 transition-colors [&:nth-child(7n+1)]:border-s-0 sm:min-h-24 sm:p-2",
+                index >= days.length - 7 && "border-b-0", // last row: let the card's rounded edge be the bottom
+                // round the bottom corner cells so their fill follows the card's curve (RTL layout)
+                index === days.length - 7 && "rounded-br-xl",
+                index === days.length - 1 && "rounded-bl-xl",
                 !isCurrentMonth && "bg-muted/30",
                 "hover:bg-accent/50",
               )}
@@ -1202,7 +1214,7 @@ function MonthView({
                   />
                 ))}
                 {dayEvents.length > 3 && (
-                  <div className="text-[10px] text-muted-foreground sm:text-xs">+{dayEvents.length - 3} more</div>
+                  <div className="text-[10px] text-muted-foreground sm:text-xs">+{dayEvents.length - 3} أخرى</div>
                 )}
               </div>
             </div>
@@ -1258,16 +1270,17 @@ function WeekView({
   return (
     <Card className="overflow-auto">
       <div className="grid grid-cols-8 border-b">
-        <div className="border-r p-2 text-center text-xs font-medium sm:text-sm">Time</div>
+        {/* The time column opens the row, so it carries no start divider; every day column does. */}
+        <div className="p-2 text-center text-xs font-medium sm:text-sm">الوقت</div>
         {weekDays.map((day) => (
           <div
             key={day.toISOString()}
-            className="border-r p-2 text-center text-xs font-medium last:border-r-0 sm:text-sm"
+            className="border-s p-2 text-center text-xs font-medium sm:text-sm"
           >
-            <div className="hidden sm:block">{day.toLocaleDateString("en-US", { weekday: "short" })}</div>
-            <div className="sm:hidden">{day.toLocaleDateString("en-US", { weekday: "narrow" })}</div>
+            <div className="hidden sm:block">{day.toLocaleDateString("ar-u-nu-latn", { weekday: "short" })}</div>
+            <div className="sm:hidden">{day.toLocaleDateString("ar-u-nu-latn", { weekday: "narrow" })}</div>
             <div className="text-[10px] text-muted-foreground sm:text-xs">
-              {day.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              {day.toLocaleDateString("ar-u-nu-latn", { month: "short", day: "numeric" })}
             </div>
           </div>
         ))}
@@ -1277,7 +1290,7 @@ function WeekView({
           <div key={`row-${hour}`} className="contents">
             <div
               key={`time-${hour}`}
-              className="border-b border-r p-1 text-[10px] text-muted-foreground sm:p-2 sm:text-xs"
+              className="border-b p-1 text-[10px] text-muted-foreground sm:p-2 sm:text-xs"
             >
               {hour.toString().padStart(2, "0")}:00
             </div>
@@ -1286,7 +1299,7 @@ function WeekView({
               return (
                 <div
                   key={`${day.toISOString()}-${hour}`}
-                  className="min-h-12 border-b border-r p-0.5 transition-colors hover:bg-accent/50 last:border-r-0 sm:min-h-16 sm:p-1"
+                  className="min-h-12 border-b border-s p-0.5 transition-colors hover:bg-accent/50 sm:min-h-16 sm:p-1"
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => onDrop(day, hour)}
                 >
@@ -1397,11 +1410,11 @@ function ListView({
   const sorted = [...events].sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
 
   const formatDate = (d: Date) =>
-    d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
-  const formatTime = (d: Date) => d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    d.toLocaleDateString("ar-u-nu-latn", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+  const formatTime = (d: Date) => d.toLocaleTimeString("ar-u-nu-latn", { hour: "2-digit", minute: "2-digit" })
 
   if (sorted.length === 0) {
-    return <Card className="p-8 text-center text-sm text-muted-foreground">No events to display</Card>
+    return <Card className="p-8 text-center text-sm text-muted-foreground">لا توجد أحداث للعرض</Card>
   }
 
   return (

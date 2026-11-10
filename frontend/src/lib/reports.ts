@@ -33,7 +33,50 @@ export interface OnlineUser {
   lastSeenAt: string
 }
 
+/* ── Diwan dashboard: per-bureau tiles + real month-bucketed series ── */
+
+export interface BureauMailStat {
+  orgUnitId: number | null
+  name: string
+  incoming: number
+  outgoing: number
+}
+
+export interface MonthlyBureauPoint {
+  month: number
+  orgUnitId: number | null
+  incoming: number
+  outgoing: number
+}
+
+export interface MonthlyCount {
+  month: number
+  count: number
+}
+
+export interface DashboardDepartment {
+  id: number
+  name: string
+}
+
+export interface DiwanDashboard {
+  year: number
+  totalDocuments: number
+  bureaus: BureauMailStat[]
+  monthlyMail: MonthlyBureauPoint[]
+  monthlyAttachments: MonthlyCount[]
+  availableYears: number[]
+  /** Departments this user may narrow the charts to; one entry or none means no filter is offered. */
+  departments: DashboardDepartment[]
+  /** The department currently applied, echoed by the server — null is the whole institution. */
+  orgUnitId: number | null
+}
+
 export const reports = {
   dashboard: () => api.get<DashboardSummary>('/reports/dashboard').then((r) => r.data),
   onlineUsers: () => api.get<OnlineUser[]>('/users/online').then((r) => r.data),
+  diwanDashboard: (year?: number, orgUnitId?: number | null) =>
+    api.get<DiwanDashboard>('/reports/diwan-dashboard', {
+      params: { year: year || undefined, orgUnitId: orgUnitId || undefined },
+    }).then((r) => r.data),
 }

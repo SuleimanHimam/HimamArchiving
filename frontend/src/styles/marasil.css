@@ -1,0 +1,187 @@
+/* ============================================================
+   MARASIL — design-system re-skin layer
+   Remaps the existing Diwan design tokens onto the Marasil
+   palette (parchment · navy · brass-gold · maroon seal) and adds
+   a dark theme. Imported AFTER diwan.css so it overrides the tokens —
+   the whole app re-skins through these variables (foundation pass).
+   ============================================================ */
+
+:root {
+  color-scheme: light;   /* native controls (select popups, date pickers, scrollbars) render light */
+  /* ---- Marasil source tokens (light) ---- */
+  --m-bg:        #F3F0E8;
+  --m-surface:   #FFFFFF;
+  --m-surface-2: #FBF9F3;
+  --m-rail:      #1B2440;
+  --m-rail-2:    #141C33;
+  --m-border:    #E4DECF;
+  --m-border-2:  #D4CCBA;
+  --m-text:      #222634;
+  --m-text-2:    #615C4F;
+  --m-text-3:    #8B8576;
+  --m-accent:    #9A7636;   /* brass gold */
+  --m-accent-2:  #B9913F;
+  --m-accent-soft:#F0E6CE;
+  --m-seal:      #8E2B2E;   /* maroon */
+  --m-info:      #345E9E;
+  --m-success:   #3C7A57;
+  --m-warning:   #9F6E22;
+  --m-danger:    #A93B3B;
+
+  /* ---- Remap the Diwan tokens onto Marasil ---- */
+  --ink:        var(--m-rail);
+  --ink-deep:   var(--m-rail-2);
+  --ink-soft:   #34406A;
+
+  --parchment:  var(--m-bg);
+  --parchment-2:var(--m-surface-2);
+  --parchment-3:var(--m-border);
+
+  --seal:       var(--m-seal);
+  --seal-deep:  #7A171B;
+  --brass:      var(--m-accent);
+  --brass-soft: #C8A24B;     /* saturated gold — used for nav icons/underline on the navy bar */
+
+  --paper:      var(--m-surface);
+  --text:       var(--m-text);
+  --text-muted: var(--m-text-2);
+  --text-faint: var(--m-text-3);
+
+  --ok:     var(--m-success);
+  --warn:   var(--m-warning);
+  --danger: var(--m-seal);
+
+  /* Legacy/undefined tokens used across component CSS with hardcoded fallbacks that never themed.
+     Aliasing them to the theme-aware tokens fixes muted text + borders + gold accents app-wide
+     (notifications, documents, settings, workflow, reports, …) in both light and dark. */
+  --muted: var(--text-muted);
+  --line:  var(--parchment-3);
+  --gold:  var(--brass);
+
+  --c-public:       #6B7280;
+  --c-internal:     var(--m-info);
+  --c-confidential: var(--m-warning);
+  --c-secret:       var(--m-seal);
+
+  /* ---- Type ---- */
+  --font-display: "Noto Sans Arabic", "Archivo", system-ui, sans-serif;
+  --font-body:    "Noto Sans Arabic", "Inter", system-ui, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
+  --font-latin:   "Archivo", "Inter", sans-serif;
+
+  --shadow-doc:  0 1px 2px rgba(20,28,51,.06), 0 4px 14px rgba(20,28,51,.05);
+  --shadow-lift: 0 10px 34px -12px rgba(20,28,51,.20);
+
+  /* ---- shadcn/Tailwind compat tokens → Marasil (light). Unlayered, so these win
+          over the @theme defaults and re-skin every shadcn component. ---- */
+  --color-ink:        var(--m-rail);
+  --color-ink-deep:   var(--m-rail-2);
+  --color-seal:       var(--m-seal);
+  --color-brass:      var(--m-accent);
+  --color-brass-soft: var(--m-accent-soft);
+  --color-paper:      var(--m-surface);
+  --color-parchment:  var(--m-bg);
+  --color-parchment-2:var(--m-surface-2);
+  --color-parchment-3:var(--m-border);
+
+  --color-background:           var(--m-surface);
+  --color-foreground:           var(--m-text);
+  --color-popover:              var(--m-surface);
+  --color-popover-foreground:   var(--m-text);
+  --color-accent:               var(--m-surface-2);
+  /* Text shown on an accent/hover surface (menus, dropdowns). Must be the theme text colour so it
+     stays readable in dark mode — var(--m-rail) is near-black and vanished on dark hover. */
+  --color-accent-foreground:    var(--m-text);
+  --color-border:               var(--m-border);
+  --color-muted:                var(--m-surface-2);
+  --color-muted-foreground:     var(--m-text-2);
+  --color-destructive:          var(--m-seal);
+  --color-destructive-foreground: #ffffff;
+  --color-card:                 var(--m-surface);
+  --color-card-foreground:      var(--m-text);
+  --color-primary:              var(--m-rail);
+  --color-primary-foreground:   #ffffff;
+  --color-secondary:            var(--m-surface-2);
+  --color-secondary-foreground: var(--m-rail);
+  --color-input:                var(--m-border-2);
+  --color-ring:                 var(--m-accent);
+
+  /* Stable navy for solid controls (buttons/badges) — does NOT flip to a text colour. */
+  --brand-solid: #1B2440;
+}
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
+[data-theme="dark"] {
+  --m-bg:        #10131C;
+  --m-surface:   #191D2A;
+  --m-surface-2: #1F2433;
+  --m-rail:      #0C0F18;
+  --m-rail-2:    #080A11;
+  --m-border:    #2A3042;
+  --m-border-2:  #3A4256;
+  --m-text:      #E7E9F0;
+  --m-text-2:    #9BA2B4;
+  --m-text-3:    #727A8E;
+  --m-accent:    #C79A4E;
+  --m-accent-2:  #D6AC60;
+  --m-accent-soft:#332B1A;
+  --m-seal:      #CC6062;
+  --m-info:      #5B8AD0;
+  --m-success:   #5BA37C;
+  --m-warning:   #C79A4E;
+  --m-danger:    #D06A6A;
+
+  /* Navy ink is used as TEXT throughout the app — flip it (and ink-soft) to light so it reads on the
+     dark background. Solid navy controls use --brand-solid instead, so they stay navy. */
+  --ink:        var(--m-text);
+  --ink-soft:   var(--m-text-2);
+  --seal-deep:  #B0494B;
+  --brass-soft: #D6AC60;
+  --brand-solid:#2E3A63;
+  --text-muted: var(--m-text-2);
+  --text-faint: var(--m-text-3);
+
+  --shadow-doc:  0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.3);
+  --shadow-lift: 0 10px 34px rgba(0,0,0,.5);
+
+  color-scheme: dark;
+}
+
+/* Smooth the theme flip. */
+body { transition: background-color .2s ease, color .2s ease; }
+
+/* Native <select> controls + their option popups follow the active theme — fixes the light
+   dropdown list in dark mode. `.field > select` keeps its transparent-on-card look (higher
+   specificity), while filter/inline selects get a themed surface; Chromium renders the native
+   option popup from these explicit option colors. */
+select { background-color: var(--paper); color: var(--text); }
+option, optgroup { background-color: var(--paper); color: var(--text); }
+
+/* Headings use --text (not the navy --ink) so they read in both light AND dark — matching the
+   Marasil prototype. (Diwan used --ink, which is invisible on a dark background.) */
+h1, h2, h3, h4 { color: var(--text); }
+
+/* Solid navy controls: pin to --brand-solid (which never flips to a text colour) and keep light text. */
+.btn-primary { background: var(--brand-solid); color: #fff; }
+.btn-primary:hover { background: var(--brand-solid); filter: brightness(1.15); }
+.pkg-tag { background: var(--brand-solid); color: #fff; }
+
+/* Dark-mode contrast touch-ups for elements that hardcoded ink/navy text. */
+[data-theme="dark"] .kicker,
+[data-theme="dark"] .crumb { color: var(--m-text-3); }
+[data-theme="dark"] a { color: var(--m-accent-2); }
+
+/* In dark mode the navy navbar already reads well; keep its text light. */
+[data-theme="dark"] .shell__navbar { background: var(--m-rail); }
+
+/* Theme toggle button in the topbar actions cluster. */
+.shell__themebtn {
+  display: inline-grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1px solid rgba(244,236,216,.16);
+  background: transparent; color: rgba(244,236,216,.85);
+  cursor: pointer; font-size: 1rem; line-height: 1;
+}
+.shell__themebtn:hover { background: rgba(244,236,216,.10); color: #fff; }

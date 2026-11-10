@@ -15,9 +15,9 @@
 }
 .gds__box:focus-within {
   background: rgba(244,236,216,.14);
-  border-color: rgba(176,137,45,.5);
+  border-color: rgba(46,150,204,.5);
 }
-.gds__icon { font-size: .85rem; color: rgba(244,236,216,.55); flex-shrink: 0; }
+.gds__icon { color: rgba(244,236,216,.55); flex-shrink: 0; }
 .gds__input {
   flex: 1; min-width: 0;
   background: none; border: none; outline: none;
@@ -49,7 +49,7 @@
   padding: .55rem .7rem; border-radius: var(--radius);
   cursor: pointer; transition: background .12s;
 }
-.gds__item:hover { background: rgba(176,137,45,.08); }
+.gds__item:hover { background: rgba(46,150,204,.08); }
 .gds__item-title {
   font-size: .85rem; font-weight: 600; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -68,7 +68,7 @@
   font-size: .78rem; font-weight: 600; color: var(--brass);
   cursor: pointer; text-align: center;
 }
-.gds__more:hover { background: rgba(176,137,45,.12); }
+.gds__more:hover { background: rgba(46,150,204,.12); }
 
 @media (max-width: 980px) {
   .gds { display: none; }

@@ -1,28 +1,39 @@
+import { ArrowRight, Star, Download, Users, Pencil, Printer, PackageCheck, Archive, X, Scan } from 'lucide-react'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { AxiosError } from 'axios'
 import { motion } from 'motion/react'
-import { Printer } from 'lucide-react'
 import { auth } from '../../lib/auth'
 import { documents, type DocumentDetail, type ScanFormat, DOC_STATUS_LABELS, formatBytes } from '../../lib/documents'
 import { scanAgent } from '../../lib/scanAgent'
 import { scannerSettings } from '../../lib/scannerSettings'
 import LocationPicker from '../../components/LocationPicker'
 import { favoritesApi, sharingApi, exportApi, foldersApi, type Share, type Folder } from '../../lib/userFeatures'
+import { FolderGlyph } from '../../components/ui/folder-dialog'
 import RequestDispositionModal from '../../components/RequestDispositionModal'
 import DocumentLocation from '../../components/DocumentLocation'
-import { CONFIDENTIALITY_LABELS } from '../../lib/incomingMail'
+import { CONFIDENTIALITY_LABELS } from '../../lib/shared'
+import { useScreenGuard, isSensitive } from '../../lib/useScreenGuard'
 import { useToast } from '../../components/toast'
+import { useConfirmDialog } from '../../components/ui/confirm-dialog'
+import { LabeledSelect } from '../../components/ui/labeled-input'
+import { useDateFormat } from '../../lib/useCalendar'
 import PreservationPackagesPanel from '../../components/PreservationPackagesPanel'
 import DocumentNotesPanel from '../../components/DocumentNotesPanel'
 import CustomFieldsPanel from '../../components/CustomFieldsPanel'
-import '../incoming/incoming.css'
+import DocumentVerificationCard from '../../components/DocumentVerificationCard'
+import '../../styles/forms.css'
+// The folder glyph's styles live here; this page names a folder, so it draws one.
+import '../../styles/file-browser.css'
 import './documents.css'
 
 export default function DocumentDetailPage() {
   const { id } = useParams()
   const docId = Number(id)
   const navigate = useNavigate()
+  const { dateTime } = useDateFormat()
   const toast = useToast()
+  const { confirm } = useConfirmDialog()
   const fileInput = useRef<HTMLInputElement>(null)
   const scanFallbackInput = useRef<HTMLInputElement>(null)
   const previewFrame = useRef<HTMLIFrameElement>(null)
@@ -31,9 +42,13 @@ export default function DocumentDetailPage() {
   const [busy, setBusy] = useState(false)
   const [scanMsg, setScanMsg] = useState('')
   const [scanName, setScanName] = useState('')
-  const [scanFormat, setScanFormat] = useState<ScanFormat>('pdf')
+  const [scanFormat] = useState<ScanFormat>('pdf')   // scans are always saved as PDF
   const [preview, setPreview] = useState<{ url: string; name: string; type: string } | null>(null)
   const [archiveOpen, setArchiveOpen] = useState(false)
+  /* The receipt shown after a successful hand-over to قسم الأرشيف. Held in its own state rather
+     than read off `doc`, so the number on screen is the one that was actually sent even after the
+     page reloads the document behind it. */
+  const [sentInfo, setSentInfo] = useState<{ number: string; title: string } | null>(null)
   const [archBoxId, setArchBoxId] = useState<number | null>(null)
   const [fav, setFav] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
@@ -45,8 +60,26 @@ export default function DocumentDetailPage() {
   const load = useCallback(async () => {
     setError('')
     try { setDoc(await documents.get(docId)) }
-    catch { setError('تعذّر تحميل الوثيقة (قد لا تملك صلاحية الوصول)') }
+    catch (err) {
+      /* "You may not have access" was told to everyone, including people arriving from a
+         notification about a document that had since been deleted — they went looking for a
+         permission problem that did not exist. The status says which it is: 404 is gone, 403 is
+         not yours. */
+      const status = (err as AxiosError).response?.status
+      setError(
+        status === 404 ? 'هذه الوثيقة لم تعد موجودة — ربما حُذفت بعد إرسال الإشعار.'
+        : status === 403 ? 'لا تملك صلاحية الوصول إلى هذه الوثيقة.'
+        : 'تعذّر تحميل الوثيقة — حاول مرة أخرى.',
+      )
+    }
   }, [docId])
+
+  const canPrintDoc = auth.hasPermission('Documents.Print')
+
+  // The capture guard covers سري/سري للغاية documents and every open preview.
+  useScreenGuard(!!preview || isSensitive(doc?.confidentiality), {
+    onViolation: () => toast.error('محتوى محمي — لا يُسمح بالتقاط صورة الشاشة'),
+  })
 
   useEffect(() => { load() }, [load])
   useEffect(() => { setFav(!!doc?.isFavorite) }, [doc?.isFavorite])
@@ -60,6 +93,26 @@ export default function DocumentDetailPage() {
   }
 
   const [reqOpen, setReqOpen] = useState(false)
+
+  async function sendToArchive() {
+    if (!doc) return
+    // The number, not just the title: titles repeat across departments («محضر اجتماع — …») and the
+    // number is what the archive will ask for on the phone, so it is what the sender must check.
+    if (!(await confirm(
+      `إرسال الوثيقة رقم ${doc.documentNumber} «${doc.title}» إلى قسم الأرشيف لمراجعتها وتخصيص موقع فيزيائي لها؟`
+    ))) return
+    setBusy(true)
+    try {
+      await documents.sendToArchive(docId)
+      // A dialog rather than a toast: this is the receipt for a hand-over to another department,
+      // and a 4-second toast takes the reference number away with it.
+      setSentInfo({ number: doc.documentNumber, title: doc.title })
+      await load()
+    } catch (e) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error
+      toast.error(msg ?? 'تعذّر الإرسال إلى الأرشيف')
+    } finally { setBusy(false) }
+  }
 
   async function downloadZip() {
     if (!doc) return
@@ -270,7 +323,7 @@ export default function DocumentDetailPage() {
   }
 
   async function removeAttachment(attachmentId: number, fileName: string) {
-    if (!confirm(`حذف المرفق «${fileName}»؟ لا يمكن التراجع.`)) return
+    if (!(await confirm({ message: `حذف المرفق «${fileName}»؟ لا يمكن التراجع.`, destructive: true }))) return
     setBusy(true); setError('')
     try {
       await documents.removeAttachment(docId, attachmentId)
@@ -283,7 +336,7 @@ export default function DocumentDetailPage() {
   }
 
   async function remove() {
-    if (!confirm('حذف هذه الوثيقة؟ (حذف منطقي قابل للاسترجاع)')) return
+    if (!(await confirm({ message: 'حذف هذه الوثيقة؟ (حذف منطقي قابل للاسترجاع)', destructive: true }))) return
     setBusy(true); setError('')
     try {
       await documents.remove(docId)
@@ -300,9 +353,23 @@ export default function DocumentDetailPage() {
 
   async function saveArchive(e: React.FormEvent) {
     e.preventDefault()
+    if (!doc) return
     setBusy(true)
     try {
-      await documents.update(docId, { boxId: archBoxId })
+      // The update endpoint is a full replace, so echo the document's current fields and change only the box —
+      // otherwise the metadata (description/keywords/category/confidentiality) would be wiped.
+      const CONF_LEVEL: Record<string, number> = { Public: 0, Internal: 1, Confidential: 2, HighlyConfidential: 3 }
+      await documents.update(docId, {
+        title: doc.title,
+        description: doc.description,
+        categoryId: doc.categoryId,
+        owningOrgUnitId: doc.owningOrgUnitId,
+        ownerPositionId: doc.ownerPositionId,
+        confidentiality: (CONF_LEVEL[doc.confidentiality] ?? 1) as never,
+        keywords: doc.keywords,
+        documentDate: doc.documentDate ?? null,
+        boxId: archBoxId,
+      })
       setArchiveOpen(false)
       await load()
       toast.success(archBoxId ? 'تم تحديد مكان الحفظ الفعلي' : 'تم إلغاء مكان الحفظ')
@@ -313,7 +380,7 @@ export default function DocumentDetailPage() {
   }
 
   if (error && !doc) return (
-    <div><Link to="/app/documents" className="btn btn-ghost">← رجوع</Link><p className="login__error">{error}</p></div>
+    <div><Link to="/app/documents" className="btn btn-ghost"><ArrowRight size={16} className="icon-dir" aria-hidden /> رجوع</Link><p className="login__error">{error}</p></div>
   )
   if (!doc) return <p className="muted">…جارٍ التحميل</p>
 
@@ -323,43 +390,62 @@ export default function DocumentDetailPage() {
     <div>
       <div className="print-header">
         <h2>{doc.title}</h2>
-        <div className="print-sub mono">{doc.documentNumber} · {doc.documentTypeName} · {new Date().toLocaleString('ar')}</div>
+        <div className="print-sub mono">{doc.documentNumber} · {doc.documentTypeName} · {dateTime(new Date().toISOString())}</div>
         <hr />
       </div>
 
       <header className="page__head">
         <div>
-          <span className="kicker mono">{doc.documentNumber}</span>
+          <span className="mono">{doc.documentNumber}</span>
           <h1>{doc.title}</h1>
         </div>
         <div className="page__headactions">
           <button className="btn btn-ghost" title={fav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'} onClick={toggleFavorite}>
-            {fav ? '★' : '☆'} مفضلة
+            <Star size={16} aria-hidden fill={fav ? 'currentColor' : 'none'} /> مفضلة
           </button>
           {auth.hasPermission('Export.View') && (
-            <button className="btn btn-ghost" title="تنزيل كملف مضغوط" onClick={downloadZip}>⬇ ZIP</button>
+            <button className="btn btn-ghost" title="تنزيل كملف مضغوط" onClick={downloadZip}><Download size={16} aria-hidden /> ZIP</button>
           )}
           {auth.hasPermission('Organization.View') && (
-            <button className="btn btn-ghost" onClick={openShare}>👥 مشاركة</button>
+            <button className="btn btn-ghost" onClick={openShare}><Users size={16} aria-hidden /> مشاركة</button>
           )}
           {auth.hasPermission('Documents.Edit') && (
-            <Link to={`/app/documents/${docId}/edit`} className="btn btn-primary">✏️ تعديل</Link>
+            <Link to={`/app/documents/${docId}/edit`} className="btn btn-primary"><Pencil size={16} aria-hidden /> تعديل</Link>
           )}
-          {auth.hasPermission('Documents.Print') && (
-            <button className="btn btn-ghost" onClick={() => window.print()}>🖨 طباعة</button>
+          {canPrintDoc && (
+            <button className="btn btn-ghost" onClick={() => window.print()}><Printer size={16} aria-hidden /> طباعة</button>
           )}
           {auth.hasPermission('Disposition.Create') && !doc.isTombstone && (
             <button className="btn btn-seal" onClick={() => setReqOpen(true)}>⊗ طلب إتلاف</button>
           )}
-          <Link to="/app/documents" className="btn btn-ghost">← رجوع للقائمة</Link>
+          {auth.hasPermission('Documents.Archive') && !doc.isTombstone
+            && (doc.status === 'Draft' || doc.status === 'Active') && (
+            <button className="btn btn-primary" disabled={busy} onClick={sendToArchive}><PackageCheck size={16} aria-hidden /> إرسال إلى قسم الأرشيف</button>
+          )}
+          <Link to="/app/documents" className="btn btn-ghost"><ArrowRight size={16} className="icon-dir" aria-hidden /> رجوع للقائمة</Link>
         </div>
       </header>
 
       {doc.boxId && <DocumentLocation boxId={doc.boxId} />}
 
+      {/* Returned by the archive: the objection belongs on the document, next to the button that
+          sends it back — a notification scrolls away, this does not. */}
+      {doc.archiveReturnReason && doc.status !== 'PendingArchive' && (
+        <div className="login__error" style={{ background: 'rgba(154,99,18,.1)', border: '1px solid var(--brass, #9a6312)', borderRadius: 8, padding: '.7rem 1rem', marginBottom: '1rem' }}>
+          أعاد قسم الأرشيف هذه الوثيقة — السبب: {doc.archiveReturnReason}. عالِج الملاحظة ثم أعِد الإرسال.
+        </div>
+      )}
+
+      {doc.status === 'PendingArchive' && (
+        <div className="login__error" style={{ background: 'rgba(30,64,120,.08)', border: '1px solid var(--ink, #1e4078)', borderRadius: 8, padding: '.7rem 1rem', marginBottom: '1rem' }}>
+          الوثيقة لدى قسم الأرشيف بانتظار تحديد مكان حفظها
+          {doc.sentToArchiveAtUtc ? ` (أُرسلت في ${new Date(doc.sentToArchiveAtUtc).toLocaleString('ar-u-nu-latn')})` : ''}.
+        </div>
+      )}
+
       {doc.isTombstone && (
         <div className="login__error" style={{ background: 'rgba(155,34,38,.1)', border: '1px solid var(--seal)', borderRadius: 8, padding: '.7rem 1rem', marginBottom: '1rem' }}>
-          ⊗ أُتلِفت هذه الوثيقة{doc.destroyedAtUtc ? ` بتاريخ ${new Date(doc.destroyedAtUtc).toLocaleString('ar')}` : ''} — المحتوى غير متوفر، والبيانات الوصفية محفوظة كسجل شاهد بموجب شهادة الإتلاف.
+          ⊗ أُتلِفت هذه الوثيقة{doc.destroyedAtUtc ? ` بتاريخ ${new Date(doc.destroyedAtUtc).toLocaleString('ar-u-nu-latn')}` : ''} — المحتوى غير متوفر، والبيانات الوصفية محفوظة كسجل شاهد بموجب شهادة الإتلاف.
         </div>
       )}
 
@@ -378,12 +464,19 @@ export default function DocumentDetailPage() {
             <dt>الكلمات المفتاحية</dt><dd>{doc.keywords ?? '—'}</dd>
             <dt>مكان الحفظ الفيزيائي</dt>
             <dd>{doc.boxCode
-              ? `📦 ${doc.boxCode}`
+              ? doc.boxCode
               : doc.physicalLocationName
               ? `${doc.physicalLocationName}${doc.boxNumber ? ` · صندوق ${doc.boxNumber}` : ''}${doc.fileNumber ? ` · ملف ${doc.fileNumber}` : ''}`
               : '—'}</dd>
             <dt>المجلد</dt>
-            <dd>
+            <dd className="detail-folder">
+              {/* A native <select> cannot colour an option, so the folder the document is actually
+                  in is drawn beside it — the same glyph the browser and the properties card use.
+                  Absent while the document sits outside every folder. */}
+              {doc.folderId != null && (() => {
+                const f = folders.find((x) => x.id === doc.folderId)
+                return <FolderGlyph className="detail-folder__art" color={f?.color} icon={f?.icon} />
+              })()}
               <select value={doc.folderId ?? ''} onChange={(e) => moveToFolder(e.target.value ? Number(e.target.value) : null)}
                 style={{ maxWidth: 220 }}>
                 <option value="">— بدون مجلد —</option>
@@ -397,7 +490,7 @@ export default function DocumentDetailPage() {
             <div className="action-bar">
               {auth.hasPermission('Archive.Archive') && (
                 <button className="btn btn-seal" disabled={busy} onClick={openArchive}>
-                  🗄 {doc.boxId ? 'تغيير مكان الحفظ' : 'تحديد مكان الحفظ'}
+                  <Archive size={16} aria-hidden /> {doc.boxId ? 'تغيير مكان الحفظ' : 'تحديد مكان الحفظ'}
                 </button>
               )}
               {auth.hasPermission('Documents.Delete') && (
@@ -406,14 +499,16 @@ export default function DocumentDetailPage() {
             </div>
           )}
           {error && <p className="login__error">{error}</p>}
+
+          {/* The QR that proves a printed copy came from here. */}
+          <DocumentVerificationCard documentId={docId} />
         </motion.section>
 
         <motion.aside className="doc-card timeline-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
           <div className="attach-header">
-            <span className="kicker">ATTACHMENTS · المرفقات</span>
-            {auth.hasPermission('Documents.Print') && doc.attachments.length > 0 && (
+            {canPrintDoc && doc.attachments.length > 0 && (
               <button className="btn btn-ghost btn-sm" disabled={busy} onClick={printAllAttachments}>
-                🖨 طباعة كل المرفقات
+                <Printer size={16} aria-hidden /> طباعة كل المرفقات
               </button>
             )}
           </div>
@@ -429,22 +524,22 @@ export default function DocumentDetailPage() {
                       {a.fileName}
                       {a.isScanned && <span className="attach-scanned" title="ممسوحة ضوئيًا">مسح ضوئي</span>}
                     </span>
-                    <span className="attach-time mono">{new Date(a.createdAt).toLocaleString('ar')}</span>
+                    <span className="attach-time mono">{dateTime(a.createdAt)}</span>
                   </span>
                 </button>
                 <span className="attach-actions">
                   <span className="attach-size mono">{formatBytes(a.sizeBytes)}</span>
-                  {auth.hasPermission('Documents.Print') && (
-                    <button className="attach-view" title="طباعة عبر المتصفح" onClick={() => printAttachment(a)}>🖨</button>
+                  {canPrintDoc && (
+                    <button className="attach-view" title="طباعة عبر المتصفح" onClick={() => printAttachment(a)}><Printer size={14} aria-hidden /></button>
                   )}
-                  {auth.hasPermission('Documents.Print') && (
+                  {canPrintDoc && (
                     <button className="attach-view" title="طباعة على طابعة محلية (عبر الوكيل)" disabled={busy}
                       onClick={() => printToPrinter(a)}><Printer size={14} /></button>
                   )}
-                  <button className="attach-view" title="تنزيل" onClick={() => documents.download(docId, a.id, a.fileName)}>⬇</button>
+                  <button className="attach-view" title="تنزيل" onClick={() => documents.download(docId, a.id, a.fileName)}><Download size={14} aria-hidden /></button>
                   {auth.hasPermission('Documents.Edit') && (
                     <button className="attach-remove" title="حذف المرفق" disabled={busy}
-                      onClick={() => removeAttachment(a.id, a.fileName)}>✕</button>
+                      onClick={() => removeAttachment(a.id, a.fileName)}><X size={14} aria-hidden /></button>
                   )}
                 </span>
               </li>
@@ -453,34 +548,26 @@ export default function DocumentDetailPage() {
 
           {auth.hasPermission('Documents.Edit') && (
             <>
-              <input ref={fileInput} type="file" style={{ display: 'none' }} onChange={onUpload}
-                accept=".pdf,.docx,.doc,.xlsx,.xls,.jpg,.jpeg,.png,.zip" />
+              {/* No accept filter: the server takes any type, and a narrower picker here
+                  would only make the browser hide files it would have accepted. */}
+              <input ref={fileInput} type="file" style={{ display: 'none' }} onChange={onUpload} />
               {/* Fallback when no local scan agent is detected: pick a file the scanner produced. */}
               <input ref={scanFallbackInput} type="file" style={{ display: 'none' }} onChange={onScanFallback}
-                accept=".pdf,.jpg,.jpeg,.png" />
+                accept=".pdf" />
               <label className="field scan-name-field">
-                <span>اسم المستند الممسوح</span>
                 <input
                   value={scanName}
                   onChange={(e) => setScanName(e.target.value)}
-                  placeholder="مثال: محضر اجتماع"
+                  placeholder="اسم المستند الممسوح"
                   maxLength={120}
                 />
-              </label>
-              <label className="field scan-name-field">
-                <span>صيغة الملف</span>
-                <select value={scanFormat} onChange={(e) => setScanFormat(e.target.value as ScanFormat)}>
-                  <option value="pdf">PDF</option>
-                  <option value="jpg">JPG (صورة)</option>
-                  <option value="png">PNG (صورة)</option>
-                </select>
               </label>
               <div className="action-bar">
                 <button className="btn btn-primary" disabled={busy} onClick={() => fileInput.current?.click()}>
                   + رفع مرفق
                 </button>
                 <button className="btn btn-seal" disabled={busy} onClick={onScan} title="المسح من ماسح ضوئي متصل بجهازك">
-                  ⎙ مسح ضوئي
+                  <Scan size={16} aria-hidden /> مسح ضوئي
                 </button>
               </div>
               {scanMsg && <p className="muted scan-msg">{scanMsg}</p>}
@@ -489,7 +576,8 @@ export default function DocumentDetailPage() {
         </motion.aside>
       </div>
 
-      <CustomFieldsPanel entityType="Document" entityId={docId} canEdit={auth.hasPermission('Documents.Edit')} />
+      <CustomFieldsPanel entityType="Document" entityId={docId} documentTypeId={doc.documentTypeId}
+        canEdit={auth.hasPermission('Documents.Edit')} />
       <PreservationPackagesPanel docId={docId} documentNumber={doc.documentNumber} />
       {auth.hasPermission('Notes.View') && <DocumentNotesPanel docId={docId} />}
 
@@ -500,19 +588,19 @@ export default function DocumentDetailPage() {
             initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
             <header className="preview-head">
               <span className="preview-title">مشاركة الوثيقة · {doc.documentNumber}</span>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShareOpen(false)}>✕ إغلاق</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShareOpen(false)}><X size={15} aria-hidden /> إغلاق</button>
             </header>
             <div style={{ padding: '1rem', overflow: 'auto' }}>
               <form className="form-grid" onSubmit={doShare}>
-                <label className="field"><span>مشاركة مع</span>
-                  <select value={shareForm.userId} onChange={(e) => setShareForm((f) => ({ ...f, userId: e.target.value }))}>
-                    <option value="">— اختر مستخدمًا —</option>
-                    {shareUsers.map((u) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
-                  </select></label>
-                <label className="field"><span>الصلاحية</span>
-                  <select value={shareForm.canEdit ? '1' : '0'} onChange={(e) => setShareForm((f) => ({ ...f, canEdit: e.target.value === '1' }))}>
-                    <option value="0">عرض فقط</option><option value="1">عرض وتعديل</option>
-                  </select></label>
+                <LabeledSelect label="مشاركة مع" value={shareForm.userId}
+                  onChange={(e) => setShareForm((f) => ({ ...f, userId: e.target.value }))}>
+                  <option value="">—</option>
+                  {shareUsers.map((u) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                </LabeledSelect>
+                <LabeledSelect label="الصلاحية" value={shareForm.canEdit ? '1' : '0'}
+                  onChange={(e) => setShareForm((f) => ({ ...f, canEdit: e.target.value === '1' }))}>
+                  <option value="0">عرض فقط</option><option value="1">عرض وتعديل</option>
+                </LabeledSelect>
                 <div className="form-actions"><button className="btn btn-primary" disabled={!shareForm.userId}>مشاركة</button></div>
               </form>
               <h4 className="detail-h3" style={{ marginTop: '1rem' }}>مُشاركة معهم ({shares.length})</h4>
@@ -531,6 +619,45 @@ export default function DocumentDetailPage() {
         </div>
       )}
 
+      {/* Sent to the archive — the receipt. The number is the thing to keep, so it is the biggest
+          element and can be copied without selecting it by hand. */}
+      {sentInfo && (
+        <div className="preview-overlay" onClick={() => setSentInfo(null)}>
+          <div className="preview-modal" onClick={(e) => e.stopPropagation()}
+            role="dialog" aria-modal="true" aria-label="تم الإرسال إلى قسم الأرشيف"
+            style={{ width: 'min(460px, 92vw)', height: 'auto' }}>
+            <header className="preview-head">
+              <span className="preview-title">تم الإرسال إلى قسم الأرشيف</span>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSentInfo(null)}>
+                <X size={15} aria-hidden /> إغلاق
+              </button>
+            </header>
+            <div style={{ padding: '1.1rem', textAlign: 'center', color: 'var(--ink-text, #211d17)' }}>
+              <PackageCheck size={30} aria-hidden style={{ opacity: .7 }} />
+              <p style={{ margin: '.6rem 0 .2rem' }}>
+                أُرسلت «{sentInfo.title}» إلى قسم الأرشيف، وهي الآن بانتظار الأرشفة.
+              </p>
+              <p className="muted" style={{ margin: '0 0 .5rem', fontSize: '.8rem' }}>رقم الوثيقة</p>
+              <div className="mono" style={{ fontSize: '1.35rem', fontWeight: 600, letterSpacing: '.02em' }}>
+                {sentInfo.number}
+              </div>
+              <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: '.5rem' }}
+                onClick={() => {
+                  navigator.clipboard.writeText(sentInfo.number)
+                    .then(() => toast.success('نُسخ رقم الوثيقة'))
+                    .catch(() => {})
+                }}>نسخ الرقم</button>
+              <p className="muted" style={{ fontSize: '.78rem', marginTop: '.8rem' }}>
+                سيحدّد قسم الأرشيف موقع الحفظ الفعلي، وسيصلك إشعار عند إتمام الأرشفة أو إرجاعها.
+              </p>
+            </div>
+            <div className="form-actions" style={{ padding: '0 1rem 1rem', justifyContent: 'center' }}>
+              <button type="button" className="btn btn-primary" onClick={() => setSentInfo(null)}>تم</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {reqOpen && doc && (
         <RequestDispositionModal documentId={docId} documentNumber={doc.documentNumber}
           onClose={() => setReqOpen(false)} onDone={load} />
@@ -543,7 +670,7 @@ export default function DocumentDetailPage() {
             initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
             <header className="preview-head">
               <span className="preview-title">تغيير مكان الحفظ الفعلي · {doc.documentNumber}</span>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setArchiveOpen(false)}>✕ إغلاق</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setArchiveOpen(false)}><X size={15} aria-hidden /> إغلاق</button>
             </header>
             <div className="form-grid" style={{ padding: '1rem', overflow: 'auto', color: 'var(--ink-text, #211d17)' }}>
               <LocationPicker value={archBoxId} onChange={setArchBoxId} />
@@ -563,9 +690,9 @@ export default function DocumentDetailPage() {
             <header className="preview-head">
               <span className="preview-title">{preview.name}</span>
               <span className="preview-actions">
-                <button className="btn btn-ghost btn-sm" onClick={printPreview}>🖨 طباعة</button>
-                <a className="btn btn-primary btn-sm" href={preview.url} download={preview.name}>⬇ تنزيل</a>
-                <button className="btn btn-ghost btn-sm" onClick={closePreview}>✕ إغلاق</button>
+                {canPrintDoc && <button className="btn btn-ghost btn-sm" onClick={printPreview}><Printer size={15} aria-hidden /> طباعة</button>}
+                <a className="btn btn-primary btn-sm" href={preview.url} download={preview.name}><Download size={15} aria-hidden /> تنزيل</a>
+                <button className="btn btn-ghost btn-sm" onClick={closePreview}><X size={15} aria-hidden /> إغلاق</button>
               </span>
             </header>
             <div className="preview-body">

@@ -1,0 +1,366 @@
+/* ============================================================
+   SANAD — Motion & Interaction Layer
+   Imported after sanad.css. Adds the prototype's animation
+   language and micro-interactions across the entire app:
+   · Route/page fade-up transition (.page-enter)
+   · Card hover lift (.cd / .doc-card)
+   · Interactive row accents (.reg-row priority borders)
+   · Button press micro-interactions
+   · Drag-drop upload zone (.dz)
+   · Upload progress bars (.pb / .pf)
+   · Classification/status badge tones (prototype .b-* map)
+   · Skeleton shimmer polish
+   ============================================================ */
+
+/* ── Page fade-up entrance (prototype .vin / @keyframes fu) ── */
+.page-enter {
+    animation: sanad-fadeUp 0.35s ease-out;
+}
+
+@keyframes sanad-fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-enter {
+        animation: none;
+    }
+}
+
+/* ── Card hover lift (prototype .cd:hover → shadow) ── */
+.doc-card,
+.dash-panel,
+.table-card {
+    transition: box-shadow var(--t-base) var(--ease), border-color var(--t-base) var(--ease),
+        background var(--t-slow), transform var(--t-base) var(--ease);
+}
+
+.doc-card:hover {
+    box-shadow: var(--shadow-doc);
+}
+
+/* ── Interactive rows: priority accent border (prototype .ph.hi/md/nl) ── */
+/* Applied when a row carries data-priority="high|urgent|medium|normal|low" */
+.reg-row[data-priority="high"],
+.reg-row[data-priority="urgent"] {
+    border-inline-start: 3px solid var(--seal, #C53030);
+}
+
+.reg-row[data-priority="medium"] {
+    border-inline-start: 3px solid var(--brass, #C8962E);
+}
+
+.reg-row[data-priority="normal"] {
+    border-inline-start: 3px solid var(--m-primary, #0D7C66);
+}
+
+.reg-row[data-priority="low"] {
+    border-inline-start: 3px solid var(--parchment-3, #DDD9D2);
+}
+
+/* Unread accent dot (prototype .dr.unr::before) */
+.reg-row.is-unread {
+    font-weight: 600;
+}
+
+.reg-row.is-unread td:first-child {
+    position: relative;
+}
+
+.reg-row.is-unread td:first-child::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--m-primary, #0D7C66);
+    margin-inline-end: 7px;
+    vertical-align: middle;
+}
+
+/* ── Button micro-interactions (prototype .bt / .bt1 / .bt2) ── */
+.btn {
+    transition: transform var(--t-fast) var(--ease), background var(--t-base) var(--ease),
+        box-shadow var(--t-base) var(--ease), filter var(--t-base);
+}
+
+.btn:active {
+    transform: translateY(1px) scale(0.985);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 124, 102, 0.3);
+}
+
+/* ── Classification badges (prototype .b-* map) ── */
+/* Soft tinted badges matching the prototype's palette.
+   These use the -fg (text) role, not the fill role: badge text sits ON the tint,
+   so it needs the theme-appropriate foreground. Reaching for --m-primary/--m-seal
+   here is what made these fail AA in dark mode — the fill colours are tuned to
+   carry white text, not to be read against a tinted panel. */
+.badge.public {
+    background: rgba(13, 124, 102, .08);
+    color: var(--c-public);
+    border-color: transparent;
+}
+
+.badge.internal {
+    background: rgba(43, 108, 176, .08);
+    color: var(--c-internal);
+    border-color: transparent;
+}
+
+.badge.confidential {
+    background: rgba(200, 150, 46, .08);
+    color: var(--c-confidential);
+    border-color: transparent;
+}
+
+.badge.secret {
+    background: rgba(197, 48, 48, .08);
+    color: var(--c-secret);
+    border-color: transparent;
+}
+
+/* Keep the leading dot from the Diwan badge; soften it */
+.badge::before {
+    opacity: 0.7;
+}
+
+/* ── Status pills (prototype status tones) ── */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.1px;
+    border: none;
+    font-family: var(--font-body);
+}
+
+.s-new {
+    background: rgba(183, 121, 31, .08);
+    color: var(--m-warning, #B7791F);
+}
+
+.s-assigned {
+    background: rgba(13, 124, 102, .08);
+    color: var(--m-primary, #0D7C66);
+}
+
+.s-inprogress {
+    background: rgba(43, 108, 176, .08);
+    color: var(--m-info, #2B6CB0);
+}
+
+.s-onhold {
+    background: rgba(183, 121, 31, .08);
+    color: var(--m-warning, #B7791F);
+}
+
+.s-closed {
+    background: rgba(47, 133, 90, .08);
+    color: var(--m-success, #2F855A);
+}
+
+.s-archived {
+    background: var(--m-surface-2, #EDEAE4);
+    color: var(--text-muted);
+}
+
+.s-pending {
+    background: rgba(183, 121, 31, .08);
+    color: var(--m-warning, #B7791F);
+}
+
+.s-overdue {
+    background: rgba(197, 48, 48, .08);
+    color: var(--m-seal, #C53030);
+}
+
+/* ── Drag-drop upload zone (prototype .dz) ── */
+.dz {
+    border: 2px dashed var(--parchment-3, #DDD9D2);
+    border-radius: 16px;
+    padding: 44px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--t-base), background var(--t-base);
+    background: var(--paper, #fff);
+}
+
+.dz:hover,
+.dz.is-over {
+    border-color: var(--m-primary, #0D7C66);
+    background: rgba(13, 124, 102, 0.06);
+}
+
+.dz.is-over .dz__icon {
+    transform: scale(1.12) translateY(-4px);
+}
+
+.dz__icon {
+    font-size: 38px;
+    color: var(--m-primary, #0D7C66);
+    margin-bottom: 10px;
+    display: inline-flex;
+    transition: transform 0.25s var(--ease);
+}
+
+.dz__title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+
+.dz__hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+/* ── Upload file list items ── */
+.upload-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--paper, #fff);
+    border: 1px solid var(--parchment-3, #DDD9D2);
+    border-radius: 12px;
+    animation: sanad-fadeUp 0.3s ease-out;
+}
+
+.upload-item__name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.upload-item__size {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* ── Progress bar (prototype .pb / .pf) ── */
+.pb {
+    height: 3px;
+    background: var(--parchment-3, #DDD9D2);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.pf {
+    height: 100%;
+    background: var(--m-primary, #0D7C66);
+    border-radius: 9px;
+    transition: width 0.6s ease;
+}
+
+/* ── Trend badge (prototype .stc2) ── */
+.trend {
+    font-size: 11.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.trend--up {
+    color: var(--m-seal, #C53030);
+    background: rgba(197, 48, 48, .06);
+}
+
+.trend--down {
+    color: var(--m-success, #2F855A);
+    background: rgba(47, 133, 90, .06);
+}
+
+/* ── Tabs: active underline (prototype .tabs / .tb) ── */
+/* The shadcn Tabs already provide styling; this adds the prototype's
+   active-tab count badge tone if present */
+.tabs__count {
+    margin-inline-start: 6px;
+    font-size: 10.5px;
+    background: var(--m-surface-2, #EDEAE4);
+    padding: 1px 7px;
+    border-radius: 7px;
+    color: var(--text-muted);
+}
+
+/* ── Skeleton shimmer (shared) ── */
+.skel-bar {
+    display: block;
+    height: 0.85rem;
+    border-radius: 4px;
+    background: linear-gradient(90deg,
+            color-mix(in srgb, var(--text) 6%, transparent) 25%,
+            color-mix(in srgb, var(--text) 12%, transparent) 37%,
+            color-mix(in srgb, var(--text) 6%, transparent) 63%);
+    background-size: 400% 100%;
+    animation: sanad-skel 1.4s ease infinite;
+}
+
+@keyframes sanad-skel {
+    0% {
+        background-position: 100% 0;
+    }
+
+    100% {
+        background-position: 0 0;
+    }
+}
+
+/* ── Focus ring polish (prototype input focus → primary) ── */
+.filters__search:focus,
+.filters__status:focus,
+input:focus:not([type="checkbox"]):not([type="radio"]),
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--m-primary, #0D7C66);
+}
+
+/* ── Slide-in detail panel feel for motion sections ── */
+/* Detail pages use motion.div already; this ensures consistent easing */
+motion-section,
+section[class*="detail"] {
+    will-change: opacity, transform;
+}
+
+/* ── Scrollbar polish (prototype: thin 5px) ── */
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--parchment-3, #DDD9D2);
+    border-radius: 9px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-faint);
+}

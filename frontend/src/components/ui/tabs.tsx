@@ -1,194 +1,138 @@
-import * as React from 'react';
-import { cn } from '@/lib/utils';
-import { cva, type VariantProps } from 'class-variance-authority';
-import * as TabsPrimitive from '@radix-ui/react-tabs';
+"use client";
 
-// Variants for TabsList
-const tabsListVariants = cva('flex items-center shrink-0', {
-  variants: {
-    variant: {
-      default: 'bg-accent p-1',
-      button: '',
-      line: 'border-b border-border',
-    },
-    shape: {
-      default: '',
-      pill: '',
-    },
-    size: {
-      lg: 'gap-2.5',
-      md: 'gap-2',
-      sm: 'gap-1.5',
-      xs: 'gap-1',
-    },
-  },
-  compoundVariants: [
-    { variant: 'default', size: 'lg', className: 'p-1.5 gap-2.5' },
-    { variant: 'default', size: 'md', className: 'p-1 gap-2' },
-    { variant: 'default', size: 'sm', className: 'p-1 gap-1.5' },
-    { variant: 'default', size: 'xs', className: 'p-1 gap-1' },
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import * as React from "react";
+import { motion } from "motion/react";
 
-    {
-      variant: 'default',
-      shape: 'default',
-      size: 'lg',
-      className: 'rounded-lg',
-    },
-    {
-      variant: 'default',
-      shape: 'default',
-      size: 'md',
-      className: 'rounded-lg',
-    },
-    {
-      variant: 'default',
-      shape: 'default',
-      size: 'sm',
-      className: 'rounded-md',
-    },
-    {
-      variant: 'default',
-      shape: 'default',
-      size: 'xs',
-      className: 'rounded-md',
-    },
+import { cn } from "@/lib/utils";
 
-    { variant: 'line', size: 'lg', className: 'gap-9' },
-    { variant: 'line', size: 'md', className: 'gap-8' },
-    { variant: 'line', size: 'sm', className: 'gap-4' },
-    { variant: 'line', size: 'xs', className: 'gap-4' },
+const Tabs = TabsPrimitive.Root;
 
-    {
-      variant: 'default',
-      shape: 'pill',
-      className: 'rounded-full [&_[role=tab]]:rounded-full',
+/**
+ * TabsList with an animated morphing-pill indicator (PillMorphTabs effect),
+ * themed to Marasil (navy → brass-gold). The active pill is measured from the
+ * live DOM so every existing <Tabs> usage gets it with no markup changes; it is
+ * RTL-aware (works off getBoundingClientRect deltas) and re-measures on resize,
+ * font load, and active-tab changes.
+ */
+const TabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, children, ...props }, ref) => {
+  const innerRef = React.useRef<HTMLDivElement | null>(null);
+  const setRefs = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      innerRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
     },
-    {
-      variant: 'button',
-      shape: 'pill',
-      className: 'rounded-full [&_[role=tab]]:rounded-full',
-    },
-  ],
-  defaultVariants: {
-    variant: 'default',
-    size: 'md',
-  },
-});
-
-// Variants for TabsTrigger
-const tabsTriggerVariants = cva(
-  'shrink-0 cursor-pointer whitespace-nowrap inline-flex justify-center items-center font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:shrink-0 [&_svg]:text-muted-foreground [&:hover_svg]:text-primary [&[data-state=active]_svg]:text-primary',
-  {
-    variants: {
-      variant: {
-        default:
-          'text-muted-foreground data-[state=active]:bg-background hover:text-foreground data-[state=active]:text-foreground data-[state=active]:shadow-xs data-[state=active]:shadow-black/5',
-        button:
-          'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg text-accent-foreground hover:text-foreground data-[state=active]:bg-accent data-[state=active]:text-foreground',
-        line: 'border-b-2 text-muted-foreground border-transparent data-[state=active]:border-primary hover:text-primary data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:text-primary',
-      },
-      size: {
-        lg: 'gap-2.5 [&_svg]:size-5 text-sm',
-        md: 'gap-2 [&_svg]:size-4 text-sm',
-        sm: 'gap-1.5 [&_svg]:size-3.5 text-xs',
-        xs: 'gap-1 [&_svg]:size-3.5 text-xs',
-      },
-    },
-    compoundVariants: [
-      { variant: 'default', size: 'lg', className: 'py-2.5 px-4 rounded-md' },
-      { variant: 'default', size: 'md', className: 'py-1.5 px-3 rounded-md' },
-      { variant: 'default', size: 'sm', className: 'py-1.5 px-2.5 rounded-sm' },
-      { variant: 'default', size: 'xs', className: 'py-1 px-2 rounded-sm' },
-
-      { variant: 'button', size: 'lg', className: 'py-3 px-4 rounded-lg' },
-      { variant: 'button', size: 'md', className: 'py-2.5 px-3 rounded-lg' },
-      { variant: 'button', size: 'sm', className: 'py-2 px-2.5 rounded-md' },
-      { variant: 'button', size: 'xs', className: 'py-1.5 px-2 rounded-md' },
-
-      { variant: 'line', size: 'lg', className: 'py-3' },
-      { variant: 'line', size: 'md', className: 'py-2.5' },
-      { variant: 'line', size: 'sm', className: 'py-2' },
-      { variant: 'line', size: 'xs', className: 'py-1.5' },
-    ],
-    defaultVariants: {
-      variant: 'default',
-      size: 'md',
-    },
-  },
-);
-
-// Variants for TabsContent
-const tabsContentVariants = cva(
-  'mt-2.5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-  {
-    variants: {
-      variant: {
-        default: '',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-    },
-  },
-);
-
-// Context
-type TabsContextType = {
-  variant?: 'default' | 'button' | 'line';
-  size?: 'lg' | 'sm' | 'xs' | 'md';
-};
-const TabsContext = React.createContext<TabsContextType>({
-  variant: 'default',
-  size: 'md',
-});
-
-// Components
-function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
-  return <TabsPrimitive.Root data-slot="tabs" className={cn('', className)} {...props} />;
-}
-
-function TabsList({
-  className,
-  variant = 'default',
-  shape = 'default',
-  size = 'md',
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.List> & VariantProps<typeof tabsListVariants>) {
-  return (
-    <TabsContext.Provider value={{ variant: variant || 'default', size: size || 'md' }}>
-      <TabsPrimitive.List
-        data-slot="tabs-list"
-        className={cn(tabsListVariants({ variant, shape, size }), className)}
-        {...props}
-      />
-    </TabsContext.Provider>
+    [ref],
   );
-}
 
-function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
-  const { variant, size } = React.useContext(TabsContext);
+  const [pill, setPill] = React.useState<{ left: number; width: number } | null>(null);
+
+  const measure = React.useCallback(() => {
+    const list = innerRef.current;
+    if (!list) return;
+    const active = list.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
+    if (!active) {
+      setPill(null);
+      return;
+    }
+    const lr = list.getBoundingClientRect();
+    const ar = active.getBoundingClientRect();
+    setPill({ left: ar.left - lr.left + list.scrollLeft, width: ar.width });
+  }, []);
+
+  React.useLayoutEffect(() => {
+    measure();
+    const list = innerRef.current;
+    if (!list) return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(list);
+    list.querySelectorAll('[role="tab"]').forEach((el) => ro.observe(el));
+    const mo = new MutationObserver(measure);
+    mo.observe(list, { attributes: true, subtree: true, attributeFilter: ["data-state"] });
+    window.addEventListener("resize", measure);
+    const t = window.setTimeout(measure, 60); // after fonts/layout settle
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener("resize", measure);
+      window.clearTimeout(t);
+    };
+  }, [measure, children]);
 
   return (
-    <TabsPrimitive.Trigger
-      data-slot="tabs-trigger"
-      className={cn(tabsTriggerVariants({ variant, size }), className)}
+    <TabsPrimitive.List
+      ref={setRefs}
+      className={cn(
+        "relative inline-flex items-center justify-center gap-1.5 rounded-full p-1.5",
+        "border border-[var(--line)] bg-[color-mix(in_srgb,var(--paper)_70%,transparent)] backdrop-blur-sm",
+        className,
+      )}
       {...props}
-    />
+    >
+      {pill && (
+        <>
+          {/* soft brass glow for depth */}
+          <motion.span
+            aria-hidden
+            initial={false}
+            animate={{ left: pill.left, width: pill.width }}
+            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+            className="pointer-events-none absolute top-0 bottom-0 z-0 rounded-full blur-xl opacity-40"
+            style={{ background: "linear-gradient(90deg, var(--brand-solid), var(--brass))" }}
+          />
+          {/* morphing pill */}
+          <motion.span
+            aria-hidden
+            initial={false}
+            animate={{ left: pill.left, width: pill.width }}
+            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+            className="pointer-events-none absolute top-1.5 bottom-1.5 z-0 rounded-full"
+            style={{
+              background: "linear-gradient(90deg, var(--brand-solid), var(--brass))",
+              boxShadow: "0 6px 18px rgba(27,36,64,0.20)",
+              border: "1px solid color-mix(in srgb, var(--brass) 35%, transparent)",
+            }}
+          />
+        </>
+      )}
+      {children}
+    </TabsPrimitive.List>
   );
-}
+});
+TabsList.displayName = TabsPrimitive.List.displayName;
 
-function TabsContent({
-  className,
-  variant,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content> & VariantProps<typeof tabsContentVariants>) {
-  return (
-    <TabsPrimitive.Content
-      data-slot="tabs-content"
-      className={cn(tabsContentVariants({ variant }), className)}
-      {...props}
-    />
-  );
-}
+const TabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "relative z-10 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-transparent shadow-none px-5 py-2.5 text-[15px] font-semibold [&_svg]:size-5 outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:opacity-50 text-[var(--text-muted)] hover:text-[var(--text)] data-[state=active]:text-white",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
+
+const TabsContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      "mt-2 outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsContent.displayName = TabsPrimitive.Content.displayName;
 
 export { Tabs, TabsContent, TabsList, TabsTrigger };

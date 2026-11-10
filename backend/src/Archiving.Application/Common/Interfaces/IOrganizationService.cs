@@ -10,9 +10,13 @@ public interface IOrganizationService
 
     Task<IReadOnlyList<OrgUnitDto>> ListOrgUnitsAsync(long? institutionId, CancellationToken ct = default);
     Task<Result<OrgUnitDto>> CreateOrgUnitAsync(CreateOrgUnitRequest request, CancellationToken ct = default);
+    Task<Result<OrgUnitDto>> UpdateOrgUnitAsync(long id, UpdateOrgUnitRequest request, CancellationToken ct = default);
+    Task<Result<bool>> DeleteOrgUnitAsync(long id, CancellationToken ct = default);
 
     Task<IReadOnlyList<PositionDto>> ListPositionsAsync(long? orgUnitId, CancellationToken ct = default);
     Task<Result<PositionDto>> CreatePositionAsync(CreatePositionRequest request, CancellationToken ct = default);
+    Task<Result<PositionDto>> UpdatePositionAsync(long id, UpdatePositionRequest request, CancellationToken ct = default);
+    Task<Result<bool>> DeletePositionAsync(long id, CancellationToken ct = default);
     Task<Result<PositionDto>> AssignOccupantAsync(long positionId, AssignOccupantRequest request, CancellationToken ct = default);
 
     Task<IReadOnlyList<UserLookupDto>> ListUsersAsync(CancellationToken ct = default);

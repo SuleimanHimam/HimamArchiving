@@ -18,6 +18,7 @@ public sealed class DocumentsController(
     IPreservationPackageService packages,
     IRecordMetadataService metadata,
     IPreservationPolicyService policy,
+    IAuditWriter audit,
     ITextIndexingService indexing) : ControllerBase
 {
     // ---- Full-text search reindex (re-extract text/OCR from every attachment) ----
@@ -32,7 +33,8 @@ public sealed class DocumentsController(
     // ---- Configuration: types & categories ----
     [HttpGet("types")]
     [HasPermission("Documents.View")]
-    public async Task<IActionResult> Types(CancellationToken ct) => Ok(await service.ListTypesAsync(ct));
+    public async Task<IActionResult> Types([FromQuery] long? orgUnitId, CancellationToken ct)
+        => Ok(await service.ListTypesAsync(orgUnitId, ct));
 
     [HttpPost("types")]
     [HasPermission("Classification.Edit")]
@@ -101,17 +103,31 @@ public sealed class DocumentsController(
         [FromQuery] long? folderId = null,
         [FromQuery] long? customFieldId = null,
         [FromQuery] string? customFieldValue = null,
+        [FromQuery] long? boxId = null,
+        [FromQuery] string? locationKind = null,
+        [FromQuery] long? locationId = null,
+        [FromQuery] bool unfiledOnly = false,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
         => Ok(await service.ListAsync(new DocumentQuery(search, status, documentTypeId, owningOrgUnitId,
-            dateFrom, dateTo, favoritesOnly, sharedWithMe, folderId, customFieldId, customFieldValue, page, pageSize), ct));
+            dateFrom, dateTo, favoritesOnly, sharedWithMe, folderId, customFieldId, customFieldValue, boxId,
+            locationKind, locationId, unfiledOnly, page, pageSize), ct));
 
     [HttpGet("{id:long}")]
     [HasPermission("Documents.View")]
     public async Task<IActionResult> Get(long id, CancellationToken ct)
     {
         var r = await service.GetAsync(id, ct);
+        return r.Succeeded ? Ok(r.Value) : NotFound(new { error = r.Error });
+    }
+
+    /// <summary>The verification code and QR paths for this document, minting the code if needed.</summary>
+    [HttpGet("{id:long}/verification")]
+    [HasPermission("Documents.View")]
+    public async Task<IActionResult> Verification(long id, CancellationToken ct)
+    {
+        var r = await service.GetVerificationAsync(id, ct);
         return r.Succeeded ? Ok(r.Value) : NotFound(new { error = r.Error });
     }
 
@@ -123,6 +139,56 @@ public sealed class DocumentsController(
         return r.Succeeded
             ? CreatedAtAction(nameof(Get), new { id = r.Value!.Id }, r.Value)
             : BadRequest(new { error = r.Error });
+    }
+
+    /// <summary>The document's unified chronological timeline (audit, workflow, correspondence, …).</summary>
+    // ---- Trash ----
+
+    [HttpGet("trash")]
+    [HasPermission("Documents.Delete")]
+    public async Task<IActionResult> Trash(CancellationToken ct) => Ok(await service.ListTrashAsync(ct));
+
+    [HttpPost("{id:long}/restore")]
+    [HasPermission("Documents.Delete")]
+    public async Task<IActionResult> Restore(long id, CancellationToken ct)
+    {
+        var r = await service.RestoreAsync(id, ct);
+        return r.Succeeded ? NoContent() : BadRequest(new { error = r.Error });
+    }
+
+    /// <summary>Permanent: the content is crypto-shredded and cannot be brought back.</summary>
+    [HttpDelete("{id:long}/purge")]
+    [HasPermission("Documents.Delete")]
+    public async Task<IActionResult> Purge(long id, CancellationToken ct)
+    {
+        var r = await service.PurgeAsync(id, ct);
+        return r.Succeeded ? NoContent() : BadRequest(new { error = r.Error });
+    }
+
+    [HttpDelete("trash")]
+    [HasPermission("Documents.Delete")]
+    public async Task<IActionResult> EmptyTrash(CancellationToken ct)
+    {
+        var r = await service.EmptyTrashAsync(ct);
+        return r.Succeeded ? Ok(new { destroyed = r.Value }) : BadRequest(new { error = r.Error });
+    }
+
+    [HttpGet("{id:long}/properties")]
+    [HasPermission("Documents.View")]
+    public async Task<IActionResult> Properties(long id, CancellationToken ct)
+    {
+        var r = await service.GetPropertiesAsync(id, ct);
+        return r.Succeeded ? Ok(r.Value) : NotFound(new { error = r.Error });
+    }
+
+    [HttpGet("{id:long}/timeline")]
+    [HasPermission("Documents.View")]
+    public async Task<IActionResult> Timeline(
+        long id, [FromQuery] string? types, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+        [FromServices] Archiving.Application.Common.Interfaces.IDocumentTimelineService timeline, CancellationToken ct)
+    {
+        var r = await timeline.GetTimelineAsync(id, new Archiving.Application.Features.Timeline.TimelineFilter(types, from, to), ct);
+        return r.Succeeded ? Ok(r.Value) : NotFound(new { error = r.Error });
     }
 
     [HttpPut("{id:long}")]
@@ -139,6 +205,43 @@ public sealed class DocumentsController(
     {
         var r = await service.DeleteAsync(id, ct);
         return r.Succeeded ? NoContent() : NotFound(new { error = r.Error });
+    }
+
+    /// <summary>Submit the document to the Archive department for review + physical filing.</summary>
+    [HttpPost("{id:long}/send-to-archive")]
+    [HasPermission("Documents.Archive")]
+    public async Task<IActionResult> SendToArchive(long id, CancellationToken ct)
+    {
+        var r = await service.SendToArchiveAsync(id, ct);
+        return r.Succeeded ? Ok(new { ok = true }) : BadRequest(new { error = r.Error });
+    }
+
+    // ---- Archive intake: the receiving department's queue ----------------------------------
+    // Gated on Archive.Archive, the custody right, rather than on Documents.* — this is the archive
+    // acting on other departments' documents, which no Documents permission is meant to allow.
+
+    /// <summary>Documents waiting for the archive to give them a physical place, oldest first.</summary>
+    [HttpGet("archive-queue")]
+    [HasPermission("Archive.Archive")]
+    public async Task<IActionResult> ArchiveQueue(CancellationToken ct)
+        => Ok(await service.ListArchiveIntakeAsync(ct));
+
+    /// <summary>File a waiting document into a box — this is what makes it مؤرشف.</summary>
+    [HttpPost("{id:long}/file-to-archive")]
+    [HasPermission("Archive.Archive")]
+    public async Task<IActionResult> FileToArchive(long id, [FromBody] FileToArchiveRequest req, CancellationToken ct)
+    {
+        var r = await service.FileToArchiveAsync(id, req, ct);
+        return r.Succeeded ? Ok(new { ok = true }) : BadRequest(new { error = r.Error });
+    }
+
+    /// <summary>Hand a waiting document back to whoever submitted it, with a reason.</summary>
+    [HttpPost("{id:long}/return-from-archive")]
+    [HasPermission("Archive.Archive")]
+    public async Task<IActionResult> ReturnFromArchive(long id, [FromBody] ReturnFromArchiveRequest req, CancellationToken ct)
+    {
+        var r = await service.ReturnFromArchiveAsync(id, req, ct);
+        return r.Succeeded ? Ok(new { ok = true }) : BadRequest(new { error = r.Error });
     }
 
     // ---- Attachments ----
@@ -243,6 +346,7 @@ public sealed class DocumentsController(
         var r = await service.DownloadAttachmentAsync(id, attachmentId, ct);
         if (!r.Succeeded) return NotFound(new { error = r.Error });
         var d = r.Value!;
+        await audit.WriteAsync("Download", "Documents", id, d.FileName, ct: ct);   // motion log: تنزيل ملف
         return File(d.Content, d.ContentType, d.FileName);
     }
 

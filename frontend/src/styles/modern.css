@@ -1,0 +1,679 @@
+/* ============================================================================
+   MODERN THEME — elevation & surface re-skin layer.
+   Design thesis: cool-neutral surfaces · indigo primary · layered soft shadows
+   with subtle colored glows. This is the authoritative layer, imported LAST
+   (after sanad-registry.css) so these :root declarations win and the whole app
+   re-skins through the existing --m-* / --shadow-* / --brand-* token vocabulary.
+
+   What changed vs. sanad-registry.css:
+     • Surfaces → cool neutral slate (no warm yellow tint), near-white cards.
+     • Primary  → modern indigo (#5b6cff); accent → vibrant violet/cyan glow.
+     • Shadows  → a 6-step elevation scale (xs→2xl) with a faint primary glow,
+       wired into --e1/e2/e3, --shadow-doc/lift, --brand-shadow-* so every
+       card, panel, modal, dropdown and toast picks up depth automatically.
+     • Added component polish: floating navbar, lifting cards on hover, glowing
+       primary buttons, modern thin scrollbars, soft focus rings.
+   ========================================================================== */
+
+:root {
+    color-scheme: light;
+
+    /* ---- Surfaces & ink (light · cool neutral) ---- */
+    --m-bg: #F4F6FB;
+    /* app page — soft cool grey-blue */
+    --m-surface: #FFFFFF;
+    /* cards / panels — pure white */
+    --m-surface-2: #F1F4F9;
+    /* raised / inset subtle panel */
+    --m-rail: #0F172A;
+    /* sidebar — slate-900 */
+    --m-rail-2: #1E293B;
+    /* sidebar elevated — slate-800 */
+    --m-border: #E2E8F0;
+    /* hairline dividers — slate-200 */
+    --m-border-2: #CBD5E1;
+    /* input borders / hover — slate-300 */
+    --m-text: #0F172A;
+    /* primary ink — slate-900 */
+    --m-text-2: #475569;
+    /* secondary — slate-600 */
+    --m-text-3: #94A3B8;
+    /* muted / placeholder — slate-400 */
+
+    /* ---- Brand: indigo primary · violet/cyan accent ---- */
+    --m-primary: #5B6CFF;
+    /* indigo-500 */
+    --m-primary-2: #4751F0;
+    /* hover */
+    --m-primary-fg: #3B45E0;
+    /* text role on tint */
+    --m-accent: #8B5CF6;
+    /* violet-500 */
+    --m-accent-2: #A78BFA;
+    /* hover */
+    --m-accent-soft: #EEF2FF;
+    /* indigo-50 tint */
+    --m-accent-fg: #6D28D9;
+    /* violet text role */
+    --brand-solid: #5B6CFF;
+
+    /* Spec-named brand aliases */
+    --pri: #5B6CFF;
+    --pri-hover: #4751F0;
+    --pri-weak: #EEF2FF;
+    --pri-ink: #3B45E0;
+    --accent: #8B5CF6;
+    --accent-weak: #F5F3FF;
+
+    /* ---- Semantic (mapped) ---- */
+    --m-success: #10B981;
+    --success: #10B981;
+    --success-weak: #ECFDF5;
+    --m-warning: #F59E0B;
+    --warning: #F59E0B;
+    --warning-weak: #FFFBEB;
+    --m-danger: #EF4444;
+    --danger: #EF4444;
+    --danger-weak: #FEF2F2;
+    --m-info: #0EA5E9;
+    --info: #0EA5E9;
+    --info-weak: #F0F9FF;
+    --m-seal: #EF4444;
+    --m-seal-fg: #EF4444;
+    --m-info-fg: #0EA5E9;
+    --seal: #EF4444;
+    --seal-deep: #DC2626;
+    --ok: #10B981;
+    --warn: #F59E0B;
+
+    /* ---- Classification — security markings (kept distinct, AA-safe) ---- */
+    --c-public: #64748B;
+    /* slate */
+    --c-internal: #0EA5E9;
+    /* sky */
+    --c-confidential: #D97706;
+    /* amber (darkened for AA) */
+    --c-secret: #DC2626;
+    /* red + hatch */
+
+    /* ---- Typography (unchanged — Arabic-first) ---- */
+    --font-display: "IBM Plex Sans Arabic", "Inter", "Cairo", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --font-latin: "Inter", system-ui, sans-serif;
+
+    /* ---- Shape (slightly larger radii for a softer modern look) ---- */
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-full: 999px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    /* legacy aliases */
+    --radius-doc: 10px;
+    --radius-doc-lg: 14px;
+
+    /* ---- Elevation scale — layered soft shadows with a faint primary glow ----
+     Modern look: tight ambient shadow (offset 1px) + a soft spread key light +
+     (for higher levels) a wide diffuse bounce + a 1px top highlight for crispness. */
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 2px 8px -2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 16px -4px rgba(15, 23, 42, 0.10), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+    --shadow-lg: 0 2px 6px rgba(15, 23, 42, 0.06), 0 12px 32px -8px rgba(15, 23, 42, 0.14), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+    --shadow-xl: 0 4px 10px rgba(15, 23, 42, 0.08), 0 24px 48px -12px rgba(15, 23, 42, 0.20), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+    --shadow-2xl: 0 8px 16px rgba(15, 23, 42, 0.10), 0 32px 64px -16px rgba(15, 23, 42, 0.28), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+
+    /* Colored glow (primary) for floating/active elements */
+    --shadow-glow-primary: 0 8px 24px -6px rgba(91, 108, 255, 0.45);
+    --shadow-glow-accent: 0 8px 24px -6px rgba(139, 92, 246, 0.40);
+    --shadow-glow-success: 0 8px 24px -6px rgba(16, 185, 129, 0.40);
+    --shadow-glow-danger: 0 8px 24px -6px rgba(239, 68, 68, 0.40);
+    --shadow-glow-warn: 0 8px 24px -6px rgba(245, 158, 11, 0.45);
+
+    /* Map legacy/e1-e3 + shadow-doc/lift onto the new scale */
+    --e1: var(--shadow-sm);
+    --e2: var(--shadow-lg);
+    --e3: var(--shadow-xl);
+    --shadow-doc: var(--shadow-sm);
+    --shadow-lift: var(--shadow-lg);
+
+    /* Focus ring — soft primary halo */
+    --ring-primary: 0 0 0 3px rgba(91, 108, 255, 0.35);
+
+    /* ---- Motion tokens (slowed for a more deliberate, premium hover feel) ---- */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --t-fast: 200ms;
+    --t-base: 450ms;
+    --t-slow: 600ms;
+    --t-page: 300ms;
+    --ease: var(--ease-out);
+
+    /* ---- Re-tune brand/archevo/rd tokens to the modern palette ---- */
+    --brand-primary: #5B6CFF;
+    --brand-primary-600: #4751F0;
+    --brand-primary-050: #EEF2FF;
+    --brand-secondary: #8B5CF6;
+    --brand-secondary-050: #F5F3FF;
+    --brand-accent: #8B5CF6;
+    --brand-accent-text: #6D28D9;
+    --brand-success: #10B981;
+    --brand-warning: #F59E0B;
+    --brand-danger: #EF4444;
+    --brand-info: #0EA5E9;
+    --brand-bg: #F4F6FB;
+    --brand-surface: #FFFFFF;
+    --brand-surface-2: #F1F4F9;
+    --brand-line: #E2E8F0;
+    --brand-text: #0F172A;
+    --brand-text-muted: #475569;
+    --brand-text-soft: #94A3B8;
+    --brand-on-primary: #FFFFFF;
+    --brand-font-heading: var(--font-display);
+    --brand-font-body: var(--font-body);
+    --brand-font-mono: var(--font-mono);
+    --brand-r-sm: 10px;
+    --brand-r-md: 14px;
+    --brand-r-lg: 18px;
+    --brand-shadow-sm: var(--shadow-sm);
+    --brand-shadow-md: var(--shadow-lg);
+    --brand-shadow-lg: var(--shadow-xl);
+    --brand-focus-ring: var(--ring-primary);
+    --brand-transition: var(--t-base) var(--ease-out);
+
+    /* ---- shadcn/Tailwind color tokens → modern ---- */
+    --color-ink: #5B6CFF;
+    --color-ink-deep: #0F172A;
+    --color-seal: #EF4444;
+    --color-brass: #8B5CF6;
+    --color-brass-soft: #A78BFA;
+    --color-paper: #FFFFFF;
+    --color-parchment: #F4F6FB;
+    --color-parchment-2: #F1F4F9;
+    --color-parchment-3: #E2E8F0;
+
+    --color-background: #FFFFFF;
+    --color-foreground: #0F172A;
+    --color-popover: #FFFFFF;
+    --color-popover-foreground: #0F172A;
+    --color-accent: #F1F4F9;
+    --color-accent-foreground: #0F172A;
+    --color-border: #E2E8F0;
+    --color-muted: #F1F4F9;
+    --color-muted-foreground: #64748B;
+    --color-destructive: #EF4444;
+    --color-destructive-foreground: #FFFFFF;
+    --color-card: #FFFFFF;
+    --color-card-foreground: #0F172A;
+    --color-primary: #5B6CFF;
+    --color-primary-foreground: #FFFFFF;
+    --color-secondary: #F1F4F9;
+    --color-secondary-foreground: #3B45E0;
+    --color-input: #CBD5E1;
+    --color-ring: #5B6CFF;
+}
+
+/* ============================================================
+   DARK — deep slate ink; indigo + violet keep their glow.
+   ============================================================ */
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --m-bg: #0B1120;
+    /* slate-950-ish page */
+    --m-surface: #111827;
+    /* slate-900 cards */
+    --m-surface-2: #1E293B;
+    /* slate-800 raised */
+    --m-rail: #090F1C;
+    /* near-black navy */
+    --m-rail-2: #131C30;
+    --m-border: #1F2937;
+    /* slate-800 dividers */
+    --m-border-2: #334155;
+    /* slate-700 input borders */
+    --m-text: #E5E7EB;
+    /* slate-200 */
+    --m-text-2: #94A3B8;
+    /* slate-400 */
+    --m-text-3: #64748B;
+    /* slate-500 */
+
+    --m-primary: #7C8BFF;
+    /* lighter indigo for dark bg */
+    --m-primary-2: #9BA8FF;
+    --m-primary-fg: #C7CEFF;
+    --m-accent: #A78BFA;
+    /* lighter violet */
+    --m-accent-2: #C4B5FD;
+    --m-accent-soft: #1E1B4B;
+    --m-accent-fg: #C4B5FD;
+    --brand-solid: #7C8BFF;
+
+    --pri: #7C8BFF;
+    --pri-hover: #9BA8FF;
+    --pri-weak: #1E1B4B;
+    --pri-ink: #C7CEFF;
+    --accent: #A78BFA;
+    --accent-weak: #2E1065;
+
+    --m-success: #34D399;
+    --success: #34D399;
+    --success-weak: #064E3B;
+    --m-warning: #FBBF24;
+    --warning: #FBBF24;
+    --warning-weak: #451A03;
+    --m-danger: #F87171;
+    --danger: #F87171;
+    --danger-weak: #450A0A;
+    --m-info: #38BDF8;
+    --info: #38BDF8;
+    --info-weak: #082F49;
+    --m-seal: #F87171;
+    --m-seal-fg: #F87171;
+    --m-info-fg: #38BDF8;
+    --seal: #F87171;
+    --seal-deep: #DC2626;
+    --ok: #34D399;
+    --warn: #FBBF24;
+
+    --c-public: #94A3B8;
+    --c-internal: #38BDF8;
+    --c-confidential: #FBBF24;
+    --c-secret: #F87171;
+
+    /* Dark elevation — stronger, deeper shadows + subtle top highlight */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+    --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 2px 8px rgba(0, 0, 0, 0.40);
+    --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 4px 16px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    --shadow-xl: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 48px rgba(0, 0, 0, 0.60), 0 1px 0 rgba(255, 255, 255, 0.07) inset;
+    --shadow-2xl: 0 8px 16px rgba(0, 0, 0, 0.50), 0 32px 64px rgba(0, 0, 0, 0.70), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+
+    --shadow-glow-primary: 0 8px 28px -6px rgba(124, 139, 255, 0.55);
+    --shadow-glow-accent: 0 8px 28px -6px rgba(167, 139, 250, 0.50);
+    --shadow-glow-success: 0 8px 28px -6px rgba(52, 211, 153, 0.50);
+    --shadow-glow-danger: 0 8px 28px -6px rgba(248, 113, 113, 0.50);
+    --shadow-glow-warn: 0 8px 28px -6px rgba(251, 191, 36, 0.55);
+
+    --e1: var(--shadow-sm);
+    --e2: var(--shadow-lg);
+    --e3: var(--shadow-xl);
+    --shadow-doc: var(--shadow-sm);
+    --shadow-lift: var(--shadow-lg);
+
+    --ring-primary: 0 0 0 3px rgba(124, 139, 255, 0.45);
+
+    --brand-primary: #7C8BFF;
+    --brand-primary-600: #9BA8FF;
+    --brand-primary-050: #1E1B4B;
+    --brand-secondary: #A78BFA;
+    --brand-secondary-050: #2E1065;
+    --brand-accent: #A78BFA;
+    --brand-accent-text: #C4B5FD;
+    --brand-success: #34D399;
+    --brand-warning: #FBBF24;
+    --brand-danger: #F87171;
+    --brand-info: #38BDF8;
+    --brand-bg: #0B1120;
+    --brand-surface: #111827;
+    --brand-surface-2: #1E293B;
+    --brand-line: #1F2937;
+    --brand-text: #E5E7EB;
+    --brand-text-muted: #94A3B8;
+    --brand-text-soft: #64748B;
+    --brand-on-primary: #0B1120;
+    --brand-focus-ring: var(--ring-primary);
+}
+
+/* ============================================================================
+   COMPONENT POLISH — modern depth & motion
+   ========================================================================== */
+
+/* Smooth the theme flip. */
+body {
+    transition: background-color .2s var(--ease-out), color .2s var(--ease-out);
+}
+
+/* Solid brand controls pinned to --brand-solid. */
+.btn-primary {
+    background: var(--brand-solid);
+    color: #fff;
+    box-shadow: var(--shadow-glow-primary);
+}
+
+.btn-primary:hover {
+    background: var(--brand-solid);
+    filter: brightness(1.08);
+    box-shadow: 0 12px 32px -6px rgba(91, 108, 255, 0.55);
+}
+
+.pkg-tag {
+    background: var(--brand-solid);
+    color: #fff;
+}
+
+/* Dark-mode touch-ups */
+[data-theme="dark"] .kicker,
+[data-theme="dark"] .crumb {
+    color: var(--m-text-3);
+}
+
+[data-theme="dark"] a {
+    color: var(--m-accent-2);
+}
+
+[data-theme="dark"] .shell__navbar {
+    background: var(--m-rail-2);
+    border-bottom-color: var(--m-border);
+}
+
+/* Theme toggle button in the topbar actions cluster. */
+.shell__themebtn {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--m-border);
+    background: var(--m-surface-2);
+    color: var(--m-text-2);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: background var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
+}
+
+.shell__themebtn:hover {
+    background: var(--m-primary-soft, var(--m-accent-soft));
+    color: var(--m-primary);
+    box-shadow: var(--shadow-xs);
+}
+
+/* ---- Floating navbar (stays over content) ---- */
+.shell__navbar {
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: saturate(140%) blur(8px);
+}
+
+[data-theme="dark"] .shell__navbar {
+    background: color-mix(in srgb, var(--m-surface) 88%, transparent);
+}
+
+/* ---- Sidebar rail: subtle inner depth + shadow when collapsed/drawer ---- */
+.shell__rail {
+    box-shadow: var(--shadow-lg);
+}
+
+/* Narrow-desktop icon rail — lighter shadow for the slimmer surface. Width-driven
+   now; the .is-collapsed class this used to key off no longer exists. */
+@media (max-width: 1150px) and (min-width: 769px) {
+    .shell__rail {
+        box-shadow: var(--shadow-md);
+    }
+}
+
+/* ---- Cards: lift on hover with a soft glow ---- */
+.doc-card,
+.brand-card,
+.dispo-card,
+.type-choice,
+.clf-swatch,
+.kpi-card,
+.dash-tile,
+.dash-kpi,
+.card {
+    transition: transform var(--t-base) var(--ease-out),
+        box-shadow var(--t-base) var(--ease-out),
+        border-color var(--t-base) var(--ease-out);
+}
+
+.doc-card:hover,
+.brand-card--hover:hover,
+.dispo-card:hover,
+.type-choice:hover,
+.kpi-card:hover,
+.dash-tile:hover,
+.dash-kpi:hover {
+    box-shadow: var(--shadow-lg) !important;
+}
+
+/* ---- Inputs: soft focus ring instead of harsh underline ---- */
+.field>input,
+.field>select,
+.field>textarea,
+.brand-field__control {
+    transition: border-color var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
+}
+
+.field>input:focus,
+.field>select:focus,
+.field>textarea:focus,
+.brand-field__control:focus-within {
+    box-shadow: var(--ring-primary);
+    border-color: var(--m-primary);
+}
+
+/* ---- Buttons: base shadow + lift on hover ---- */
+.brand-btn {
+    box-shadow: var(--shadow-xs);
+}
+
+.brand-btn:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.brand-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--ring-primary);
+}
+
+/* ---- Dropdowns / popovers / modals: crisp elevated depth ---- */
+.shell__createdrop,
+.mbx__modal,
+.diwan__modal,
+.globaldocsearch,
+.folderpicker,
+.toasts,
+.toast,
+.bell__panel,
+.preferences-modal,
+.report-designer__modal,
+.doc-modal {
+    box-shadow: var(--shadow-xl) !important;
+}
+
+/* ---- Modern scrollbars (thin, rounded, themed) ---- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--m-border-2) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--m-border-2);
+    border-radius: var(--r-full);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--m-text-3);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+}
+
+/* ---- Selection ---- */
+::selection {
+    background: color-mix(in srgb, var(--m-primary) 25%, transparent);
+    color: var(--m-text);
+}
+
+/* ============================================================================
+   COMPACT DENSITY — smaller, more comfortable default scale.
+   modern.css is imported LAST, so this block overrides the base sizing
+   app-wide without hunting through diwan/forms/sanad/dashboard.css.
+   Two levers are used together so EVERY component (rem-based AND px-based)
+   shrinks consistently:
+     1) html font-size: 16px → 14px  → every rem value drops ~12%.
+     2) --brand-sp-* scale: 4/8/12/16/24/32/48 → 3/6/9/12/18/24/36 (px).
+   A few of the most generous fixed-px paddings are trimmed below to match.
+   ========================================================================== */
+
+html {
+    font-size: 14px;
+}
+
+/* Keep the scrollbar width proportional to the smaller UI. */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+/* Tighten the brand spacing scale used by brand/dashboard/archevo components. */
+:root {
+    --brand-sp-1: 3px;
+    --brand-sp-2: 6px;
+    --brand-sp-3: 9px;
+    --brand-sp-4: 12px;
+    --brand-sp-5: 18px;
+    --brand-sp-6: 24px;
+    --brand-sp-8: 36px;
+}
+
+/* Brand buttons / fields / cards: trim the most generous fixed paddings. */
+.brand-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+}
+
+.brand-btn--sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.brand-btn--lg {
+    padding: 11px 20px;
+    font-size: 14px;
+}
+
+.brand-field {
+    gap: 4px;
+}
+
+.brand-field__label {
+    font-size: 12px;
+}
+
+.brand-field__control input,
+.brand-field__control select {
+    padding: 9px 0;
+    font-size: 13px;
+}
+
+.brand-field__msg {
+    font-size: 11px;
+}
+
+.brand-card__head {
+    padding: 12px 14px;
+    gap: 10px;
+}
+
+.brand-card__title {
+    font-size: 14px;
+}
+
+.brand-card__sub {
+    font-size: 12px;
+    margin-top: 1px;
+}
+
+.brand-card__body {
+    padding: 14px;
+}
+
+.brand-card__foot {
+    padding: 10px 14px;
+}
+
+.brand-nav {
+    gap: 10px;
+    padding: 9px 14px;
+}
+
+.brand-nav__links {
+    gap: 2px;
+    margin-inline-start: 6px;
+}
+
+.brand-nav__link {
+    padding: 6px 10px;
+    font-size: 12.5px;
+}
+
+.brand-badge {
+    padding: 2px 8px;
+    font-size: 11px;
+}
+
+/* Dashboard panels & tiles already read large; pull them in. */
+.dash-panel__head {
+    padding: 10px 14px;
+}
+
+.dash-panel__empty {
+    padding: 22px 14px;
+    font-size: 12px;
+}
+
+.dash-panel__hint {
+    padding: 6px 14px;
+    font-size: 10px;
+}
+
+/* ModernCard: slightly tighter inner padding. */
+.mc__body {
+    padding: clamp(12px, 1.4vw, 16px);
+}
+
+/* Sidebar / shell: don't let the theme button stay oversized. */
+.shell__themebtn {
+    width: 32px;
+    height: 32px;
+    font-size: .92rem;
+}
+
+/* ---- Reduced motion: keep depth, drop the motion ---- */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+/* Install-app button in the header. Same visual weight as the theme/language toggles: it is an
+   offer, not a call to action, and it disappears once the app is installed. */
+.shell__install {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 10px;
+  border: 1px solid var(--color-border, #d8dee9);
+  background: transparent; color: inherit;
+  font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer;
+}
+.shell__install:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+@media (max-width: 900px) { .shell__install-label { display: none; } }

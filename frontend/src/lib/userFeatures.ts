@@ -1,14 +1,41 @@
 import { api } from './api'
 
-export interface Folder { id: number; name: string; parentId: number | null; documentCount: number }
+export interface Folder {
+  id: number; name: string; parentId: number | null; documentCount: number
+  /** Palette key and optional face symbol; null on folders made before these existed. */
+  color: string | null; icon: string | null
+  /** False on your own folders; true on one someone opened up to you. */
+  shared: boolean
+  /** Whether you may rename it, recolour it, and put things into it. Deleting stays with its owner. */
+  canEdit: boolean
+  /** Whose folder it is, on a borrowed one. */
+  ownerName: string | null
+}
+
+/** One grant on a folder or a file, as its owner's share list shows it. */
+export interface ItemShare { userId: number; userName: string; canEdit: boolean; createdAt: string }
 export interface Share { documentId: number; sharedWithUserId: number; userName: string; canEdit: boolean; createdAt: string }
 
 export const foldersApi = {
   list: () => api.get<Folder[]>('/folders').then((r) => r.data),
-  create: (b: { name: string; parentId?: number | null }) => api.post<Folder>('/folders', b).then((r) => r.data),
-  update: (id: number, b: { name: string; parentId?: number | null }) => api.put<Folder>(`/folders/${id}`, b).then((r) => r.data),
+  create: (b: { name: string; parentId?: number | null; color?: string | null; icon?: string | null }) =>
+    api.post<Folder>('/folders', b).then((r) => r.data),
+  update: (id: number, b: { name: string; parentId?: number | null; color?: string | null; icon?: string | null }) =>
+    api.put<Folder>(`/folders/${id}`, b).then((r) => r.data),
   remove: (id: number) => api.delete(`/folders/${id}`),
   moveDocument: (docId: number, folderId: number | null) => api.put(`/documents/${docId}/folder`, { folderId }),
+}
+
+/** Grants on one folder. Only its owner may read or change this list. */
+export const folderSharesApi = {
+  list: (id: number) => api.get<ItemShare[]>(`/folders/${id}/shares`).then((r) => r.data),
+  share: (id: number, userId: number, canEdit: boolean) =>
+    api.post(`/folders/${id}/shares`, { userId, canEdit }),
+  unshare: (id: number, userId: number) => api.delete(`/folders/${id}/shares/${userId}`),
+  /** One call rather than one per person — the institution can be large. */
+  shareEveryone: (id: number, canEdit: boolean) =>
+    api.post(`/folders/${id}/shares/everyone`, { canEdit }),
+  unshareEveryone: (id: number) => api.delete(`/folders/${id}/shares/everyone`),
 }
 
 export const favoritesApi = {
@@ -27,6 +54,9 @@ export const sharingApi = {
   list: (docId: number) => api.get<Share[]>(`/documents/${docId}/shares`).then((r) => r.data),
   share: (docId: number, userId: number, canEdit: boolean) => api.post(`/documents/${docId}/shares`, { userId, canEdit }),
   unshare: (docId: number, userId: number) => api.delete(`/documents/${docId}/shares/${userId}`),
+  shareEveryone: (docId: number, canEdit: boolean) =>
+    api.post(`/documents/${docId}/shares/everyone`, { canEdit }),
+  unshareEveryone: (docId: number) => api.delete(`/documents/${docId}/shares/everyone`),
 }
 
 async function downloadBlob(url: string, filename: string) {

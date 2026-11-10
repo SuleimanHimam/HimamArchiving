@@ -1,0 +1,59 @@
+/* ── Account menu — lives in the header actions cluster ───────────────────── */
+
+.acct__trigger {
+  display: flex; align-items: center; gap: .5rem; flex-shrink: 0;
+  max-width: 15rem; height: 32px;   /* matches every other control in the cluster */
+  padding: 0 .5rem 0 .3rem;
+  border: 1px solid transparent; border-radius: 999px;
+  background: none; font: inherit; color: var(--text); cursor: pointer;
+  transition: background .14s var(--ease), border-color .14s var(--ease);
+}
+.acct__trigger:hover {
+  background: var(--parchment-2);
+  border-color: var(--line);
+}
+.acct__trigger[data-state="open"] { background: var(--parchment-2); border-color: var(--line); }
+.acct__trigger:focus-visible { outline: 2px solid var(--m-primary); outline-offset: 1px; }
+
+.acct__avatar {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--brand-solid, #1B4C9E), var(--hds-purple, #2C6FD6));
+  color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 12px;
+}
+.acct__avatarimg { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.acct__who {
+  display: flex; flex-direction: column; align-items: flex-start;
+  min-width: 0; line-height: 1.2;
+}
+.acct__name {
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  max-width: 9.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.acct__role {
+  font-size: 10.5px; color: var(--text-muted);
+  max-width: 9.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.acct__caret { flex-shrink: 0; color: var(--text-faint); }
+
+/* Narrow headers: the avatar alone still identifies the account, and the name is
+   repeated at the top of the menu it opens. Dropping the wordmark this early also
+   slims the actions cluster, which is what pulls the centred search off-centre
+   once the header runs short of room. */
+@media (max-width: 1250px) {
+  .acct__who { display: none; }
+  .acct__trigger { padding: .25rem; }
+}
+
+/* ── Dropdown content ── */
+.acct__label { display: flex; flex-direction: column; gap: 2px; }
+.acct__labelname { font-weight: 600; font-size: .85rem; }
+.acct__labelmail {
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

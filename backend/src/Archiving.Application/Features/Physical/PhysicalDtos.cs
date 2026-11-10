@@ -26,10 +26,12 @@ public sealed record UpdatePhysicalLocationRequest(
     string? RfidTag,
     bool IsActive);
 
+/// <param name="Source">"Legacy" for a PhysicalArchiveItem row, "Box" for a document filed straight
+/// into the normalized Building→…→Box hierarchy (Document.BoxId). "Box" rows have no archive-item row
+/// behind them, so <paramref name="Id"/> is 0 and they are edited by re-filing the document.</param>
 public sealed record PhysicalArchiveItemDto(
     long Id,
     long? DocumentId,
-    long? IncomingMailId,
     long PhysicalLocationId,
     string LocationName,
     string? BoxNumber,
@@ -37,11 +39,11 @@ public sealed record PhysicalArchiveItemDto(
     DateTime ArchivedAt,
     string? Notes,
     string? DocumentNumber = null,
-    string? DocumentTitle = null);
+    string? DocumentTitle = null,
+    string Source = "Legacy");
 
 public sealed record CreatePhysicalArchiveItemRequest(
     long? DocumentId,
-    long? IncomingMailId,
     long PhysicalLocationId,
     string? BoxNumber,
     string? FileNumber,

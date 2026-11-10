@@ -21,23 +21,49 @@
     "locations": "Physical Locations",
     "destruction": "Destruction",
     "disposition": "Retention & Disposition",
+    "correspondence": "Correspondence",
+    "diwan": "Diwan",
     "reports": "Reports",
     "monitoring": "Activity Log",
+    "workflow": "Workflow Designer",
+    "users": "User Management",
+    "scanner": "Scanners & Printers",
+    "printDesign": "Print Designs",
+    "backup": "Backup",
     "settings": "Settings",
     "logout": "Log Out",
     "menu": "Menu",
-    "notes": "Notepad"
+    "notes": "Notepad",
+    "mytasks": "My Tasks",
+    "external": "External Organizations",
+    "departments": "Departments",
+    "records": "Retention Schedule",
+    "system": "System",
+    "searchPlaceholder": "Search documents…",
+    "searchHint": "Search by number, title, keywords, or inside file contents"
+  },
+  "session": {
+    "expired": "Your session ended after a period of inactivity. Please sign in again.",
+    "idle": {
+      "title": "Are you still there?",
+      "body": "There has been no activity for a while. The session will close automatically to protect the documents open on this screen.",
+      "countdown": "Signing out in {{seconds}} seconds",
+      "stay": "Stay signed in"
+    }
   },
   "auth": {
     "login": "Sign In",
     "loginAction": "Sign In to Diwan",
     "loginLoading": "Verifying...",
-    "email": "Email Address",
+    "email": "User name or email",
     "password": "Password",
-    "emailPlaceholder": "name@institution.gov",
     "passwordPlaceholder": "••••••••",
     "autoFill": "Auto-fill",
     "autoFillTitle": "Fill in demo credentials",
+    "demo": {
+      "title": "Try the system with a demo account",
+      "fillTitle": "Fill in this account's credentials ({{email}})"
+    },
     "adLogin": "Sign in with Institutional Account (Active Directory)",
     "mfaNote": "You may be prompted for a two-factor verification code after entering your password.",
     "subtitle": "Enter your credentials to access the Diwan.",
@@ -64,7 +90,7 @@
     "permissionsGranted": "{{count}} permissions granted",
     "authSuccess": "Authentication successful",
     "accessLevel": "Access level:",
-    "enter": "Open →",
+    "enter": "Open",
     "noPermission": "No permission",
     "stats": {
       "documents": "Documents",
@@ -126,7 +152,7 @@
       "submit": "Register Transaction",
       "submitting": "Saving...",
       "cancel": "Cancel",
-      "back": "← Back to List",
+      "back": "Back to List",
       "errors": {
         "required": "Sending entity and subject are required.",
         "failed": "Failed to create transaction."
@@ -134,7 +160,7 @@
     },
     "detail": {
       "kicker": "DETAIL · Incoming",
-      "back": "← Back to List",
+      "back": "Back to List",
       "notFound": "Transaction not found.",
       "loadError": "Failed to load transaction.",
       "fields": {
@@ -199,7 +225,7 @@
       "submit": "Save Draft",
       "submitting": "Saving...",
       "cancel": "Cancel",
-      "back": "← Back to List",
+      "back": "Back to List",
       "errors": {
         "required": "Recipient entity and subject are required.",
         "failed": "Failed to create letter."
@@ -245,17 +271,20 @@
       "submit": "Upload Document",
       "submitting": "Uploading...",
       "cancel": "Cancel",
-      "back": "← Back to List",
+      "back": "Back to List",
       "dragDrop": "Drag & drop files here or click to select",
       "errors": {
         "required": "Title and document type are required.",
+        "missing": "Please fill in: {{fields}}",
+        "noTypesCanAdd": "This unit has no active document types — add one with the “New type” button.",
+        "noTypes": "This unit has no active document types — pick another unit, or ask an administrator to add one under Settings → Document Types.",
         "failed": "Failed to upload document."
       }
     },
     "scan": {
       "title": "Scan Document",
       "kicker": "SCAN · Scan",
-      "back": "← Back",
+      "back": "Back",
       "notAvailable": "Scan agent not available.",
       "selectScanner": "Select scanner",
       "scan": "Scan",
@@ -291,6 +320,31 @@
       "completed": "Completed",
       "skipped": "Skipped",
       "escalated": "Escalated"
+    }
+  },
+  "archiveTree": {
+    "tab": "Archive Tree",
+    "title": "Archive Tree",
+    "byDepartment": "Departments",
+    "byExternal": "External Parties",
+    "searchPlaceholder": "Search the tree…",
+    "searchDocs": "Search documents…",
+    "allDocuments": "All documents",
+    "empty": "Nothing here",
+    "noDocs": "No documents in this branch",
+    "loadError": "Could not load the archive tree",
+    "loadDocsError": "Could not load documents",
+    "resultCount": "{{count}} document",
+    "resultCount_other": "{{count}} documents",
+    "openHint": "Click to open the document",
+    "cols": {
+      "number": "Number",
+      "date": "Date",
+      "title": "Subject",
+      "type": "Type",
+      "department": "Department",
+      "origin": "Party",
+      "direction": "Direction"
     }
   },
   "archive": {
@@ -374,7 +428,8 @@
       "language": "Language",
       "backup": "Backup & Restore",
       "roles": "Role Management",
-      "classification": "Classification Types"
+      "classification": "Classification Types",
+      "prefs": "Preferences"
     }
   },
   "backup": {
@@ -386,13 +441,13 @@
     "notFound": "not found",
     "backupTitle": "Download Backup",
     "backupDesc": "Export the full database as a SQL file. Schedule regular backups and store them in a secure location.",
-    "downloadBtn": "⬇ Download Backup",
+    "downloadBtn": "Download Backup",
     "downloading": "Downloading...",
     "downloadSuccess": "Backup downloaded successfully",
     "downloadError": "Failed to download backup",
     "restoreTitle": "Restore Data",
     "restoreDesc": "Restore the database from a SQL file. Warning: all current data will be replaced with the data in the file.",
-    "restoreBtn": "⬆ Select Restore File (.sql)",
+    "restoreBtn": "Select Restore File (.sql)",
     "restoring": "Restoring...",
     "restoreSuccess": "Data restored successfully from {{file}}",
     "restoreError": "Restore failed",
@@ -414,7 +469,7 @@
     "browseError": "Could not browse this path",
     "testPathBtn": "Test path",
     "testingPath": "Testing...",
-    "pathOk": "✓ Path is writable",
+    "pathOk": "Path is writable",
     "pathError": "Could not write to this path",
     "intervalLabel": "Backup interval",
     "every6h": "Every 6 hours",
@@ -485,13 +540,516 @@
       "page": "Page {{page}} of {{total}}",
       "count": "{{count}} items"
     },
-    "loading": "Loading...",
-    "saving": "Saving...",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "save": "Save",
     "required": "Required",
     "optional": "Optional",
     "yes": "Yes",
     "no": "No",
     "unknown": "Unknown",
-    "mfa": "MFA"
+    "mfa": "MFA",
+    "back": "Back to previous page",
+    "backTitle": "Return to the page you came from",
+    "cancel": "Cancel",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{total}}",
+    "saved": "Saved",
+    "remove": "Remove",
+    "close": "Close",
+    "filters": "Filters",
+    "clear": "Clear"
+  },
+  "navgroup": {
+    "workspace": "Workspace",
+    "records": "Records & Correspondence",
+    "oversight": "Oversight",
+    "system": "System"
+  },
+  "system": {
+    "tenants": "Tenants",
+    "roles": "System Roles",
+    "auditchain": "Audit Chain",
+    "keys": "Encryption Keys",
+    "backup": "Backup & Restore"
+  },
+  "create": {
+    "menu": "Create",
+    "document": "New Document",
+    "outgoing": "Outgoing Mail",
+    "incoming": "Incoming Mail",
+    "external": "External Organization"
+  },
+  "audit": {
+    "export": "Export CSV",
+    "exporting": "Exporting…",
+    "chain": {
+      "valid": "Chain intact · {{count}} entries",
+      "broken": "Chain broken at #{{id}}",
+      "unknown": "Integrity unknown",
+      "checking": "Verifying…",
+      "recheck": "Re-verify the audit chain"
+    },
+    "reseal": {
+      "action": "Reseal",
+      "title": "Reseal the audit chain",
+      "confirm": "Reseal",
+      "desc": "Establishes a new verified baseline from this point forward. It does not repair or erase history — existing entries and any broken link stay exactly as they are, and the reseal itself is recorded in the log."
+    },
+    "kicker": "AUDIT LOG",
+    "title": "Audit & Activity Log",
+    "empty": "No matching entries",
+    "totalCount": "{{count}} entries",
+    "machine": "Machine",
+    "col": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "entity": "Entity",
+      "title": "Title",
+      "ip": "IP address"
+    },
+    "filter": {
+      "entity": "Entity type",
+      "action": "Action",
+      "user": "User",
+      "allUsers": "All users",
+      "from": "From date",
+      "to": "To date",
+      "all": "All",
+      "search": "Search",
+      "panel": "Filters",
+      "clear": "Clear",
+      "searchPlaceholder": "Search by title, user, or action…",
+      "clearAll": "Clear all filters",
+      "searchScope": "Text search covers the records on this page only — use the filters below to search the whole log.",
+      "period": "Period",
+      "today": "Today",
+      "d7": "Last 7 days",
+      "d30": "Last 30 days",
+      "allTime": "All time",
+      "allEntities": "All entities"
+    },
+    "card": {
+      "title": "Audit trail",
+      "desc": "A chronological record of every action on the system: user, action, entity and time."
+    },
+    "diff": {
+      "before": "Before change",
+      "after": "After change"
+    },
+    "noaccess": {
+      "title": "You do not have access to the audit log",
+      "hint": "Contact your system administrator to be granted Audit.View"
+    },
+    "hide": {
+      "title": "Hide from view (the entry is retained for audit)",
+      "confirm": "Hide this entry from the view? It stays stored for audit and the chain integrity is unaffected."
+    },
+    "hideAll": {
+      "action": "Hide all",
+      "title": "Hide all entries from view",
+      "confirm": "Yes, hide all",
+      "desc": "Hides every entry from this view. Nothing is deleted — the rows are retained, the hash chain stays intact and still verifies, and this action is itself recorded as the next entry."
+    },
+    "action": {
+      "Create": "Create",
+      "Edit": "Edit",
+      "Delete": "Delete",
+      "Download": "Download",
+      "Print": "Print",
+      "View": "View",
+      "Forward": "Forward",
+      "Approve": "Approve",
+      "Archive": "Archive",
+      "Login": "Sign in",
+      "Logout": "Sign out",
+      "Created": "Created",
+      "Edited": "Edited",
+      "Updated": "Updated",
+      "Deleted": "Deleted",
+      "Removed": "Removed",
+      "Viewed": "Viewed",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Archived": "Archived",
+      "Restored": "Restored",
+      "Printed": "Printed",
+      "Downloaded": "Downloaded",
+      "DownloadAttachment": "Attachment downloaded",
+      "Forwarded": "Forwarded",
+      "Registered": "Registered",
+      "Shared": "Shared",
+      "Replied": "Replied",
+      "SentToArchive": "Sent to archive",
+      "PasswordReset": "Password reset",
+      "RolesUpdated": "Roles updated"
+    },
+    "entity": {
+      "Documents": "Documents",
+      "IncomingMail": "Incoming",
+      "OutgoingMail": "Outgoing",
+      "Workflow": "Workflow",
+      "Archive": "Archive",
+      "Reports": "Reports",
+      "Users": "Users",
+      "Organization": "Organization",
+      "Settings": "Settings",
+      "Audit": "Audit log",
+      "AuditLog": "Activity log"
+    },
+    "matchCount": "{{count}} matching on this page"
+  },
+  "destruction": {
+    "cert": {
+      "title": "Certificate of Document Destruction",
+      "issuedAt": "Issued",
+      "method": "Destruction method",
+      "docNumber": "Document number",
+      "docId": "Identifier",
+      "loadError": "Could not load the certificate",
+      "verifier": "Verifier (Records Officer)",
+      "approver": "Final approver (Legal Affairs)",
+      "attestation": "This document certifies that the records listed above were permanently destroyed after their statutory retention period elapsed, under a two-stage approval cycle (verification followed by final approval)."
+    }
+  },
+  "dash": {
+    "greeting": {
+      "morning": "Good morning",
+      "noon": "Good afternoon",
+      "evening": "Good evening",
+      "night": "Good night"
+    },
+    "ago": {
+      "now": "just now",
+      "min": "{{n}}m ago",
+      "hour": "{{n}}h ago",
+      "day": "{{n}}d ago"
+    },
+    "trend": "{{trend}} vs last month",
+    "system": "System",
+    "kpi": {
+      "documents": "Documents",
+      "incoming": "Incoming mail",
+      "outgoing": "Outgoing mail",
+      "openTasks": "Open tasks",
+      "overdueTasks": "Overdue tasks",
+      "expiringSoon": "Expiring soon",
+      "disposals": "Disposal requests"
+    },
+    "corrTitle": "Correspondence & Diwan",
+    "chart": {
+      "share": "Direction share",
+      "byDirection": "By direction",
+      "total": "Total"
+    },
+    "expiringDesc": "Retention period ending",
+    "backup": {
+      "title": "Backup",
+      "off": "Disabled",
+      "ok": "Success",
+      "bad": "Failed",
+      "pending": "Awaiting first run",
+      "neverRun": "Not run yet",
+      "manage": "Manage backup settings"
+    },
+    "online": {
+      "title": "Online now",
+      "empty": "No one online in the last few minutes",
+      "refresh": "Updates every 30 seconds"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity recorded yet",
+      "mine": "My recent activity"
+    },
+    "action": {
+      "Create": "created",
+      "Created": "created",
+      "Edit": "edited",
+      "PermissionsUpdated": "permissions updated",
+      "RolesUpdated": "roles updated",
+      "Delete": "deleted",
+      "Deleted": "deleted",
+      "Approve": "approved",
+      "Activated": "activated",
+      "Deactivated": "deactivated",
+      "PermissionsReset": "permissions reset",
+      "Login": "signed in",
+      "PasswordReset": "password reset"
+    },
+    "entity": {
+      "Document": "document",
+      "IncomingMail": "incoming mail",
+      "OutgoingMail": "outgoing mail",
+      "User": "user",
+      "Role": "role",
+      "Workflow": "workflow",
+      "Archive": "archive"
+    },
+    "hero": "{{greeting}}, {{name}}"
+  },
+  "corr": {
+    "kicker": "CORRESPONDENCE",
+    "title": "Correspondence",
+    "registerIncoming": "Register incoming",
+    "compose": "Compose",
+    "empty": "No correspondence in this folder",
+    "detail": "Correspondence detail",
+    "from": "From",
+    "date": "Date",
+    "reference": "Reference",
+    "dueDate": "Due date",
+    "reply": "Reply",
+    "replyAll": "Reply all",
+    "forward": "Forward",
+    "archive": "Archive",
+    "delete": "Delete",
+    "restore": "Restore",
+    "recipients": "Recipients",
+    "attachments": "Attachments",
+    "hasAttachments": "Has attachments",
+    "readStatus": "Read status",
+    "user": "User",
+    "readState": "State",
+    "readAt": "Read at",
+    "thread": "Thread",
+    "approvalStage": "Approval stage",
+    "subject": "Subject",
+    "senderName": "Sender name",
+    "classification": "Classification",
+    "direction": "Direction",
+    "body": "Body",
+    "send": "Send",
+    "savedToast": "Correspondence saved",
+    "addRecipient": "Add recipient",
+    "targetId": "ID",
+    "targetName": "Name",
+    "addressingLabel": "Addressing",
+    "targetKindLabel": "Target type",
+    "folders": {
+      "label": "Folders",
+      "inbox": "Inbox",
+      "outbox": "Outbox",
+      "internal": "Internal",
+      "drafts": "Drafts",
+      "deleted": "Deleted",
+      "all": "All",
+      "allDiwan": "All Diwan",
+      "allMurasalat": "All correspondence",
+      "externalIn": "External in",
+      "externalOut": "External out",
+      "internalIn": "Internal in",
+      "internalOut": "Internal out"
+    },
+    "action": {
+      "ForAction": "For action",
+      "ForSigning": "For signature",
+      "ForReview": "For review",
+      "ForInfo": "For information",
+      "ForReply": "For reply",
+      "ForApproval": "For approval",
+      "ForArchive": "For filing"
+    },
+    "actionLabel": "Required action",
+    "actionNone": "— None —",
+    "responsePeriod": "Response period (days)",
+    "responsePeriodHint": "e.g. 7",
+    "responseDeadline": "Response deadline",
+    "remindOnNoReply": "Notify me if no reply by the deadline",
+    "remindOn": "reminder on",
+    "keywords": "Keywords",
+    "keywordsHint": "comma separated",
+    "addresseeName": "Addressee name",
+    "addresseeTitle": "Addressee job title",
+    "print": "Print",
+    "preview": "Preview",
+    "captureBlocked": "Protected content — screen capture is not allowed",
+    "open": "Open",
+    "noBody": "No content",
+    "fileNumber": "File",
+    "confirmDelete": "Delete this correspondence?",
+    "secBasic": "Basic information",
+    "secClassify": "Classification & follow-up",
+    "secContent": "Content",
+    "searchRecipient": "Search by name…",
+    "searchSender": "Search sender / external org…",
+    "externalOnlyHint": "Outgoing Diwan mail can only be addressed to an external organization.",
+    "conversation": "Conversation",
+    "attachFile": "Attach file",
+    "scanFile": "Scan",
+    "dropHint": "Drag files here, or use the buttons above",
+    "uploadingAttachments": "Uploading {{n}} attachment(s)…",
+    "scan": {
+      "connecting": "Connecting to the scanner…",
+      "scanning": "Scanning…",
+      "scanningFrom": "Scanning from: {{name}}…",
+      "done": "Scan added",
+      "failed": "Scan failed"
+    },
+    "dir": {
+      "outgoing": "Outgoing",
+      "internal": "Internal",
+      "Incoming": "Incoming",
+      "Outgoing": "Outgoing",
+      "InternalIncoming": "Internal in",
+      "InternalOutgoing": "Internal out"
+    },
+    "target": {
+      "employee": "Employee",
+      "department": "Department",
+      "group": "Group",
+      "external": "External org"
+    },
+    "priority": {
+      "label": "Priority",
+      "Low": "Low",
+      "Normal": "Normal",
+      "High": "High",
+      "Urgent": "Urgent"
+    },
+    "class": {
+      "Public": "Public",
+      "Internal": "Internal",
+      "Confidential": "Confidential",
+      "HighlyConfidential": "Highly confidential"
+    },
+    "status": {
+      "Draft": "Draft",
+      "Registered": "Registered",
+      "UnderReview": "Under review",
+      "Approved": "Approved",
+      "Sent": "Sent",
+      "Replied": "Replied",
+      "OnHold": "On hold",
+      "Overdue": "Overdue",
+      "Closed": "Closed",
+      "Archived": "Archived"
+    },
+    "addressing": {
+      "To": "To",
+      "Cc": "Cc",
+      "Bcc": "Bcc"
+    },
+    "read": {
+      "Undelivered": "Undelivered",
+      "Delivered": "Delivered",
+      "Read": "Read"
+    },
+    "link": {
+      "Root": "Root",
+      "Reply": "Reply",
+      "Forward": "Forward",
+      "Reference": "Reference",
+      "Related": "Related"
+    },
+    "errors": {
+      "subjectRequired": "Subject is required",
+      "recipientRequired": "At least one recipient is required",
+      "saveFailed": "Could not save",
+      "printFailed": "Could not open the print view",
+      "previewFailed": "Could not open the preview — your browser may be blocking pop-ups",
+      "attachmentFailed": "Could not upload {{name}}"
+    },
+    "newMail": "New mail",
+    "searchPlaceholder": "Search…",
+    "rows": "Rows",
+    "typeMail": "Correspondence",
+    "col": {
+      "status": "Action",
+      "number": "No.",
+      "read": "Read",
+      "date": "Date",
+      "from": "From",
+      "to": "To",
+      "fromTo": "From / To",
+      "direction": "Type",
+      "type": "Kind",
+      "action": "Action",
+      "deadline": "Deadline",
+      "subject": "Subject",
+      "classification": "Classification",
+      "actions": "Actions"
+    },
+    "linkAction": "Link",
+    "ctx": {
+      "openNewTab": "Open in new tab",
+      "copyNumber": "Copy number",
+      "copied": "Copied",
+      "copyFailed": "Copy failed"
+    },
+    "to": "To",
+    "cc": "Cc",
+    "bcc": "Bcc",
+    "showBcc": "Add Bcc",
+    "hideBcc": "Hide Bcc",
+    "previewPrint": "Preview & print"
+  },
+  "diwan": {
+    "externalParty": "External party",
+    "searchOrg": "Search external organization…",
+    "composeOutgoing": "New outgoing letter",
+    "viewArchivedDoc": "View archived document",
+    "errors": {
+      "orgRequired": "The external party is required"
+    },
+    "mailNumber": "Mail no.",
+    "autoNew": "New",
+    "mailStatus": "Mail status",
+    "issueDate": "Mail issue date",
+    "sentDate": "Sent date",
+    "replyDueDate": "Reply-due date",
+    "mailCategory": "Mail category",
+    "referenceTo": "Reference to",
+    "toDiwan": "To bureau",
+    "fileName": "File name",
+    "searchPriorMail": "Search an earlier letter…",
+    "searchUnit": "Search department…",
+    "linkedToDirectory": "Linked to the external directory",
+    "access": "Who may open it"
+  },
+  "internal": {
+    "internalOnlyHint": "Internal mail can only be addressed to an employee, department, or group."
+  },
+  "account": {
+    "menu": "Account",
+    "avatar": {
+      "add": "Add picture",
+      "change": "Change picture",
+      "remove": "Remove picture",
+      "removeConfirm": "Remove your account picture?",
+      "done": "Picture updated",
+      "removed": "Picture removed",
+      "failed": "Could not update the picture",
+      "hint": "Square image; automatically resized to 256px."
+    },
+    "pw": {
+      "change": "Change password",
+      "hint": "Enter your current password, then the new one. Other sessions will be signed out.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm password",
+      "currentRequired": "Current password is required",
+      "weak": "Password is not strong enough — see the requirements below the field",
+      "mismatch": "Passwords do not match",
+      "matches": "Passwords match",
+      "done": "Password changed",
+      "failed": "Could not change the password"
+    },
+    "page": {
+      "settings": "Account settings",
+      "title": "Personal settings",
+      "subtitle": "Your picture and password.",
+      "profile": "Profile",
+      "name": "Full name",
+      "email": "Email",
+      "jobTitle": "Job title",
+      "clearance": "Clearance",
+      "roles": "Roles",
+      "adminNote": "Name, email, roles and clearance are set by a system administrator.",
+      "groups": "Groups",
+      "noGroups": "Not in any group"
+    }
   }
 }

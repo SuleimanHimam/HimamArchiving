@@ -1,0 +1,54 @@
+/* ختم التحقق on the document page: small, quiet, and unmistakably a thing you print. */
+
+.dvf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+  margin-block-start: 1rem;
+  padding: .9rem;
+  border: 1px dashed var(--color-border, var(--parchment-3));
+  border-radius: 12px;
+  background: var(--color-muted, var(--parchment-2));
+  text-align: center;
+}
+
+.dvf__head {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--color-muted-foreground, var(--text-muted));
+}
+.dvf__head h4 { margin: 0; font-size: .82rem; font-weight: 650; }
+
+/* White plate behind the code: a QR on a tinted card still scans, but not from every screen. */
+.dvf__qr {
+  inline-size: 132px;
+  block-size: 132px;
+  padding: 6px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--color-border, var(--parchment-3));
+  image-rendering: pixelated;     /* keep the modules crisp when the browser scales it */
+}
+
+.dvf__code {
+  margin: 0;
+  font-size: .8rem;
+  letter-spacing: .14em;
+  color: var(--color-foreground, var(--ink));
+}
+.dvf__hint {
+  margin: 0;
+  font-size: .72rem;
+  line-height: 1.7;
+  color: var(--color-muted-foreground, var(--text-muted));
+}
+
+.dvf__acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .3rem;
+  margin-block-start: .3rem;
+}

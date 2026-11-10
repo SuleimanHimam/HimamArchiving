@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="الديوان الإلكتروني">
+  <!-- One ink, for stamps and single-colour print: the stack as three outlined sheets, since a
+       solid silhouette of overlapping rhombi would fill in to a blob. -->
+  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round">
+    <path d="M32 39 55 49.5 32 60 9 49.5Z"/>
+    <path d="M32 29 55 39.5 32 50 9 39.5Z"/>
+    <path d="M32 19 55 29.5 32 40 9 29.5Z"/>
+  </g>
+</svg>

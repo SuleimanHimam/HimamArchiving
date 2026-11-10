@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Package, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { locations, type Breadcrumb } from '../lib/locations'
 
@@ -10,10 +11,10 @@ export default function DocumentLocation({ boxId }: { boxId: number }) {
   return (
     <div className="doc-card" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
       <div>
-        <strong>📦 الموقع الفعلي: </strong>{bc.path}
+        <strong><Package size={14} aria-hidden /> الموقع الفعلي: </strong>{bc.path}
         <span className="mono muted" style={{ marginInlineStart: 8, fontSize: '.8rem' }}>{bc.locationCode}</span>
       </div>
-      <Link to="/app/locations" className="btn btn-ghost btn-sm">المواقع الفعلية ↗</Link>
+      <Link to="/app/locations" className="btn btn-ghost btn-sm">المواقع الفعلية <ExternalLink size={13} aria-hidden /></Link>
     </div>
   )
 }

@@ -1,3 +1,5 @@
+using Archiving.Domain.Events;
+
 namespace Archiving.Domain.Common;
 
 /// <summary>Marker for entities that carry creation/modification audit stamps.</summary>
@@ -25,6 +27,15 @@ public abstract class BaseEntity : IAuditableEntity
     public long? CreatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public long? UpdatedBy { get; set; }
+
+    // ---- Domain events (in-process) ----
+    // Raised by services/entities, collected and published by AppDbContext after a successful save.
+    // Not persisted — ignored in EF mapping (see AppDbContext.OnModelCreating).
+    private readonly List<IDomainEvent> _domainEvents = [];
+
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    public void AddDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+    public void ClearDomainEvents() => _domainEvents.Clear();
 }
 
 /// <summary>Base for entities that participate in soft-delete (documents, mail, etc.).</summary>

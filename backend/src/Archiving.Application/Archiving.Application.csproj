@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <!-- Pinned to the last Apache-2.0 (free) release; v13+ requires a paid commercial licence. -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
   </ItemGroup>
 
   <PropertyGroup>
