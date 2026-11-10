@@ -1,0 +1,21 @@
+{
+  "//": "Template for local development on SQL Server. Copy to appsettings.Development.json (gitignored) and fill in real local values. See docs/local-setup-sqlserver.ar.md.",
+  "Logging": {
+    "LogLevel": { "Default": "Information", "Microsoft.AspNetCore": "Warning" }
+  },
+  "Database": { "Provider": "SqlServer" },
+  "//ConnectionStrings": "Windows login on a local SQL Server Express instance. For a SQL login use: Server=localhost,1433;Database=Archiving;User ID=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=true;MultipleActiveResultSets=true;",
+  "ConnectionStrings": {
+    "Default": "Server=.\\SQLEXPRESS;Database=Archiving;Integrated Security=true;TrustServerCertificate=true;MultipleActiveResultSets=true;"
+  },
+  "Jwt": {
+    "Key": "YOUR_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS"
+  },
+  "Cors": {
+    "AllowedOrigins": [ "http://localhost:5173" ]
+  },
+  "App": { "PublicBaseUrl": "http://localhost:5173" },
+  "Escalation": { "IntervalSeconds": 300 },
+  "Search": { "IndexingEnabled": true, "OcrEnabled": true, "OcrLanguages": "ara+eng", "BatchSize": 5, "IdleSeconds": 60 },
+  "Storage": { "RootPath": "" }
+}

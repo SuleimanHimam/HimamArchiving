@@ -22,9 +22,15 @@ frontend/rcheck/
 storage/
 **/storage/
 
+# ---- Deployment output ----
+# The packaged build (self-contained runtime + SPA + generated settings) — hundreds of MB, and
+# appsettings.Production.json inside it holds this installation's JWT and storage keys.
+dist/
+
 # ---- Local secrets / overrides ----
 # Holds the real DB password + JWT key + machine-specific paths. Use the .example as a template.
 appsettings.Development.json
+appsettings.Production.json
 appsettings.Local.json
 appsettings.*.user.json
 secrets.json
@@ -32,5 +38,26 @@ secrets.json
 # ---- Misc / temp ----
 _shot.mjs
 *.tmp
+# Vite's dependency cache, written wherever the dev server was started from.
+.vite/
+# One-off Playwright screenshot scripts and their output — local checks, not part of the project.
+/phtest.mjs
+/shot.mjs
+frontend/_*.mjs
+frontend/.brand.mjs
+frontend/zoom.mjs
+frontend/fc-shot.mjs
+frontend/fc-demo.html
+frontend/*.png
 .DS_Store
 Thumbs.db
+
+# Local database dumps — contain password hashes and refresh tokens.
+backups/
+
+# ---- Licensing ----
+# Signing keys never belong in the repo: the private key can mint licences for anyone.
+license-private.pem
+license-public.txt
+# Issued licences are per-customer, per-machine artefacts.
+*.lic
