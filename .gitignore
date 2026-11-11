@@ -21,6 +21,9 @@ frontend/rcheck/
 # ---- Runtime data (uploaded files, scans) ----
 storage/
 **/storage/
+# …but not the storage *source code*. Git on Windows matches these patterns case-insensitively, so
+# the lines above also hid Archiving.Infrastructure/Storage/ and a fresh clone could not build.
+!backend/src/Archiving.Infrastructure/Storage/
 
 # ---- Deployment output ----
 # The packaged build (self-contained runtime + SPA + generated settings) — hundreds of MB, and
