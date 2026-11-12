@@ -70,6 +70,9 @@ public static class DependencyInjection
         // Scoped, not transient: it caches the caller's roles and department for the request.
         services.AddScoped<IAccessScope, Services.AccessScope>();
         services.AddScoped<IOrganizationService, Services.OrganizationService>();
+        // Shared core: the employee register and work sites every module points at.
+        services.AddScoped<Archiving.Application.Features.Core.ISiteService, Services.Core.SiteService>();
+        services.AddScoped<Archiving.Application.Features.Core.IEmployeeService, Services.Core.EmployeeService>();
         services.AddScoped<IReportTemplateService, Services.ReportTemplateService>();
         services.AddScoped<IGroupService, Services.GroupService>();
         services.AddScoped<IDiwanService, Services.DiwanService>();

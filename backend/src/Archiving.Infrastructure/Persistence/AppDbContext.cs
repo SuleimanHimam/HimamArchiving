@@ -100,6 +100,11 @@ public class AppDbContext : DbContext
     public DbSet<InternalRead> InternalReads => Set<InternalRead>();
     public DbSet<InternalAttachment> InternalAttachments => Set<InternalAttachment>();
 
+    // ── Shared core (unified platform): the one employee register and the places people work ──
+    public DbSet<Archiving.Domain.Core.Employee> Employees => Set<Archiving.Domain.Core.Employee>();
+    public DbSet<Archiving.Domain.Core.Site> Sites => Set<Archiving.Domain.Core.Site>();
+    public DbSet<Archiving.Domain.Core.SiteLocation> SiteLocations => Set<Archiving.Domain.Core.SiteLocation>();
+
     // Workflow
     public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
     public DbSet<WorkflowStage> WorkflowStages => Set<WorkflowStage>();

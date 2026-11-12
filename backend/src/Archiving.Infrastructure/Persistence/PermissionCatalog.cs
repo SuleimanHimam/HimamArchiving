@@ -51,6 +51,8 @@ public static class PermissionCatalog
         // ---- System administration ----
         ("Users",          [V, C, E, D]),
         ("Organization",   [V, C, E, D]),                // org units, external directory
+        ("Employees",      [V, C, E, D]),                // core employee register
+        ("Sites",          [V, C, E, D]),                // crossings / work sites and their locations
         // Print designs (الترويسات) for documents — the block designer. Correspondence no longer
         // uses this: it moved to the slot-based Letterhead resource below.
         ("PrintDesign",    [V, C, E, D]),
