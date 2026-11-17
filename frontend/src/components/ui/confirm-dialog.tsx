@@ -31,6 +31,8 @@ export interface PromptOptions {
   cancelText?: string;
   /** Written left-to-right (URLs, codes); Arabic labels stay RTL when false. */
   ltr?: boolean;
+  /** Optional input: saving an empty value resolves "" instead of null (null stays "cancelled"). */
+  allowEmpty?: boolean;
 }
 
 export interface ChooseOption {
@@ -92,7 +94,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     }), []);
 
   const onConfirm = () => {
-    if (state?.kind === "prompt") settle(state.value.trim() === "" ? null : state.value);
+    if (state?.kind === "prompt") settle(state.value.trim() === "" && !state.opts.allowEmpty ? null : state.value);
     else settle(true);
   };
   const onCancel = () => settle(state?.kind === "prompt" || state?.kind === "choose" ? null : false);

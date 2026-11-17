@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "verify:a11y": "node verify-a11y.mjs",
     "verify:shell": "node verify-shell.mjs",
-    "scan:i18n": "node scan-i18n.mjs"
+    "scan:i18n": "node scan-i18n.mjs",
+    "test": "node --experimental-strip-types --no-warnings --test \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "@ark-ui/react": "^5.37.2",

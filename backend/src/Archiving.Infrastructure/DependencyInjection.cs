@@ -73,6 +73,26 @@ public static class DependencyInjection
         // Shared core: the employee register and work sites every module points at.
         services.AddScoped<Archiving.Application.Features.Core.ISiteService, Services.Core.SiteService>();
         services.AddScoped<Archiving.Application.Features.Core.IEmployeeService, Services.Core.EmployeeService>();
+        services.AddScoped<Archiving.Application.Features.Core.ILookupService, Services.Core.LookupService>();
+        // Approval layer over the workflow engine: the engine calls the outcome handler, which calls
+        // the effect registered for the request type.
+        services.AddScoped<Archiving.Application.Features.Core.IApprovalService, Services.Core.ApprovalService>();
+        services.AddScoped<Archiving.Application.Features.Core.IApprovalOutcomeHandler, Services.Core.ApprovalOutcomeHandler>();
+        services.AddScoped<Archiving.Application.Features.Core.IApprovalEffect, Services.Hr.PersonnelActionEffectHandler>();
+        services.AddScoped<ISensitiveDataProtector, Security.Crypto.SensitiveDataProtector>();
+        // HR
+        services.AddScoped<Archiving.Application.Features.Hr.IActionTypeService, Services.Hr.ActionTypeService>();
+        services.AddScoped<Archiving.Application.Features.Hr.IEmployeeFileService, Services.Hr.EmployeeFileService>();
+        services.AddScoped<Archiving.Application.Features.Hr.IPersonnelActionService, Services.Hr.PersonnelActionService>();
+        services.AddScoped<Archiving.Application.Features.Hr.IClearanceService, Services.Hr.ClearanceService>();
+        services.AddScoped<Archiving.Application.Features.Hr.IHrCalendarService, Services.Hr.HrCalendarService>();
+        services.AddScoped<Archiving.Application.Features.Hr.ILeaveTypeService, Services.Hr.LeaveTypeService>();
+        services.AddScoped<Archiving.Application.Features.Hr.ILeaveService, Services.Hr.LeaveService>();
+        services.AddScoped<Archiving.Application.Features.Core.IApprovalEffect, Services.Hr.LeaveEffectHandler>();
+        services.AddScoped<Archiving.Application.Features.Hr.IShiftService, Services.Hr.ShiftService>();
+        services.AddScoped<Archiving.Application.Features.Hr.IAttendanceService, Services.Hr.AttendanceService>();
+        services.AddScoped<Archiving.Application.Features.Hr.IPayrollSettingsService, Services.Hr.PayrollSettingsService>();
+        services.AddScoped<Archiving.Application.Features.Hr.IPayrollService, Services.Hr.PayrollService>();
         services.AddScoped<IReportTemplateService, Services.ReportTemplateService>();
         services.AddScoped<IGroupService, Services.GroupService>();
         services.AddScoped<IDiwanService, Services.DiwanService>();

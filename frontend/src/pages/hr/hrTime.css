@@ -1,0 +1,17 @@
+/* Roster grid and HR phase-2/3 bits. Colours come from the theme tokens only. */
+.roster-grid { border-collapse: collapse; font-size: .78rem; min-width: 100%; }
+.roster-grid th, .roster-grid td { border: 1px solid var(--line); padding: 2px; text-align: center; white-space: nowrap; }
+.roster-grid .roster-name { position: sticky; inset-inline-start: 0; background: var(--paper); text-align: start; padding-inline: .5rem; min-width: 9rem; z-index: 1; }
+.roster-grid select { font-size: .75rem; border: 0; background: transparent; color: inherit; min-width: 4.2rem; }
+.roster-grid .roster-leave { background: var(--parchment-3); color: var(--muted); }
+.roster-grid .roster-dirty { outline: 2px solid var(--brass); outline-offset: -2px; }
+.roster-grid .roster-coverage td, .roster-grid .roster-coverage th { font-weight: 600; }
+.roster-grid .roster-short { color: var(--seal); background: color-mix(in srgb, var(--seal) 12%, transparent); }
+.stage-bar { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0 1rem; padding: 0; list-style: none; }
+.stage-bar li { border: 1px solid var(--line); border-radius: 999px; padding: .2rem .7rem; font-size: .8rem; color: var(--muted); }
+.stage-bar li.is-done { color: var(--ink); border-color: var(--ink); }
+.stage-bar li.is-current { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.kpi-row > div { border: 1px solid var(--line); border-radius: 8px; padding: .6rem .8rem; }
+.kpi-row strong { display: block; font-size: 1.15rem; }
+.num-neg { color: var(--seal); }

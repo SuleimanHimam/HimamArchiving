@@ -153,7 +153,11 @@ public sealed class EmployeeService(AppDbContext db, IAuditWriter audit, IAccess
             r.PositionId, title, r.SiteId, r.HireDate, r.UserId), null);
     }
 
-    private async Task<IQueryable<Employee>> ScopedAsync(CancellationToken ct)
+    private Task<IQueryable<Employee>> ScopedAsync(CancellationToken ct) => ScopedQueryAsync(db, scope, ct);
+
+    /// <summary>The employees the caller may see. Shared with the HR services so every employee-facing
+    /// endpoint applies the same row scope.</summary>
+    internal static async Task<IQueryable<Employee>> ScopedQueryAsync(AppDbContext db, IAccessScope scope, CancellationToken ct)
     {
         var query = db.Employees.AsNoTracking();
         if (await scope.IsSystemAdminAsync(ct)) return query;

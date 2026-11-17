@@ -26,6 +26,7 @@ import InternalListPage from './pages/internal/InternalListPage'
 import InternalComposePage from './pages/internal/InternalComposePage'
 import InternalDetailPage from './pages/internal/InternalDetailPage'
 import WorkflowDesignerPage from './pages/workflow/WorkflowDesignerPage'
+import ApprovalsInboxPage from './pages/approvals/ApprovalsInboxPage'
 import DocumentsListPage from './pages/documents/DocumentsListPage'
 import DocumentCreatePage from './pages/documents/DocumentCreatePage'
 import DocumentEditPage from './pages/documents/DocumentEditPage'
@@ -36,6 +37,17 @@ import LocationsPage from './pages/locations/LocationsPage'
 import ArchivePage from './pages/archive/ArchivePage'
 import ExternalDirectoryPage from './pages/external/ExternalDirectoryPage'
 import DepartmentsPage from './pages/departments/DepartmentsPage'
+import EmployeesPage from './pages/hr/EmployeesPage'
+import EmployeeFilePage from './pages/hr/EmployeeFilePage'
+import PersonnelActionsPage from './pages/hr/PersonnelActionsPage'
+import ClearancesPage from './pages/hr/ClearancesPage'
+import HrSettingsPage from './pages/hr/HrSettingsPage'
+import LeavePage from './pages/hr/LeavePage'
+import ShiftsPage from './pages/hr/ShiftsPage'
+import AttendancePage from './pages/hr/AttendancePage'
+import PayrollPage from './pages/hr/PayrollPage'
+import PayrollSettingsPage from './pages/hr/PayrollSettingsPage'
+import SelfServicePage from './pages/hr/SelfServicePage'
 import UsersPage from './pages/users/UsersPage'
 import MonitoringPage from './pages/monitoring/MonitoringPage'
 import SettingsPage from './pages/settings/SettingsPage'
@@ -103,6 +115,19 @@ createRoot(document.getElementById('root')!).render(
               <Route path="archive" element={<ArchivePage />} />
               <Route path="external" element={<ExternalDirectoryPage />} />
               <Route path="departments" element={<DepartmentsPage />} />
+              {/* الموارد البشرية — flat segments so each maps to its own sidebar key (see AppLayout bounce) */}
+              <Route path="approvals" element={<ApprovalsInboxPage />} />
+              <Route path="hr-employees" element={<EmployeesPage />} />
+              <Route path="hr-employees/:id" element={<EmployeeFilePage />} />
+              <Route path="hr-actions" element={<PersonnelActionsPage />} />
+              <Route path="hr-clearances" element={<ClearancesPage />} />
+              <Route path="hr-settings" element={<HrSettingsPage />} />
+              <Route path="hr-leave" element={<LeavePage />} />
+              <Route path="hr-shifts" element={<ShiftsPage />} />
+              <Route path="hr-attendance" element={<AttendancePage />} />
+              <Route path="hr-payroll" element={<PayrollPage />} />
+              <Route path="hr-payroll-settings" element={<PayrollSettingsPage />} />
+              <Route path="me" element={<SelfServicePage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="locations" element={<LocationsPage />} />
               <Route path="monitoring" element={<MonitoringPage />} />

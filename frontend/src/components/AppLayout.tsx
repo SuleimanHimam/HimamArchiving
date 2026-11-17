@@ -87,6 +87,7 @@ export default function AppLayout() {
   const NAV_GROUPS = [
     { key: 'workspace', label: t('navgroup.workspace') },
     { key: 'records', label: t('navgroup.records') },
+    { key: 'hr', label: t('navgroup.hr') },
     { key: 'oversight', label: t('navgroup.oversight') },
     { key: 'system', label: t('navgroup.system') },
   ]

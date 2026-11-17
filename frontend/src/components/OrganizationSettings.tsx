@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useSites } from '../lib/hrHooks'
 import { Pencil, Trash2, Users } from 'lucide-react'
 import { motion } from 'motion/react'
 import { AxiosError } from 'axios'
@@ -18,8 +20,8 @@ import '../pages/settings/settings.css'
 const errOf = (err: unknown, fallback: string) =>
   (err as AxiosError<{ error?: string }>).response?.data?.error ?? fallback
 
-interface UnitForm { name: string; nameEn: string; code: string; type: number; sortOrder: number; parentId: number | ''; isActive: boolean }
-const EMPTY_UNIT: UnitForm = { name: '', nameEn: '', code: '', type: 2, sortOrder: 0, parentId: '', isActive: true }
+interface UnitForm { name: string; nameEn: string; code: string; type: number; sortOrder: number; parentId: number | ''; isActive: boolean; managerPositionId: number | ''; siteId: number | '' }
+const EMPTY_UNIT: UnitForm = { name: '', nameEn: '', code: '', type: 2, sortOrder: 0, parentId: '', isActive: true, managerPositionId: '', siteId: '' }
 
 interface PosForm { title: string; code: string; rank: number; isActive: boolean }
 const EMPTY_POS: PosForm = { title: '', code: '', rank: 0, isActive: true }
@@ -38,6 +40,10 @@ export default function OrganizationSettings() {
   const [users, setUsers] = useState<UserLookupDto[]>([])
 
   const [unitForm, setUnitForm] = useState<UnitForm>(EMPTY_UNIT)
+  const { t } = useTranslation()
+  const sites = useSites()
+  // Seats of the unit being edited: the manager seat must be one of them.
+  const [unitSeats, setUnitSeats] = useState<PositionDto[]>([])
   const [unitEditId, setUnitEditId] = useState<number | null>(null)
   const [posForm, setPosForm] = useState<PosForm>(EMPTY_POS)
   const [posEditId, setPosEditId] = useState<number | null>(null)
@@ -74,7 +80,9 @@ export default function OrganizationSettings() {
     setUnitEditId(u.id)
     const typeNum = ORG_UNIT_TYPES.find((t) => ORG_UNIT_TYPE_LABEL[u.type] === t.ar)?.v ?? 2
     setUnitForm({ name: u.name, nameEn: u.nameEn ?? '', code: u.code ?? '', type: typeNum,
-      sortOrder: u.sortOrder, parentId: u.parentId ?? '', isActive: u.isActive })
+      sortOrder: u.sortOrder, parentId: u.parentId ?? '', isActive: u.isActive,
+      managerPositionId: u.managerPositionId ?? '', siteId: u.siteId ?? '' })
+    organization.positions(u.id).then(setUnitSeats).catch(() => setUnitSeats([]))
   }
 
   async function submitUnit(e: FormEvent) {
@@ -85,6 +93,8 @@ export default function OrganizationSettings() {
       parentId: unitForm.parentId === '' ? null : Number(unitForm.parentId),
       name: unitForm.name.trim(), nameEn: unitForm.nameEn.trim() || null,
       code: unitForm.code.trim() || null, type: Number(unitForm.type), sortOrder: Number(unitForm.sortOrder) || 0,
+      managerPositionId: unitForm.managerPositionId === '' ? null : Number(unitForm.managerPositionId),
+      siteId: unitForm.siteId === '' ? null : Number(unitForm.siteId),
     }
     setBusy(true)
     try {
@@ -231,6 +241,17 @@ export default function OrganizationSettings() {
           </LabeledSelect>
           <LabeledInput label="رمز (اختياري)" dir="ltr" value={unitForm.code} onChange={(e) => setU('code', e.target.value)} />
           <LabeledInput label="الترتيب" type="number" dir="ltr" value={unitForm.sortOrder} onChange={(e) => setU('sortOrder', Number(e.target.value))} />
+          <LabeledSelect label={t('hrt.org.site')} value={unitForm.siteId} onChange={(e) => setU('siteId', e.target.value === '' ? '' : Number(e.target.value))}>
+            <option value="">—</option>
+            {sites.filter((s) => s.isActive).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </LabeledSelect>
+          {unitEditId && (
+            <LabeledSelect label={t('hrt.org.managerSeat')} value={unitForm.managerPositionId}
+              onChange={(e) => setU('managerPositionId', e.target.value === '' ? '' : Number(e.target.value))}>
+              <option value="">{t('hrt.org.noManager')}</option>
+              {unitSeats.filter((p) => p.isActive).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+            </LabeledSelect>
+          )}
           {unitEditId && (
             <LabeledSelect label="الحالة" value={unitForm.isActive ? '1' : '0'} onChange={(e) => setU('isActive', e.target.value === '1')}>
               <option value="1">مفعّل</option><option value="0">معطّل</option>

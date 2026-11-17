@@ -30,6 +30,55 @@ public static class DbSeeder
         await SeedDestructionMethodsAsync(db, ct);
         await SeedArchiveIntakeAsync(db, ct);
         await SeedLetterheadApprovalAsync(db, ct);
+        await SeedHrAsync(db, ct);
+    }
+
+    /// <summary>
+    /// What the documents state for HR, and nothing more (operations sequence §8.3–8.4, standards §5.5):
+    /// the nine personnel action types, the four clearance parties, and the approved numbering formats.
+    /// Approval paths are left empty on purpose: the administrator builds them, and until then an action
+    /// of that type cannot be submitted. Every step is idempotent and never overwrites an admin's edit.
+    /// </summary>
+    private static async Task SeedHrAsync(AppDbContext db, CancellationToken ct)
+    {
+        (string Entity, string Pattern, ResetFrequency Reset)[] numbering =
+        [
+            (Services.Core.ApprovalService.NumberingEntity, "REQ-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            (Services.Hr.PersonnelActionEffectHandler.ActionNumbering, "HR-MV-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            (Services.Hr.PersonnelActionEffectHandler.ClearanceNumbering, "CLR-{YYYY}-{SEQ:3}", ResetFrequency.Yearly),
+            (Services.Hr.LeaveEffectHandler.Numbering, "HR-LV-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+        ];
+        foreach (var (entity, pattern, reset) in numbering)
+            if (!await db.NumberingTemplates.AnyAsync(t => t.EntityType == entity, ct))
+                db.NumberingTemplates.Add(new NumberingTemplate { EntityType = entity, Pattern = pattern, ResetFrequency = reset });
+
+        (string Code, string Name, Archiving.Domain.Hr.PersonnelActionEffect Effect)[] actionTypes =
+        [
+            ("HIRE", "تعيين", Archiving.Domain.Hr.PersonnelActionEffect.Hire),
+            ("CONFIRM", "تثبيت", Archiving.Domain.Hr.PersonnelActionEffect.Confirm),
+            ("PROMOTE", "ترقية أو تعديل درجة", Archiving.Domain.Hr.PersonnelActionEffect.Promote),
+            ("TRANSFER", "نقل لدائرة أخرى", Archiving.Domain.Hr.PersonnelActionEffect.Transfer),
+            ("SECOND", "ندب أو تكليف", Archiving.Domain.Hr.PersonnelActionEffect.Second),
+            ("ALLOWANCE", "علاوة أو خصم ثابت", Archiving.Domain.Hr.PersonnelActionEffect.Allowance),
+            ("PENALTY", "عقوبة", Archiving.Domain.Hr.PersonnelActionEffect.Penalty),
+            ("SUSPEND", "إيقاف عن العمل", Archiving.Domain.Hr.PersonnelActionEffect.Suspend),
+            ("END_SERVICE", "انتهاء خدمة", Archiving.Domain.Hr.PersonnelActionEffect.EndService),
+        ];
+        var existingTypes = await db.PersonnelActionTypes.IgnoreQueryFilters().Select(t => t.Code).ToListAsync(ct);
+        foreach (var (code, name, effect) in actionTypes.Where(t => !existingTypes.Contains(t.Code)))
+            db.PersonnelActionTypes.Add(new Archiving.Domain.Hr.PersonnelActionType { Code = code, Name = name, Effect = effect });
+
+        (string Code, string Name, int Order)[] parties =
+            [("SUPPLY", "اللوازم", 1), ("FINANCE", "المالية", 2), ("ARCHIVE", "الأرشيف", 3), ("IT", "تقنية المعلومات", 4)];
+        var existingParties = await db.Lookups.IgnoreQueryFilters()
+            .Where(l => l.Category == Archiving.Domain.Core.LookupCategories.ClearanceParty).Select(l => l.Code).ToListAsync(ct);
+        foreach (var (code, name, order) in parties.Where(p => !existingParties.Contains(p.Code)))
+            db.Lookups.Add(new Archiving.Domain.Core.Lookup
+            {
+                Category = Archiving.Domain.Core.LookupCategories.ClearanceParty, Code = code, Name = name, SortOrder = order,
+            });
+
+        await db.SaveChangesAsync(ct);
     }
 
     public const string LetterheadApprovalWorkflowName = "اعتماد ترويسة القسم";

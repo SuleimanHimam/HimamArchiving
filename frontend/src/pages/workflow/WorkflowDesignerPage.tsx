@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Trash2, Users } from 'lucide-react'
 import {
@@ -59,7 +60,12 @@ function newStage(order: number): StageDraft {
   }
 }
 
+/** Select value for routes that decide approval requests (HR actions and other modules), which have no
+ *  mail category: the module starts the run itself when a request is submitted. */
+const APPROVAL_TRIGGER = 'approval'
+
 export default function WorkflowDesignerPage() {
+  const { t } = useTranslation()
   const toast = useToast()
   const { confirm } = useConfirmDialog()
   const qc = useQueryClient()
@@ -85,7 +91,10 @@ export default function WorkflowDesignerPage() {
     () => (categories ?? []).filter((c) => c.isActive && c.scope !== 'External'),
     [categories],
   )
-  const triggerLabel = usableCategories.find((c) => String(c.id) === categoryId)?.name ?? ''
+  const isApproval = categoryId === APPROVAL_TRIGGER
+  const triggerLabel = isApproval
+    ? t('workflowApproval.triggerLabel')
+    : usableCategories.find((c) => String(c.id) === categoryId)?.name ?? ''
 
   const patch = (key: string, next: Partial<StageDraft>) =>
     setStages((list) => list.map((s) => (s.key === key ? { ...s, ...next } : s)))
@@ -217,8 +226,8 @@ export default function WorkflowDesignerPage() {
       await workflow.createDefinition({
         name: name.trim(),
         description: description.trim() || null,
-        triggerModule: 'InternalMail',
-        mailCategoryId: Number(categoryId),
+        triggerModule: isApproval ? 'ApprovalRequest' : 'InternalMail',
+        mailCategoryId: isApproval ? null : Number(categoryId),
         isActive: true,
         // The draft key is a UI concern for React reconciliation; the API takes the stage as configured.
         stages: stages.map((s) => {
@@ -227,7 +236,7 @@ export default function WorkflowDesignerPage() {
           return rest as CreateStageRequest
         }),
       })
-      toast.success('حُفظ المسار، وسيبدأ تلقائيًا مع أول مراسلة بهذا التصنيف.')
+      toast.success(isApproval ? t('workflowApproval.saved') : 'حُفظ المسار، وسيبدأ تلقائيًا مع أول مراسلة بهذا التصنيف.')
       setName(''); setDescription(''); setCategoryId('')
       setStages([newStage(1)]); setSelected(null)
       qc.invalidateQueries({ queryKey: ['workflow', 'definitions'] })
@@ -260,10 +269,11 @@ export default function WorkflowDesignerPage() {
           <div className="wfd__grid">
             <LabeledInput label="اسم سير العمل" value={name} required
               onChange={(e) => setName(e.target.value)} />
-            <LabeledSelect label="يبدأ عند مراسلة بتصنيف" value={categoryId} required
+            <LabeledSelect label={t('workflowApproval.triggerField')} value={categoryId} required
               onChange={(e) => setCategoryId(e.target.value)}
-              hint="الشرط: بريد داخلي جديد + هذا التصنيف ⇒ يبدأ المسار.">
+              hint={isApproval ? t('workflowApproval.hint') : 'الشرط: بريد داخلي جديد + هذا التصنيف ⇒ يبدأ المسار.'}>
               <option value="">— اختر —</option>
+              <option value={APPROVAL_TRIGGER}>{t('workflowApproval.option')}</option>
               {usableCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </LabeledSelect>
             <LabeledTextarea label="وصف" rows={1} value={description}
@@ -274,6 +284,7 @@ export default function WorkflowDesignerPage() {
             <WorkflowCanvas
               stages={canvasStages}
               triggerLabel={triggerLabel}
+              triggerTitle={isApproval ? t('workflowApproval.triggerTitle') : undefined}
               selectedKey={selected}
               onSelect={setSelected}
               onInsertAfter={insertAfter}
