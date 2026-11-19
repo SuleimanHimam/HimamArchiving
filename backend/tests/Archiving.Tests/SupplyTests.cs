@@ -22,7 +22,7 @@ using DocumentType = Archiving.Domain.Supply.DocumentType;
 namespace Archiving.Tests;
 
 /// <summary>اللوازم والمخازن. Every item, figure and name is illustrative test data.</summary>
-public class SupplyTests
+public partial class SupplyTests
 {
     private const long Unit = 10, Workflow = 7, W1 = 100, W2 = 200, WM = 300;
 
