@@ -46,6 +46,7 @@ public class OrgUnit : BaseEntity
     public string? Code { get; set; }
     public OrgUnitType Type { get; set; } = OrgUnitType.Department;
     public long? ManagerPositionId { get; set; }      // the seat that manages this unit (for DirectManager escalation)
+    public long? SiteId { get; set; }                 // the crossing / headquarters the unit sits at (core.sites)
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
 

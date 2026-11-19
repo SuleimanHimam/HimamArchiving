@@ -29,7 +29,7 @@ public sealed class OrganizationService(AppDbContext db, IAuditWriter audit, ICu
         if (institutionId is { } id) q = q.Where(u => u.InstitutionId == id);
         return await q.OrderBy(u => u.SortOrder).ThenBy(u => u.Name)
             .Select(u => new OrgUnitDto(u.Id, u.InstitutionId, u.ParentId, u.Name, u.NameEn, u.Code,
-                u.Type.ToString(), u.SortOrder, u.IsActive))
+                u.Type.ToString(), u.SortOrder, u.IsActive, u.ManagerPositionId, u.SiteId))
             .ToListAsync(ct);
     }
 
@@ -39,17 +39,20 @@ public sealed class OrganizationService(AppDbContext db, IAuditWriter audit, ICu
             return Result<OrgUnitDto>.Fail("المؤسسة غير موجودة");
         if (r.ParentId is { } pid && !await db.OrgUnits.AnyAsync(u => u.Id == pid, ct))
             return Result<OrgUnitDto>.Fail("الوحدة الأم غير موجودة");
+        if (await ValidateUnitLinksAsync(null, r.ManagerPositionId, r.SiteId, ct) is { } linkError)
+            return Result<OrgUnitDto>.Fail(linkError);
 
         var e = new OrgUnit
         {
             InstitutionId = r.InstitutionId, ParentId = r.ParentId, Name = r.Name,
             NameEn = r.NameEn, Code = r.Code, Type = r.Type, SortOrder = r.SortOrder,
+            ManagerPositionId = r.ManagerPositionId, SiteId = r.SiteId,
         };
         db.OrgUnits.Add(e);
         await db.SaveChangesAsync(ct);
         await audit.WriteAsync("Created", "OrgUnit", e.Id, e.Name, ct: ct);
         return Result<OrgUnitDto>.Ok(new OrgUnitDto(e.Id, e.InstitutionId, e.ParentId, e.Name, e.NameEn, e.Code,
-            e.Type.ToString(), e.SortOrder, e.IsActive));
+            e.Type.ToString(), e.SortOrder, e.IsActive, e.ManagerPositionId, e.SiteId));
     }
 
     public async Task<Result<OrgUnitDto>> UpdateOrgUnitAsync(long id, UpdateOrgUnitRequest r, CancellationToken ct = default)
@@ -61,8 +64,14 @@ public sealed class OrganizationService(AppDbContext db, IAuditWriter audit, ICu
             if (pid == id) return Result<OrgUnitDto>.Fail("لا يمكن أن تكون الوحدة أباً لنفسها");
             if (!await db.OrgUnits.AnyAsync(u => u.Id == pid, ct))
                 return Result<OrgUnitDto>.Fail("الوحدة الأم غير موجودة");
+            if (await IsDescendantAsync(pid, id, ct))
+                return Result<OrgUnitDto>.Fail("لا يمكن نقل الوحدة تحت إحدى وحداتها الفرعية");
         }
+        if (await ValidateUnitLinksAsync(id, r.ManagerPositionId, r.SiteId, ct) is { } linkError)
+            return Result<OrgUnitDto>.Fail(linkError);
 
+        e.ManagerPositionId = r.ManagerPositionId;
+        e.SiteId = r.SiteId;
         e.ParentId = r.ParentId;
         e.Name = r.Name;
         e.NameEn = r.NameEn;
@@ -73,7 +82,31 @@ public sealed class OrganizationService(AppDbContext db, IAuditWriter audit, ICu
         await db.SaveChangesAsync(ct);
         await audit.WriteAsync("Updated", "OrgUnit", e.Id, e.Name, ct: ct);
         return Result<OrgUnitDto>.Ok(new OrgUnitDto(e.Id, e.InstitutionId, e.ParentId, e.Name, e.NameEn, e.Code,
-            e.Type.ToString(), e.SortOrder, e.IsActive));
+            e.Type.ToString(), e.SortOrder, e.IsActive, e.ManagerPositionId, e.SiteId));
+    }
+
+    /// <summary>The manager seat must belong to this unit; the site must exist and be active.</summary>
+    private async Task<string?> ValidateUnitLinksAsync(long? unitId, long? managerPositionId, long? siteId, CancellationToken ct)
+    {
+        if (managerPositionId is { } pos)
+        {
+            var seatUnit = await db.Positions.Where(p => p.Id == pos).Select(p => (long?)p.OrgUnitId).FirstOrDefaultAsync(ct);
+            if (seatUnit is null) return "المقعد الوظيفي للمدير غير موجود";
+            if (unitId is null || seatUnit != unitId) return "مقعد المدير يجب أن يكون من مقاعد الوحدة نفسها";
+        }
+        if (siteId is { } site && !await db.Sites.AnyAsync(s => s.Id == site && s.IsActive, ct))
+            return "المعبر أو الموقع غير موجود أو غير مفعّل";
+        return null;
+    }
+
+    /// <summary>True when <paramref name="candidate"/> sits somewhere below <paramref name="ancestor"/>.</summary>
+    private async Task<bool> IsDescendantAsync(long candidate, long ancestor, CancellationToken ct)
+    {
+        var parents = await db.OrgUnits.Select(u => new { u.Id, u.ParentId }).ToDictionaryAsync(u => u.Id, u => u.ParentId, ct);
+        var seen = new HashSet<long>();
+        for (long? cur = candidate; cur is { } c && seen.Add(c); cur = parents.GetValueOrDefault(c))
+            if (c == ancestor) return true;
+        return false;
     }
 
     public async Task<Result<bool>> DeleteOrgUnitAsync(long id, CancellationToken ct = default)

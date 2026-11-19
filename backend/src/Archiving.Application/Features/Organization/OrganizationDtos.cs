@@ -15,7 +15,9 @@ public sealed record OrgUnitDto(
     string? Code,
     string Type,
     int SortOrder,
-    bool IsActive);
+    bool IsActive,
+    long? ManagerPositionId = null,
+    long? SiteId = null);
 
 public sealed record CreateOrgUnitRequest(
     long InstitutionId,
@@ -24,7 +26,9 @@ public sealed record CreateOrgUnitRequest(
     string? NameEn,
     string? Code,
     OrgUnitType Type,
-    int SortOrder);
+    int SortOrder,
+    long? ManagerPositionId = null,
+    long? SiteId = null);
 
 public sealed record UpdateOrgUnitRequest(
     long? ParentId,
@@ -33,7 +37,9 @@ public sealed record UpdateOrgUnitRequest(
     string? Code,
     OrgUnitType Type,
     int SortOrder,
-    bool IsActive);
+    bool IsActive,
+    long? ManagerPositionId = null,
+    long? SiteId = null);
 
 public sealed record PositionDto(
     long Id,

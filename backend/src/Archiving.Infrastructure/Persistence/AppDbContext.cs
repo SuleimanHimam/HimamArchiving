@@ -100,6 +100,47 @@ public class AppDbContext : DbContext
     public DbSet<InternalRead> InternalReads => Set<InternalRead>();
     public DbSet<InternalAttachment> InternalAttachments => Set<InternalAttachment>();
 
+    // ── Shared core (unified platform): the one employee register and the places people work ──
+    public DbSet<Archiving.Domain.Core.Employee> Employees => Set<Archiving.Domain.Core.Employee>();
+    public DbSet<Archiving.Domain.Core.Site> Sites => Set<Archiving.Domain.Core.Site>();
+    public DbSet<Archiving.Domain.Core.SiteLocation> SiteLocations => Set<Archiving.Domain.Core.SiteLocation>();
+    public DbSet<Archiving.Domain.Core.Lookup> Lookups => Set<Archiving.Domain.Core.Lookup>();
+    public DbSet<Archiving.Domain.Core.ApprovalRequest> ApprovalRequests => Set<Archiving.Domain.Core.ApprovalRequest>();
+
+    // ── HR (schema hr) ──
+    public DbSet<Archiving.Domain.Hr.PersonnelActionType> PersonnelActionTypes => Set<Archiving.Domain.Hr.PersonnelActionType>();
+    public DbSet<Archiving.Domain.Hr.EmployeeProfile> EmployeeProfiles => Set<Archiving.Domain.Hr.EmployeeProfile>();
+    public DbSet<Archiving.Domain.Hr.EmployeeFamilyMember> EmployeeFamilyMembers => Set<Archiving.Domain.Hr.EmployeeFamilyMember>();
+    public DbSet<Archiving.Domain.Hr.EmployeeQualification> EmployeeQualifications => Set<Archiving.Domain.Hr.EmployeeQualification>();
+    public DbSet<Archiving.Domain.Hr.EmployeeBankAccount> EmployeeBankAccounts => Set<Archiving.Domain.Hr.EmployeeBankAccount>();
+    public DbSet<Archiving.Domain.Hr.PersonnelAction> PersonnelActions => Set<Archiving.Domain.Hr.PersonnelAction>();
+    public DbSet<Archiving.Domain.Hr.Clearance> Clearances => Set<Archiving.Domain.Hr.Clearance>();
+    public DbSet<Archiving.Domain.Hr.ClearanceItem> ClearanceItems => Set<Archiving.Domain.Hr.ClearanceItem>();
+    public DbSet<Archiving.Domain.Hr.HrSetting> HrSettings => Set<Archiving.Domain.Hr.HrSetting>();
+    public DbSet<Archiving.Domain.Hr.PublicHoliday> PublicHolidays => Set<Archiving.Domain.Hr.PublicHoliday>();
+    public DbSet<Archiving.Domain.Hr.LeaveType> LeaveTypes => Set<Archiving.Domain.Hr.LeaveType>();
+    public DbSet<Archiving.Domain.Hr.LeaveRequest> LeaveRequests => Set<Archiving.Domain.Hr.LeaveRequest>();
+    public DbSet<Archiving.Domain.Hr.LeaveBalanceMovement> LeaveBalanceMovements => Set<Archiving.Domain.Hr.LeaveBalanceMovement>();
+    public DbSet<Archiving.Domain.Hr.ShiftType> ShiftTypes => Set<Archiving.Domain.Hr.ShiftType>();
+    public DbSet<Archiving.Domain.Hr.ShiftAssignment> ShiftAssignments => Set<Archiving.Domain.Hr.ShiftAssignment>();
+    public DbSet<Archiving.Domain.Hr.ShiftRoster> ShiftRosters => Set<Archiving.Domain.Hr.ShiftRoster>();
+    public DbSet<Archiving.Domain.Hr.CoverageRule> CoverageRules => Set<Archiving.Domain.Hr.CoverageRule>();
+    public DbSet<Archiving.Domain.Hr.AttendancePunch> AttendancePunches => Set<Archiving.Domain.Hr.AttendancePunch>();
+    public DbSet<Archiving.Domain.Hr.AttendanceException> AttendanceExceptions => Set<Archiving.Domain.Hr.AttendanceException>();
+    public DbSet<Archiving.Domain.Hr.AttendancePeriod> AttendancePeriods => Set<Archiving.Domain.Hr.AttendancePeriod>();
+    public DbSet<Archiving.Domain.Hr.PayElement> PayElements => Set<Archiving.Domain.Hr.PayElement>();
+    public DbSet<Archiving.Domain.Hr.PayElementRate> PayElementRates => Set<Archiving.Domain.Hr.PayElementRate>();
+    public DbSet<Archiving.Domain.Hr.SalaryScaleRate> SalaryScaleRates => Set<Archiving.Domain.Hr.SalaryScaleRate>();
+    public DbSet<Archiving.Domain.Hr.EmployeePayElement> EmployeePayElements => Set<Archiving.Domain.Hr.EmployeePayElement>();
+    public DbSet<Archiving.Domain.Hr.TaxBracket> TaxBrackets => Set<Archiving.Domain.Hr.TaxBracket>();
+    public DbSet<Archiving.Domain.Hr.PayrollPeriod> PayrollPeriods => Set<Archiving.Domain.Hr.PayrollPeriod>();
+    public DbSet<Archiving.Domain.Hr.PayrollStageLog> PayrollStageLogs => Set<Archiving.Domain.Hr.PayrollStageLog>();
+    public DbSet<Archiving.Domain.Hr.PayrollInput> PayrollInputs => Set<Archiving.Domain.Hr.PayrollInput>();
+    public DbSet<Archiving.Domain.Hr.PayrollResult> PayrollResults => Set<Archiving.Domain.Hr.PayrollResult>();
+    public DbSet<Archiving.Domain.Hr.PayrollResultLine> PayrollResultLines => Set<Archiving.Domain.Hr.PayrollResultLine>();
+    public DbSet<Archiving.Domain.Hr.DisbursementRule> DisbursementRules => Set<Archiving.Domain.Hr.DisbursementRule>();
+    public DbSet<Archiving.Domain.Hr.EntitlementMovement> EntitlementMovements => Set<Archiving.Domain.Hr.EntitlementMovement>();
+
     // Workflow
     public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
     public DbSet<WorkflowStage> WorkflowStages => Set<WorkflowStage>();
@@ -198,6 +239,14 @@ public class AppDbContext : DbContext
         foreach (var entityType in b.Model.GetEntityTypes().ToList())
             if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
                 b.Entity(entityType.ClrType).Ignore(nameof(BaseEntity.DomainEvents));
+
+        // ---- Org structure: the crossing a unit sits at (HR phase 2; nullable, nothing existing changes) ----
+        b.Entity<OrgUnit>().HasOne<Archiving.Domain.Core.Site>().WithMany().HasForeignKey(x => x.SiteId).OnDelete(DeleteBehavior.Restrict);
+
+        // ---- HR personnel actions: JSON snapshots outgrow the 256-char string convention ----
+        b.Entity<Archiving.Domain.Hr.PersonnelAction>().Property(x => x.PayloadJson).HasColumnType(LongText);
+        b.Entity<Archiving.Domain.Hr.PersonnelAction>().Property(x => x.BeforeJson).HasColumnType(LongText);
+        b.Entity<Archiving.Domain.Hr.PersonnelAction>().Property(x => x.AfterJson).HasColumnType(LongText);
 
         // ---- Event audit trail ----
         b.Entity<EventLog>().Property(x => x.EventData).HasColumnType(LongText);

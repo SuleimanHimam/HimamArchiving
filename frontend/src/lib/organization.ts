@@ -33,6 +33,10 @@ export interface OrgUnitDto {
   type: string
   sortOrder: number
   isActive: boolean
+  /** The seat that manages the unit; the direct manager of its employees is resolved from it. */
+  managerPositionId?: number | null
+  /** The crossing / headquarters the unit sits at. */
+  siteId?: number | null
 }
 
 export interface PositionDto {
@@ -61,6 +65,8 @@ export interface OrgUnitInput {
   code: string | null
   type: number
   sortOrder: number
+  managerPositionId?: number | null
+  siteId?: number | null
 }
 
 export interface PositionInput {

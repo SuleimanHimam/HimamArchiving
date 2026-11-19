@@ -1,9 +1,10 @@
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Check, Eye, EyeOff, Plus, SearchX } from "lucide-react";
-import { Children, Fragment, isValidElement, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAnchoredPopup } from "./anchored-popup";
+import { collectOptions, type SelectOption } from "./select-options";
 
 /* ────────────────────────────────────────────────────────────────────────────
    Labeled field family — one floating-label look across the three native
@@ -247,31 +248,6 @@ export function LabeledSelect({
    and `e.currentTarget` all behave exactly as they did before: the change is
    dispatched on that element rather than synthesised. */
 
-interface SelectOption { value: string; label: string; disabled?: boolean }
-
-/** Flattens <option> children (including those inside <optgroup> and fragments). */
-function collectOptions(children: React.ReactNode): SelectOption[] {
-  const out: SelectOption[] = [];
-  const walk = (nodes: React.ReactNode) => {
-    Children.forEach(nodes, (child) => {
-      if (!isValidElement(child)) return;
-      if (child.type === "option") {
-        const p = child.props as { value?: string | number; children?: React.ReactNode; disabled?: boolean };
-        out.push({
-          value: String(p.value ?? ""),
-          label: typeof p.children === "string" || typeof p.children === "number"
-            ? String(p.children)
-            : String(p.value ?? ""),
-          disabled: p.disabled,
-        });
-      } else if (child.type === "optgroup" || child.type === Fragment) {
-        walk((child.props as { children?: React.ReactNode }).children);
-      }
-    });
-  };
-  walk(children);
-  return out;
-}
 
 function SearchableSelect({
   label, required, className, containerClassName, error, hint, options, children,

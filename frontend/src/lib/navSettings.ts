@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Mail, PenSquare, FileText, Building2, Network, Archive,
   Recycle, ScrollText, UsersRound, DatabaseBackup, Settings, ScanLine, LayoutTemplate, GitBranch,
+  IdCard, FilePen, ClipboardCheck, SlidersHorizontal, Inbox, CalendarDays, CalendarRange, Fingerprint, Wallet, Calculator, UserRound,
 } from 'lucide-react'
 import { api } from './api'
 
@@ -23,7 +24,7 @@ export interface NavItem {
   /** Match the route exactly (only the home entry needs this). */
   end?: boolean
   perm: string | null
-  group: 'workspace' | 'records' | 'oversight' | 'system'
+  group: 'workspace' | 'records' | 'hr' | 'oversight' | 'system'
 }
 
 /**
@@ -37,12 +38,24 @@ export interface NavItem {
  */
 export const NAV_ITEMS: NavItem[] = [
   { key: 'home',        to: '/app',             labelKey: 'nav.home',           Icon: LayoutDashboard, end: true, perm: null,       group: 'workspace' },
+  { key: 'approvals',   to: '/app/approvals',   labelKey: 'nav.approvals',      Icon: Inbox, perm: 'Approvals.View',          group: 'workspace' },
+  { key: 'me',          to: '/app/me',          labelKey: 'nav.selfService',    Icon: UserRound, perm: 'SelfService.View',    group: 'workspace' },
   { key: 'diwan',       to: '/app/diwan',       labelKey: 'nav.diwan',          Icon: Mail, perm: 'Correspondence.View', group: 'records' },
   { key: 'internal',    to: '/app/internal',    labelKey: 'nav.correspondence', Icon: PenSquare, perm: 'Correspondence.View', group: 'records' },
   { key: 'documents',   to: '/app/documents',   labelKey: 'nav.documents',      Icon: FileText, perm: 'Documents.View',      group: 'records' },
   { key: 'external',    to: '/app/external',    labelKey: 'nav.external',       Icon: Building2, perm: 'Organization.View',   group: 'records' },
   { key: 'departments', to: '/app/departments', labelKey: 'nav.departments',    Icon: Network, perm: 'Organization.View',   group: 'records' },
   { key: 'archive',     to: '/app/archive',     labelKey: 'nav.archive',        Icon: Archive, perm: 'Archive.View',        group: 'records' },
+  // Human resources. Route segments equal the keys so the hidden/permission bounce in AppLayout applies.
+  { key: 'hr-employees',  to: '/app/hr-employees',  labelKey: 'nav.hrEmployees',  Icon: IdCard, perm: 'Employees.View',   group: 'hr' },
+  { key: 'hr-actions',    to: '/app/hr-actions',    labelKey: 'nav.hrActions',    Icon: FilePen, perm: 'HrActions.View', group: 'hr' },
+  { key: 'hr-clearances', to: '/app/hr-clearances', labelKey: 'nav.hrClearances', Icon: ClipboardCheck, perm: 'HrClearance.View', group: 'hr' },
+  { key: 'hr-leave',      to: '/app/hr-leave',      labelKey: 'nav.hrLeave',      Icon: CalendarDays, perm: 'HrLeave.View', group: 'hr' },
+  { key: 'hr-shifts',     to: '/app/hr-shifts',     labelKey: 'nav.hrShifts',     Icon: CalendarRange, perm: 'HrShifts.View', group: 'hr' },
+  { key: 'hr-attendance', to: '/app/hr-attendance', labelKey: 'nav.hrAttendance', Icon: Fingerprint, perm: 'HrAttendance.View', group: 'hr' },
+  { key: 'hr-payroll',    to: '/app/hr-payroll',    labelKey: 'nav.hrPayroll',    Icon: Wallet, perm: 'HrPayroll.View', group: 'hr' },
+  { key: 'hr-payroll-settings', to: '/app/hr-payroll-settings', labelKey: 'nav.hrPayrollSettings', Icon: Calculator, perm: 'HrPayroll.View', group: 'hr' },
+  { key: 'hr-settings',   to: '/app/hr-settings',   labelKey: 'nav.hrSettings',   Icon: SlidersHorizontal, perm: 'HrSettings.View', group: 'hr' },
   { key: 'disposition', to: '/app/disposition', labelKey: 'nav.disposition',    Icon: Recycle, perm: 'Disposition.View',    group: 'oversight' },
   // Despite the "monitoring" route name, this is the M7 audit log viewer, so Audit.View is the
   // right gate. Spec §18 separates M24 Observability (health checks, OCR queue depth, API p95,

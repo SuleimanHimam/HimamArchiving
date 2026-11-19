@@ -85,6 +85,8 @@ interface Props {
   stages: CanvasStage[]
   /** The تصنيف البريد that fires the route; shown on the trigger node. */
   triggerLabel: string
+  /** Heading of the trigger node. Defaults to the internal-mail trigger. */
+  triggerTitle?: string
   selectedKey: string | null
   onSelect: (key: string | null) => void
   /** Insert a new stage after `afterKey`, or at the start when null. */
@@ -138,7 +140,7 @@ function stageKind(s: CanvasStage): { label: string; icon: React.ReactNode } {
 }
 
 export default function WorkflowCanvas({
-  stages, triggerLabel, selectedKey, onSelect, onInsertAfter, onReorder, onDelete, menu,
+  stages, triggerLabel, triggerTitle, selectedKey, onSelect, onInsertAfter, onReorder, onDelete, menu,
 }: Props) {
   const { placed, cols, maxRows } = React.useMemo(() => layout(stages), [stages])
   const [dragKey, setDragKey] = React.useState<string | null>(null)
@@ -331,7 +333,7 @@ export default function WorkflowCanvas({
                       onContextMenu={(e) => e.stopPropagation()}>
                       <span className="wfc__tile wfc__tile--trigger"><Zap size={22} /></span>
                       <span className="wfc__label">
-                        بريد داخلي جديد
+                        {triggerTitle ?? 'بريد داخلي جديد'}
                         <em>{triggerLabel || 'اختر التصنيف'}</em>
                       </span>
                       {/* The route starts here, so this is where "add the first stage" belongs. */}

@@ -1,0 +1,2 @@
+/* Overdue approval tasks read in the seal (alert) colour, as overdue rows do across the registers. */
+.reg-row.is-overdue > td { color: var(--seal); }

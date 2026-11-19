@@ -51,6 +51,22 @@ public static class PermissionCatalog
         // ---- System administration ----
         ("Users",          [V, C, E, D]),
         ("Organization",   [V, C, E, D]),                // org units, external directory
+        ("Employees",      [V, C, E, D]),                // core employee register
+        ("Sites",          [V, C, E, D]),                // crossings / work sites and their locations
+        ("Lookups",        [V, E]),                      // shared reference lists (grades, marital status, …)
+        ("Approvals",      [V]),                         // a requester's own approval requests
+
+        // ---- Human resources ----
+        ("HrProfile",      [V, E]),                      // the personnel file tabs
+        ("HrSensitive",    [V]),                         // reveal national id / mobile / bank account (audited)
+        ("HrActions",      [V, C]),                      // personnel actions: draft, submit, cancel
+        ("HrClearance",    [V, E]),                      // براءة الذمة: clear a party's item
+        ("HrSettings",     [V, E]),                      // action types and their approval paths
+        ("HrLeave",        [V, C, E]),                   // leave requests of others; E = balances, grant, adjust, leave types
+        ("HrShifts",       [V, E]),                      // shift types, coverage minimums, rosters
+        ("HrAttendance",   [V, E]),                      // punches, processing, exceptions, monthly close; E also holidays & work week
+        ("HrPayroll",      [V, E, Ap]),                  // E = settings, inputs, calculate, review; Ap = audit, approve, disburse, close
+        ("SelfService",    [V, C]),                      // my balances, attendance, payslips; C = my own leave requests
         // Print designs (الترويسات) for documents — the block designer. Correspondence no longer
         // uses this: it moved to the slot-based Letterhead resource below.
         ("PrintDesign",    [V, C, E, D]),
@@ -82,7 +98,10 @@ public static class PermissionCatalog
         // archive: قسم الأرشيف is the custodians' workspace (buildings, rooms, shelves, boxes), not an
         // oversight report. A manager who also runs the archive gets Archive.View granted explicitly.
         ("Manager", "اعتماد وتظهير المعاملات ومراجعة التقارير",
-            p => (p.Action == PermissionAction.View && p.Resource is not ("Settings" or "Archive"))
+            // HrSensitive is excluded: revealing personal data is granted to named HR roles only.
+            // HrPayroll is excluded too: salaries are visible with the payroll permission only (standards §7.3).
+            p => (p.Action == PermissionAction.View && p.Resource is not ("Settings" or "Archive" or "HrSensitive" or "HrPayroll"))
+                || p.Resource == "SelfService"
                 || (p.Resource == "Correspondence" && p.Action is PermissionAction.Create or PermissionAction.Edit
                     or PermissionAction.Forward or PermissionAction.Print or PermissionAction.Archive)
                 || (p.Resource == "Documents" && p.Action is PermissionAction.Approve or PermissionAction.Print
@@ -122,6 +141,7 @@ public static class PermissionCatalog
         // Intake, classification and custody of the records themselves.
         ("Archive Officer", "إدخال وتصنيف وحفظ الوثائق وإدارة المواقع",
             p => ((p.Resource is "Documents" or "Archive") && p.Action != PermissionAction.Approve)
+                || p.Resource == "SelfService"
                 || p.Resource is "Notes" or "Export" or "TableColumns" or "CustomFields"
                 /* قسم الأرشيف corresponds like any other department: it writes to the department
                    whose record it just filed, asks for a missing attachment, answers a retrieval
@@ -149,7 +169,8 @@ public static class PermissionCatalog
 
                Not to be confused with the Archive.* resource below: that is the physical archive,
                the shelves themselves, and it stays with the people who keep them. */
-            p => (p.Resource == "Correspondence" && p.Action is PermissionAction.View or PermissionAction.Create
+            p => p.Resource == "SelfService"
+                || (p.Resource == "Correspondence" && p.Action is PermissionAction.View or PermissionAction.Create
                     or PermissionAction.Edit or PermissionAction.Forward or PermissionAction.Print
                     or PermissionAction.Archive)
                 || (p.Resource == "Documents" && p.Action is PermissionAction.View or PermissionAction.Create

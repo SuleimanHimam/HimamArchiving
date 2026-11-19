@@ -20,10 +20,13 @@ export const WF_ACTIONS: { name: WfActionName; value: number; label: string; cls
   { name: 'Close', value: 64, label: 'إغلاق', cls: 'btn-ghost', needsNote: false },
 ]
 
-/** True when a stage's AllowedActions string ("Approve, Reject, Comment") includes this action. */
+/** True when a stage's AllowedActions includes this action. Accepts the flag names ("Approve, Reject")
+ *  and the numeric form ("131") that SQL Server returns when the worklist projects the enum in SQL. */
 export function stageAllows(allowedActions: string | null | undefined, name: WfActionName): boolean {
   if (!allowedActions) return false
-  return allowedActions.split(',').map((s) => s.trim()).includes(name)
+  const trimmed = allowedActions.trim()
+  if (/^\d+$/.test(trimmed)) return (Number(trimmed) & WF_ACTION[name]) !== 0
+  return trimmed.split(',').map((s) => s.trim()).includes(name)
 }
 
 export interface WorklistItem {

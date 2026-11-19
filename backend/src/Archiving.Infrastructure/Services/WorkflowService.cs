@@ -16,7 +16,8 @@ public sealed class WorkflowService(
     ICurrentUser currentUser,
     IAuditWriter audit,
     IDelegationService delegations,
-    IWorkflowMailRouter mailRouter) : IWorkflowService
+    IWorkflowMailRouter mailRouter,
+    Archiving.Application.Features.Core.IApprovalOutcomeHandler? approvalOutcomes = null) : IWorkflowService
 {
     private const string EntityType = "Workflow";
 
@@ -422,6 +423,28 @@ public sealed class WorkflowService(
 
     public async Task<Result<WorkflowInstanceDto>> ActOnTaskAsync(long taskId, WorkflowActionRequest r, CancellationToken ct = default)
     {
+        // Runs that decide an approval request carry an effect that must commit or roll back with the
+        // decision, so they act inside one transaction. Every other run keeps its original behaviour.
+        var entityType = await db.WorkflowTasks.Where(t => t.Id == taskId)
+            .Select(t => t.WorkflowInstance.EntityType).FirstOrDefaultAsync(ct);
+        if (approvalOutcomes is null || entityType != Archiving.Application.Features.Core.IApprovalOutcomeHandler.EntityType)
+            return await ActOnTaskCoreAsync(taskId, r, ct);
+
+        try
+        {
+            return await db.InTransactionAsync(() => ActOnTaskCoreAsync(taskId, r, ct), result => result.Succeeded, ct);
+        }
+        catch (Archiving.Domain.Common.DomainException ex)
+        {
+            // The effect refused (e.g. the employee number is now taken): the decision is rolled back
+            // and the approver sees why.
+            _pendingTaskObjects.Clear();
+            return Result<WorkflowInstanceDto>.Fail(ex.Message);
+        }
+    }
+
+    private async Task<Result<WorkflowInstanceDto>> ActOnTaskCoreAsync(long taskId, WorkflowActionRequest r, CancellationToken ct)
+    {
         var task = await db.WorkflowTasks
             .Include(t => t.Stage)
             .Include(t => t.WorkflowInstance).ThenInclude(i => i.WorkflowDefinition).ThenInclude(d => d.Stages)
@@ -575,6 +598,11 @@ public sealed class WorkflowService(
                 await AdvanceAfterApprovalAsync(instance, orderedStages, task, eventDocumentId, ct);
                 break;
         }
+
+        // Approval requests: the request's effect runs before the decision is saved, in the same
+        // transaction (opened by ActOnTaskAsync), so neither is committed without the other.
+        if (approvalOutcomes is not null && instance.EntityType == Archiving.Application.Features.Core.IApprovalOutcomeHandler.EntityType)
+            await approvalOutcomes.HandleAsync(instance.EntityId, instance.Status, r.Note, ct);
 
         await db.SaveChangesAsync(ct);
 
