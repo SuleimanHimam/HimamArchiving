@@ -140,6 +140,25 @@ public class AppDbContext : DbContext
     public DbSet<Archiving.Domain.Hr.PayrollResultLine> PayrollResultLines => Set<Archiving.Domain.Hr.PayrollResultLine>();
     public DbSet<Archiving.Domain.Hr.DisbursementRule> DisbursementRules => Set<Archiving.Domain.Hr.DisbursementRule>();
     public DbSet<Archiving.Domain.Hr.EntitlementMovement> EntitlementMovements => Set<Archiving.Domain.Hr.EntitlementMovement>();
+    // Supply (اللوازم والمخازن)
+    public DbSet<Archiving.Domain.Supply.SupplySetting> SupplySettings => Set<Archiving.Domain.Supply.SupplySetting>();
+    public DbSet<Archiving.Domain.Supply.ItemCategory> ItemCategories => Set<Archiving.Domain.Supply.ItemCategory>();
+    public DbSet<Archiving.Domain.Supply.Item> Items => Set<Archiving.Domain.Supply.Item>();
+    public DbSet<Archiving.Domain.Supply.Warehouse> Warehouses => Set<Archiving.Domain.Supply.Warehouse>();
+    public DbSet<Archiving.Domain.Supply.Asset> Assets => Set<Archiving.Domain.Supply.Asset>();
+    public DbSet<Archiving.Domain.Supply.Custody> Custodies => Set<Archiving.Domain.Supply.Custody>();
+    public DbSet<Archiving.Domain.Supply.SupplyDocument> SupplyDocuments => Set<Archiving.Domain.Supply.SupplyDocument>();
+    public DbSet<Archiving.Domain.Supply.SupplyDocumentLine> SupplyDocumentLines => Set<Archiving.Domain.Supply.SupplyDocumentLine>();
+    public DbSet<Archiving.Domain.Supply.StockMovement> StockMovements => Set<Archiving.Domain.Supply.StockMovement>();
+    public DbSet<Archiving.Domain.Supply.IssueRequest> IssueRequests => Set<Archiving.Domain.Supply.IssueRequest>();
+    public DbSet<Archiving.Domain.Supply.IssueRequestLine> IssueRequestLines => Set<Archiving.Domain.Supply.IssueRequestLine>();
+    public DbSet<Archiving.Domain.Supply.MonthlyQuota> MonthlyQuotas => Set<Archiving.Domain.Supply.MonthlyQuota>();
+    public DbSet<Archiving.Domain.Supply.CountCycle> CountCycles => Set<Archiving.Domain.Supply.CountCycle>();
+    public DbSet<Archiving.Domain.Supply.CountCommitteeMember> CountCommitteeMembers => Set<Archiving.Domain.Supply.CountCommitteeMember>();
+    public DbSet<Archiving.Domain.Supply.CountEntry> CountEntries => Set<Archiving.Domain.Supply.CountEntry>();
+    public DbSet<Archiving.Domain.Supply.CountVariance> CountVariances => Set<Archiving.Domain.Supply.CountVariance>();
+    public DbSet<Archiving.Domain.Supply.WorkOrder> WorkOrders => Set<Archiving.Domain.Supply.WorkOrder>();
+    public DbSet<Archiving.Domain.Supply.OpeningImport> OpeningImports => Set<Archiving.Domain.Supply.OpeningImport>();
 
     // Workflow
     public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
@@ -246,6 +265,7 @@ public class AppDbContext : DbContext
         // ---- HR personnel actions: JSON snapshots outgrow the 256-char string convention ----
         b.Entity<Archiving.Domain.Hr.PersonnelAction>().Property(x => x.PayloadJson).HasColumnType(LongText);
         b.Entity<Archiving.Domain.Hr.PersonnelAction>().Property(x => x.BeforeJson).HasColumnType(LongText);
+        b.Entity<Archiving.Domain.Supply.OpeningImport>().Property(x => x.ErrorsJson).HasColumnType(LongText);
         b.Entity<Archiving.Domain.Hr.PersonnelAction>().Property(x => x.AfterJson).HasColumnType(LongText);
 
         // ---- Event audit trail ----

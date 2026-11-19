@@ -1,0 +1,95 @@
+/* Supply screens. Colours from theme tokens only (standards §9). */
+.sup-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.sup-kpi { display: flex; align-items: center; gap: .8rem; border: 1px solid var(--line); border-radius: 12px; padding: .9rem 1rem; background: var(--paper); }
+.sup-kpi__icon { display: grid; place-items: center; inline-size: 2.6rem; block-size: 2.6rem; border-radius: 10px; background: var(--parchment-2); color: var(--ink); flex: none; }
+.sup-kpi--alert .sup-kpi__icon { color: var(--seal); background: color-mix(in srgb, var(--seal) 12%, transparent); }
+.sup-kpi strong { display: block; font-size: 1.5rem; line-height: 1.1; }
+.sup-kpi span { color: var(--muted); font-size: .85rem; }
+
+.sup-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.sup-card { border: 1px solid var(--line); border-radius: 12px; padding: 1rem; background: var(--paper); min-inline-size: 0; }
+.sup-card h3 { display: flex; align-items: center; gap: .45rem; margin: 0 0 .75rem; font-size: 1rem; }
+.sup-card h3.is-alert { color: var(--seal); }
+.sup-list { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.sup-list li { display: flex; align-items: center; gap: .6rem; justify-content: space-between; border: 1px solid var(--line); border-radius: 10px; padding: .55rem .75rem; }
+.sup-list .mono { font-family: var(--font-mono, ui-monospace, monospace); }
+
+/* Stacked monthly consumption bars: plain CSS, no chart library. */
+.sup-bars { display: flex; align-items: flex-end; gap: 1.2rem; block-size: 13rem; padding: 1.2rem .5rem 0; }
+.sup-bars__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .3rem; block-size: 100%; justify-content: flex-end; }
+.sup-bars__stack { inline-size: 2.2rem; display: flex; flex-direction: column-reverse; border-radius: 6px 6px 0 0; overflow: hidden; }
+.sup-bars__total { font-size: .75rem; color: var(--muted); }
+.sup-bars__label { font-size: .78rem; color: var(--muted); }
+.sup-legend { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin-top: .6rem; font-size: .8rem; color: var(--muted); }
+.sup-legend i { display: inline-block; inline-size: .7rem; block-size: .7rem; border-radius: 3px; margin-inline-end: .3rem; vertical-align: -1px; }
+
+/* Catalogue: tree beside the table. */
+.sup-split { display: grid; grid-template-columns: 17rem 1fr; gap: 1rem; align-items: start; }
+@media (max-width: 900px) { .sup-split { grid-template-columns: 1fr; } }
+.sup-tree { border: 1px solid var(--line); border-radius: 12px; padding: .6rem; background: var(--paper); display: grid; gap: .15rem; }
+.sup-tree button { display: flex; justify-content: space-between; align-items: center; gap: .5rem; border: 0; background: transparent; color: inherit;
+  font: inherit; text-align: start; padding: .4rem .6rem; border-radius: 8px; cursor: pointer; }
+.sup-tree button:hover { background: var(--parchment-2); }
+.sup-tree button.is-active { background: var(--parchment-3); font-weight: 700; }
+.sup-tree .sup-tree__kind { margin-top: .5rem; }
+.sup-tree .sup-tree__sub { padding-inline-start: 1.4rem; }
+.sup-tree .sup-count { font-size: .72rem; border-radius: 999px; padding: 0 .45rem; background: var(--parchment-2); color: var(--muted); }
+
+.sup-kind { display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .1rem .55rem; font-size: .78rem; border: 1px solid var(--line); white-space: nowrap; }
+.sup-kind::before { content: ""; inline-size: 6px; block-size: 6px; border-radius: 50%; background: currentColor; }
+.sup-kind--FixedAsset { color: var(--ink); }
+.sup-kind--Consumable { color: var(--ok); }
+.sup-kind--MaintenanceSupply { color: var(--brass); }
+
+.reg-table tr.is-low > td { background: color-mix(in srgb, var(--seal) 8%, transparent); }
+.reg-table td.num, .reg-table th.num { text-align: end; font-variant-numeric: tabular-nums; }
+.reg-table td .is-low-num { color: var(--seal); font-weight: 700; }
+
+/* Folder chips with counters (list page pattern). */
+.sup-folders { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: .9rem; }
+.sup-folders button { display: inline-flex; align-items: center; gap: .45rem; border: 1px solid var(--line); background: var(--paper); color: inherit;
+  border-radius: 999px; padding: .35rem .85rem; font: inherit; cursor: pointer; }
+.sup-folders button.is-active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.sup-folders .sup-count { font-size: .72rem; border-radius: 999px; padding: 0 .45rem; background: var(--parchment-2); color: var(--muted); }
+.sup-folders button.is-active .sup-count { background: color-mix(in srgb, var(--paper) 25%, transparent); color: var(--paper); }
+
+.sup-toolbar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; margin-bottom: .75rem; }
+.sup-toolbar .grow { flex: 1; min-inline-size: 12rem; }
+
+/* Stepper (count cycle, opening wizard). */
+.sup-steps { display: flex; gap: .25rem; margin: .25rem 0 1rem; padding: 0; list-style: none; counter-reset: s; }
+.sup-steps li { flex: 1; text-align: center; font-size: .82rem; color: var(--muted); position: relative; padding-top: 2.2rem; }
+.sup-steps li::before { counter-increment: s; content: counter(s); position: absolute; inset-block-start: 0; inset-inline-start: 50%; transform: translateX(50%);
+  inline-size: 1.8rem; block-size: 1.8rem; line-height: 1.8rem; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); }
+[dir="ltr"] .sup-steps li::before { transform: translateX(-50%); }
+.sup-steps li.is-done { color: var(--ok); }
+.sup-steps li.is-done::before { content: "✓"; background: var(--ok); color: var(--paper); border-color: var(--ok); }
+.sup-steps li.is-current { color: var(--ink); font-weight: 700; }
+.sup-steps li.is-current::before { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* Detail cards. */
+.sup-facts { display: grid; grid-template-columns: max-content 1fr; gap: .45rem 1.2rem; margin: 0; }
+.sup-facts dt { color: var(--muted); }
+.sup-facts dd { margin: 0; }
+.sup-timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: .7rem; }
+.sup-timeline li { border-inline-start: 2px solid var(--line); padding-inline-start: .8rem; }
+.sup-timeline small { color: var(--muted); display: block; }
+
+/* Tablet-first count entry: big targets. */
+.sup-scan { display: flex; gap: .5rem; align-items: end; flex-wrap: wrap; }
+.sup-scan input[data-scan] { font-size: 1.15rem; padding: .7rem .9rem; min-inline-size: 16rem; }
+.sup-scan .btn { min-block-size: 2.8rem; }
+.sup-count-row input[type="number"] { inline-size: 7rem; font-size: 1rem; padding: .45rem .6rem; }
+
+.sup-lines input, .sup-lines select { inline-size: 100%; min-inline-size: 5rem; }
+.sup-print-only { display: none; }
+@media print {
+  .sup-print-only { display: block; }
+  .sup-no-print, nav, aside, header.app-header { display: none !important; }
+}
+
+/* "Add" in green (form pattern, standards §9). */
+.btn.btn-success { background: var(--ok); border-color: var(--ok); color: #fff; }
+.btn.btn-success:hover:not(:disabled) { background: color-mix(in srgb, var(--ok) 85%, #000); }
+.btn.btn-success:disabled { opacity: .55; }
+label.btn.is-disabled { opacity: .55; pointer-events: none; }

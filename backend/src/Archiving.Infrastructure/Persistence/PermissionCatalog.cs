@@ -67,6 +67,16 @@ public static class PermissionCatalog
         ("HrAttendance",   [V, E]),                      // punches, processing, exceptions, monthly close; E also holidays & work week
         ("HrPayroll",      [V, E, Ap]),                  // E = settings, inputs, calculate, review; Ap = audit, approve, disburse, close
         ("SelfService",    [V, C]),                      // my balances, attendance, payslips; C = my own leave requests
+
+        // ---- Supply & warehouses (اللوازم والمخازن) ----
+        ("SupplyAdmin",       [V]),                      // every warehouse (مدير اللوازم); without it a keeper acts on their own warehouse only
+        ("SupplyItems",       [V, E]),                   // catalogue, categories, warehouses, monthly quotas; E also supply settings
+        ("SupplyStock",       [V]),                      // balances, assets, custody sheets, dashboard, reports
+        ("SupplyDocuments",   [V, C, E]),                // المحاضر: C = draft, submit, cancel; E = confirm receipt of a transfer
+        ("SupplyRequests",    [V, C, E]),                // طلبات الصرف: C = my own; V = others in scope; E = fulfil, suspend, quotas, on behalf
+        ("SupplyCount",       [V, C, E]),                // الجرد: C = plan, start, reconcile, justify, settle; E = enter counts
+        ("SupplyMaintenance", [V, C, E]),                // الصيانة: C = report a fault; E = manage work orders, issue parts
+        ("SupplyOpening",     [V, E]),                   // الأرصدة الافتتاحية: import, lock
         // Print designs (الترويسات) for documents — the block designer. Correspondence no longer
         // uses this: it moved to the slot-based Letterhead resource below.
         ("PrintDesign",    [V, C, E, D]),
@@ -100,8 +110,8 @@ public static class PermissionCatalog
         ("Manager", "اعتماد وتظهير المعاملات ومراجعة التقارير",
             // HrSensitive is excluded: revealing personal data is granted to named HR roles only.
             // HrPayroll is excluded too: salaries are visible with the payroll permission only (standards §7.3).
-            p => (p.Action == PermissionAction.View && p.Resource is not ("Settings" or "Archive" or "HrSensitive" or "HrPayroll"))
-                || p.Resource == "SelfService"
+            p => (p.Action == PermissionAction.View && p.Resource is not ("Settings" or "Archive" or "HrSensitive" or "HrPayroll" or "SupplyAdmin" or "SupplyOpening"))
+                || p.Resource == "SelfService" || IsEveryoneSupply(p)
                 || (p.Resource == "Correspondence" && p.Action is PermissionAction.Create or PermissionAction.Edit
                     or PermissionAction.Forward or PermissionAction.Print or PermissionAction.Archive)
                 || (p.Resource == "Documents" && p.Action is PermissionAction.Approve or PermissionAction.Print
@@ -141,7 +151,7 @@ public static class PermissionCatalog
         // Intake, classification and custody of the records themselves.
         ("Archive Officer", "إدخال وتصنيف وحفظ الوثائق وإدارة المواقع",
             p => ((p.Resource is "Documents" or "Archive") && p.Action != PermissionAction.Approve)
-                || p.Resource == "SelfService"
+                || p.Resource == "SelfService" || IsEveryoneSupply(p)
                 || p.Resource is "Notes" or "Export" or "TableColumns" or "CustomFields"
                 /* قسم الأرشيف corresponds like any other department: it writes to the department
                    whose record it just filed, asks for a missing attachment, answers a retrieval
@@ -169,7 +179,7 @@ public static class PermissionCatalog
 
                Not to be confused with the Archive.* resource below: that is the physical archive,
                the shelves themselves, and it stays with the people who keep them. */
-            p => p.Resource == "SelfService"
+            p => p.Resource == "SelfService" || IsEveryoneSupply(p)
                 || (p.Resource == "Correspondence" && p.Action is PermissionAction.View or PermissionAction.Create
                     or PermissionAction.Edit or PermissionAction.Forward or PermissionAction.Print
                     or PermissionAction.Archive)
@@ -189,5 +199,23 @@ public static class PermissionCatalog
                 || (p.Resource is "Notes" or "Export" && p.Action is PermissionAction.View or PermissionAction.Create)
                 || (p.Resource is "Scanner" && p.Action is PermissionAction.View or PermissionAction.Edit)
                 || (p.Resource == "TableColumns" && p.Action == PermissionAction.Edit)),
+
+        // مدير اللوازم: the whole supply module across every warehouse, plus what its screens need to pick people.
+        ("Supply Manager", "إدارة اللوازم والمخازن في كل المستودعات",
+            p => p.Resource.StartsWith("Supply", StringComparison.Ordinal) || p.Resource == "SelfService"
+                || (p.Resource is "Employees" or "Organization" or "Sites" or "Approvals" && p.Action == PermissionAction.View)),
+
+        // أمين المستودع: his own warehouse only (§5.2) — documents, fulfilment, counting; no settings, no opening import.
+        ("Warehouse Keeper", "أمين مستودع: الاستلام والصرف والنقل والجرد في مستودعه",
+            p => p.Resource == "SelfService" || IsEveryoneSupply(p)
+                || (p.Resource is "SupplyItems" or "SupplyStock" && p.Action == PermissionAction.View)
+                || p.Resource is "SupplyDocuments" or "SupplyRequests"
+                || (p.Resource == "SupplyCount" && p.Action is PermissionAction.View or PermissionAction.Edit)
+                || (p.Resource == "SupplyMaintenance" && p.Action == PermissionAction.View)
+                || (p.Resource is "Employees" or "Organization" or "Approvals" && p.Action == PermissionAction.View)),
     ];
+
+    /// <summary>Every employee may ask for supplies and report a fault (§6.3, §7.2).</summary>
+    private static bool IsEveryoneSupply(Permission p) =>
+        (p.Resource == "SupplyRequests" || p.Resource == "SupplyMaintenance") && p.Action == PermissionAction.Create;
 }

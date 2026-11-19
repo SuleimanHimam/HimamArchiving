@@ -48,6 +48,17 @@ import AttendancePage from './pages/hr/AttendancePage'
 import PayrollPage from './pages/hr/PayrollPage'
 import PayrollSettingsPage from './pages/hr/PayrollSettingsPage'
 import SelfServicePage from './pages/hr/SelfServicePage'
+import SupplyDashboardPage from './pages/supply/SupplyDashboardPage'
+import ItemsPage from './pages/supply/ItemsPage'
+import AssetsPage, { AssetCardPage } from './pages/supply/AssetsPage'
+import IssueRequestsPage from './pages/supply/IssueRequestsPage'
+import DocumentsPage from './pages/supply/DocumentsPage'
+import CustodyPage from './pages/supply/CustodyPage'
+import CountsPage, { CountCyclePage } from './pages/supply/CountsPage'
+import MaintenancePage from './pages/supply/MaintenancePage'
+import OpeningPage from './pages/supply/OpeningPage'
+import SupplyReportsPage from './pages/supply/SupplyReportsPage'
+import SupplySettingsPage from './pages/supply/SupplySettingsPage'
 import UsersPage from './pages/users/UsersPage'
 import MonitoringPage from './pages/monitoring/MonitoringPage'
 import SettingsPage from './pages/settings/SettingsPage'
@@ -127,6 +138,19 @@ createRoot(document.getElementById('root')!).render(
               <Route path="hr-attendance" element={<AttendancePage />} />
               <Route path="hr-payroll" element={<PayrollPage />} />
               <Route path="hr-payroll-settings" element={<PayrollSettingsPage />} />
+              <Route path="supply" element={<SupplyDashboardPage />} />
+              <Route path="supply-items" element={<ItemsPage />} />
+              <Route path="supply-assets" element={<AssetsPage />} />
+              <Route path="supply-assets/:id" element={<AssetCardPage />} />
+              <Route path="supply-requests" element={<IssueRequestsPage />} />
+              <Route path="supply-documents" element={<DocumentsPage />} />
+              <Route path="supply-custody" element={<CustodyPage />} />
+              <Route path="supply-counts" element={<CountsPage />} />
+              <Route path="supply-counts/:id" element={<CountCyclePage />} />
+              <Route path="supply-maintenance" element={<MaintenancePage />} />
+              <Route path="supply-opening" element={<OpeningPage />} />
+              <Route path="supply-reports" element={<SupplyReportsPage />} />
+              <Route path="supply-settings" element={<SupplySettingsPage />} />
               <Route path="me" element={<SelfServicePage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="locations" element={<LocationsPage />} />

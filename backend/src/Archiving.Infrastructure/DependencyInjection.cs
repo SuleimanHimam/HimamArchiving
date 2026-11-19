@@ -93,6 +93,16 @@ public static class DependencyInjection
         services.AddScoped<Archiving.Application.Features.Hr.IAttendanceService, Services.Hr.AttendanceService>();
         services.AddScoped<Archiving.Application.Features.Hr.IPayrollSettingsService, Services.Hr.PayrollSettingsService>();
         services.AddScoped<Archiving.Application.Features.Hr.IPayrollService, Services.Hr.PayrollService>();
+        // Supply (اللوازم والمخازن)
+        services.AddScoped<Archiving.Application.Features.Supply.ISupplyCatalogService, Services.Supply.SupplyCatalogService>();
+        services.AddScoped<Archiving.Application.Features.Supply.ISupplyStockService, Services.Supply.SupplyStockService>();
+        services.AddScoped<Archiving.Application.Features.Supply.ISupplyDocumentService, Services.Supply.SupplyDocumentService>();
+        services.AddScoped<Archiving.Application.Features.Core.IApprovalEffect, Services.Supply.SupplyDocumentEffectHandler>();
+        services.AddScoped<Archiving.Application.Features.Supply.IIssueRequestService, Services.Supply.IssueRequestService>();
+        services.AddScoped<Archiving.Application.Features.Core.IApprovalEffect, Services.Supply.IssueRequestEffectHandler>();
+        services.AddScoped<Archiving.Application.Features.Supply.ISupplyCountService, Services.Supply.SupplyCountService>();
+        services.AddScoped<Archiving.Application.Features.Supply.IMaintenanceService, Services.Supply.MaintenanceService>();
+        services.AddScoped<Archiving.Application.Features.Supply.IOpeningBalanceService, Services.Supply.OpeningBalanceService>();
         services.AddScoped<IReportTemplateService, Services.ReportTemplateService>();
         services.AddScoped<IGroupService, Services.GroupService>();
         services.AddScoped<IDiwanService, Services.DiwanService>();

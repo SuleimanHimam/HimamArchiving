@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { hrTime, money, type LeaveRequestDto } from '../../lib/hrTime'
+import CustodyTable from '../supply/CustodyTable'
 import { PageHead } from './hrShared'
 import { MonthPicker } from './hrtShared'
 import { thisMonth } from '../../lib/hrtUtils'
@@ -70,6 +71,11 @@ export default function SelfServicePage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="doc-card">
+        <h3 className="detail-h3">{t('sup.common.myCustody')}</h3>
+        <CustodyTable employeeId="me" />
       </section>
 
       <section className="doc-card">

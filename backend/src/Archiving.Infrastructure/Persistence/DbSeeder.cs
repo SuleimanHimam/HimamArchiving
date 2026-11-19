@@ -47,6 +47,19 @@ public static class DbSeeder
             (Services.Hr.PersonnelActionEffectHandler.ActionNumbering, "HR-MV-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
             (Services.Hr.PersonnelActionEffectHandler.ClearanceNumbering, "CLR-{YYYY}-{SEQ:3}", ResetFrequency.Yearly),
             (Services.Hr.LeaveEffectHandler.Numbering, "HR-LV-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.RCV", "SUP-RCV-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.ISS", "SUP-ISS-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.TRF", "SUP-TRF-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.MOV", "SUP-MOV-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.RET", "SUP-RET-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.DSP", "SUP-DSP-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.ADJ", "SUP-ADJ-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyDocument.OPN", "SUP-OPN-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyIssueRequest", "SR-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyCount", "CNT-{YYYY}-{SEQ:3}", ResetFrequency.Yearly),
+            ("SupplyWorkOrder", "WO-{YYYY}-{SEQ:5}", ResetFrequency.Yearly),
+            ("SupplyAsset", "AST-{SEQ:5}", ResetFrequency.Never),
+            ("SupplyBarcode", "{SEQ:8}", ResetFrequency.Never),
         ];
         foreach (var (entity, pattern, reset) in numbering)
             if (!await db.NumberingTemplates.AnyAsync(t => t.EntityType == entity, ct))

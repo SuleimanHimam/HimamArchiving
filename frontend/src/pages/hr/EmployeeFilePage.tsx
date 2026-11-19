@@ -10,6 +10,7 @@ import {
 } from '../../lib/hr'
 import { LabeledInput, LabeledSelect } from '../../components/ui/labeled-input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
+import CustodyTable from '../supply/CustodyTable'
 import { useToast } from '../../components/toast'
 import { useConfirmDialog } from '../../components/ui/confirm-dialog'
 import { ActionStatusPill, EmployeeStatusPill, PageHead } from './hrShared'
@@ -46,7 +47,8 @@ export default function EmployeeFilePage() {
         <TabsContent value="job"><JobTab file={data} /></TabsContent>
         <TabsContent value="financial"><FinancialTab file={data} canEdit={canEdit} /></TabsContent>
         <TabsContent value="actions"><ActionsTab file={data} /></TabsContent>
-        {(['leaves', 'custody', 'documents'] as const).map((k) => (
+        <TabsContent value="custody"><section className="doc-card"><CustodyTable employeeId={data.employee.id} /></section></TabsContent>
+        {(['leaves', 'documents'] as const).map((k) => (
           <TabsContent key={k} value={k}><section className="doc-card"><p className="muted">{t('hr.file.laterPhase')}</p></section></TabsContent>
         ))}
       </Tabs>
