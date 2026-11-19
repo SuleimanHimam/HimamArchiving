@@ -85,6 +85,7 @@
 .sup-print-only { display: none; }
 @media print {
   .sup-print-only { display: block; }
+  .sup-print-sign { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem; }
   .sup-no-print, nav, aside, header.app-header { display: none !important; }
 }
 

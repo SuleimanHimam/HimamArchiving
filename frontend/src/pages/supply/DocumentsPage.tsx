@@ -176,7 +176,7 @@ export function DocumentDetail({ id, onEdit, onChanged }: { id: number; onEdit?:
         </table>
       </div>
       {/* Paper copy: the recipient signs here (§6.3 — or on the tablet, then scanned and attached). */}
-      <div className="sup-print-only" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+      <div className="sup-print-only sup-print-sign">
         <div>{t('sup.doc.signKeeper')}: ____________</div><div>{t('sup.doc.signRecipient')}: ____________</div>
       </div>
     </div>
