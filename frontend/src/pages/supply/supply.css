@@ -93,3 +93,8 @@
 .btn.btn-success:hover:not(:disabled) { background: color-mix(in srgb, var(--ok) 85%, #000); }
 .btn.btn-success:disabled { opacity: .55; }
 label.btn.is-disabled { opacity: .55; pointer-events: none; }
+
+/* Cards on the dashboard are narrow: let their tables shrink instead of scrolling sideways. */
+.sup-card .reg-table { min-width: 0; width: 100%; }
+.sup-split .reg-table td:nth-child(2) { white-space: nowrap; }
+[dir="rtl"] .sup-facts dd[dir="ltr"] { text-align: right; }
